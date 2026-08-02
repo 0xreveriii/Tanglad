@@ -3,7 +3,7 @@ import { DisciplinesStory } from "./disciplines-story";
 import { EffortComparison } from "./effort-comparison";
 import { GuidanceExperience } from "./guidance-experience";
 import { HeroExperience } from "./hero-experience";
-import { Reveal, ScrollSection } from "./motion-primitives";
+import { Reveal, ScrollSection, SectionFade } from "./motion-primitives";
 import { SiteNav } from "./site-nav";
 import { WeightStory } from "./weight-story";
 import { TangladFooter } from "./ui/footer-section";
@@ -21,11 +21,16 @@ export function LandingPage() {
     <a className="skip-link" href="#main-content">Skip to main content</a>
     <main id="main-content">
       <SiteNav />
-      <HeroExperience />
+      <SectionFade>
+        <HeroExperience />
+      </SectionFade>
 
-      <EffortComparison />
+      <SectionFade>
+        <EffortComparison />
+      </SectionFade>
 
-      <ScrollSection className="factors-section">
+      <SectionFade>
+        <ScrollSection className="factors-section">
         <div className="page-frame">
           <Reveal className="section-heading">
             <h2>More context. A truer measure.</h2>
@@ -46,15 +51,23 @@ export function LandingPage() {
             ))}
           </div>
         </div>
-      </ScrollSection>
+        </ScrollSection>
+      </SectionFade>
 
-      <WeightStory />
+      <SectionFade>
+        <WeightStory />
+      </SectionFade>
 
-      <DisciplinesStory />
+      <SectionFade>
+        <DisciplinesStory />
+      </SectionFade>
 
-      <GuidanceExperience />
+      <SectionFade>
+        <GuidanceExperience />
+      </SectionFade>
 
-      <ScrollSection className="outcome-section">
+      <SectionFade>
+        <ScrollSection className="outcome-section">
         <div className="page-frame outcome-layout">
           <Reveal className="outcome-intro">
             <h2>Built for the work teams actually do.</h2>
@@ -85,11 +98,16 @@ export function LandingPage() {
             </Reveal>
           </div>
         </div>
-      </ScrollSection>
+        </ScrollSection>
+      </SectionFade>
 
-      <ClosingExperience />
+      <SectionFade>
+        <ClosingExperience />
+      </SectionFade>
 
-      <TangladFooter />
+      <SectionFade>
+        <TangladFooter />
+      </SectionFade>
     </main>
     </>
   );

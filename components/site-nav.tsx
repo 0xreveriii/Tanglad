@@ -14,7 +14,32 @@ const links = [
 export function SiteNav() {
   const [dark, setDark] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeHref, setActiveHref] = useState("#product");
   const reduceMotion = useStableReducedMotion();
+
+  useEffect(() => {
+    const updateActiveSection = () => {
+      const marker = window.innerHeight * 0.32;
+      let nextHref = links[0].href;
+
+      for (const link of links) {
+        const section = document.querySelector<HTMLElement>(link.href);
+        if (section && section.getBoundingClientRect().top <= marker) {
+          nextHref = link.href;
+        }
+      }
+
+      setActiveHref((current) => current === nextHref ? current : nextHref);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, []);
 
   useEffect(() => {
     let nextDark = true;
@@ -65,9 +90,29 @@ export function SiteNav() {
         </a>
 
         <nav className="desktop-links" aria-label="Main navigation">
-          {links.map((link) => (
-            <a key={link.href} href={link.href}>{link.label}</a>
-          ))}
+          {links.map((link) => {
+            const isActive = activeHref === link.href;
+
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                className={isActive ? "is-active" : undefined}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() => setActiveHref(link.href)}
+              >
+                {isActive && (
+                  <motion.span
+                    className="nav-active-indicator"
+                    layoutId="nav-active-indicator"
+                    transition={reduceMotion ? { duration: 0 } : { duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="nav-link-label">{link.label}</span>
+              </a>
+            );
+          })}
         </nav>
 
         <div className="nav-actions">
@@ -117,7 +162,12 @@ export function SiteNav() {
                 <motion.a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMenuOpen(false)}
+                  className={activeHref === link.href ? "is-active" : undefined}
+                  aria-current={activeHref === link.href ? "page" : undefined}
+                  onClick={() => {
+                    setActiveHref(link.href);
+                    setMenuOpen(false);
+                  }}
                   initial={{ opacity: 0, y: 22 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.08 + index * 0.06, duration: 0.45 }}

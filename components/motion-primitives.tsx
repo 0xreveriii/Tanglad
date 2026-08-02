@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 export function useStableReducedMotion() {
   const preference = useReducedMotion();
@@ -65,6 +65,18 @@ export function Reveal({
       viewport={{ once: false, amount: 0.22 }}
       transition={{ duration: 0.78, delay: reduce ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}
     >
+      {children}
+    </motion.div>
+  );
+}
+
+export function SectionFade({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const opacity = useTransform(scrollYProgress, [0, 0.16, 0.78, 1], [0.86, 1, 1, 0.3]);
+
+  return (
+    <motion.div ref={ref} className={className} style={{ opacity }}>
       {children}
     </motion.div>
   );

@@ -33,15 +33,17 @@ export function WeightStory() {
   const [active, setActive] = useState(0);
   const reduce = useStableReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-  const railScale = useTransform(scrollYProgress, [0, 1], [0.04, 1]);
+  const railScale = Math.max(0.04, active / (stages.length - 1));
   const fieldRotate = useTransform(scrollYProgress, [0, 0.32, 0.68, 0.75, 1], [-4, -1, 1, 0, 0]);
   const fieldScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.94, 1.02, 1]);
   const copyOpacity = useTransform(scrollYProgress, [0, 0.05, 0.95, 1], [0, 1, 1, 0]);
   const copyFilter = useTransform(scrollYProgress, [0, 0.07, 0.93, 1], ["blur(10px)", "blur(0px)", "blur(0px)", "blur(8px)"]);
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
-    const next = Math.min(stages.length - 1, Math.floor(value * stages.length));
-    if (next !== active) setActive(next);
+    // Use explicit thresholds so the final stage is reachable before the section exits.
+    const thresholds = [0, 0.24, 0.48, 0.68];
+    const next = thresholds.reduce((stageIndex, threshold, index) => (value >= threshold ? index : stageIndex), 0);
+    setActive((current) => (current === next ? current : next));
   });
 
   const ActiveIcon = stages[active].icon;
