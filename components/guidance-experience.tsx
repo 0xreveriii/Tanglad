@@ -27,8 +27,7 @@ export function GuidanceExperience() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const copyY = useTransform(scrollYProgress, [0, 0.48, 1], [34, 0, -24]);
-  const copyOpacity = useTransform(scrollYProgress, [0, 0.12, 0.82, 1], [0.08, 1, 1, 0]);
-  const copyFilter = useTransform(scrollYProgress, [0, 0.14, 0.84, 1], ["blur(9px)", "blur(0px)", "blur(0px)", "blur(7px)"]);
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.12, 0.82, 1], [0, 1, 1, 0]);
   const fieldScale = useTransform(scrollYProgress, [0.02, 0.55], [0.94, 1]);
   const fieldOpacity = useTransform(scrollYProgress, [0.02, 0.34], [0.35, 1]);
   const recommendationScale = useTransform(scrollYProgress, [0.28, 0.62], [0.82, 1]);
@@ -38,7 +37,7 @@ export function GuidanceExperience() {
   return (
     <section className="guidance-story" id="principles" ref={ref}>
       <div className="guidance-sticky page-frame">
-        <motion.div className="guidance-copy" style={{ y: copyY, opacity: copyOpacity, filter: copyFilter }}>
+        <motion.div className="guidance-copy" style={{ y: copyY, opacity: copyOpacity }}>
           <h2>Guidance, with the team still in control.</h2>
           <p>Tanglad turns task and workload context into evidence-based recommendations. The final decision always stays with the team.</p>
         </motion.div>
