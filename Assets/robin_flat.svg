@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="750"
+   height="750"
+   viewBox="0 0 198.4375 198.4375"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="robin_flat.svg"
+   inkscape:export-filename="C:\Users\kristoffer\robin_flat.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="1"
+     inkscape:cx="254.5"
+     inkscape:cy="472"
+     inkscape:window-width="2560"
+     inkscape:window-height="1494"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:page
+       x="0"
+       y="0"
+       width="198.4375"
+       height="198.4375"
+       id="page2"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1">
+    <inkscape:path-effect
+       effect="powerclip"
+       message=""
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath2">
+      <path
+         id="lpe_path-effect2"
+         style="fill:#55d400;stroke:#1a1a1a;stroke-width:0"
+         class="powerclip"
+         d="M 8.2291641,8.2291641 H 190.20834 V 190.20834 H 8.2291641 Z M 157.37003,99.21875 A 58.151279,58.151279 0 0 0 99.21875,41.067471 58.151279,58.151279 0 0 0 41.067471,99.21875 58.151279,58.151279 0 0 0 99.21875,157.37003 58.151279,58.151279 0 0 0 157.37003,99.21875 Z" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline"
+     inkscape:export-filename="layer1.svg"
+     inkscape:export-xdpi="96"
+     inkscape:export-ydpi="96">
+    <path
+       id="path6"
+       style="fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0"
+       d="M 122.68398,86.886169 V 110.1695 l 13.66015,-4.35374 0.57258,-18.929591 z m 21.22713,0 c 0.87155,2.091653 1.48416,5.073972 1.53789,9.316228 0.0357,2.817666 -0.53889,5.190363 -1.41748,7.163383 L 195.73689,86.886169 Z M 104.7502,57.737044 C 81.515216,57.856704 68.65771,85.238088 66.200094,91.022868 L 2.2985677,111.38958 H 75.259489 c 20.311869,17.35406 -20.549133,21.14393 -20.549133,21.14393 l 52.978674,21.20904 16.27446,-12.03285 c 10.05553,-7.43466 14.71442,-34.7159 15.40888,-46.313456 0.86566,-14.456632 -10.20752,-32.278696 -26.14311,-36.531103 -2.96524,-0.791274 -5.79148,-1.141938 -8.47906,-1.128097 z m -5.223975,18.996257 c 4.384305,0.05356 5.899385,2.279964 5.899385,2.279964 L 76.411357,87.4913 C 87.88858,78.799214 95.141925,76.67974 99.526225,76.733301 Z M 99.21875,33.072917 A 66.145834,66.145834 0 0 0 33.076534,98.536621 L 55.526843,83.892554 a 46.302082,46.302082 0 0 1 43.691907,-30.975887 46.302082,46.302082 0 0 1 44.67376,34.13125 h 20.34295 a 66.145834,66.145834 0 0 0 -65.01671,-53.975 z M 52.916667,99.21875 a 46.302082,46.302082 0 0 0 0.395841,6.03219 46.302082,46.302082 0 0 1 -0.395841,-6.03219 z m 92.604163,0 a 46.302082,46.302082 0 0 1 -0.36587,5.57588 46.302082,46.302082 0 0 0 0.36587,-5.57588 z m 19.84323,0.189136 -22.23636,14.504544 a 46.302082,46.302082 0 0 0 0.45216,-1.64021 46.302082,46.302082 0 0 1 -44.36111,33.24861 46.302082,46.302082 0 0 1 -45.587398,-38.65707 46.302082,46.302082 0 0 0 0.84801,4.28346 H 34.157605 a 66.145834,66.145834 0 0 0 65.061145,54.21736 66.145834,66.145834 0 0 0 66.14531,-65.956694 z m -20.49125,7.119464 a 46.302082,46.302082 0 0 1 -0.75396,3.79046 46.302082,46.302082 0 0 0 0.75396,-3.79046 z"
+       inkscape:export-filename="C:\Users\kristoffer\robin_flat.svg"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+  </g>
+</svg>
