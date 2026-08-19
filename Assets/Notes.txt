@@ -1,0 +1,3 @@
+Assets are now in SVG format which are more scalable for web.
+
+Base colors for the non-logo assets are black for now, will be changed once initial palette and design are finalized.
