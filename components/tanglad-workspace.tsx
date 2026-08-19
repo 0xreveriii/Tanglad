@@ -189,7 +189,7 @@ export function TangladWorkspace() {
         <label className="tl-global-search">
           <MagnifyingGlass weight="bold" />
           <span className="sr-only">Search Tanglad</span>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search for anything" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search for anything" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} />
         </label>
 
         <div className="tl-topbar-actions">
@@ -321,7 +321,7 @@ function NotificationPanel({ onClose, openInvite, setToast }: { onClose: () => v
       </header>
       <AnimatedTabs id="notification-tabs" className="tl-notification-tabs" ariaLabel="Notification filters" active={tab} onChange={(value) => setTab(value as typeof tab)} items={[{ id: "all", label: "All" }, { id: "mentioned", label: "Mentioned" }, { id: "assigned", label: "Assigned to me" }]} />
       <div className="tl-notification-controls">
-        <label className="tl-notification-search"><MagnifyingGlass /><span className="sr-only">Search notifications</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search notifications by people, boards, and more..." /></label>
+        <label className="tl-notification-search"><MagnifyingGlass /><span className="sr-only">Search notifications</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search notifications by people, boards, and more..." autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} /></label>
         <label className="tl-notification-toggle"><input type="checkbox" checked={unreadOnly} onChange={(event) => setUnreadOnly(event.target.checked)} /><span aria-hidden="true" />Unread only</label>
       </div>
       {showTeamsCard && <div className="tl-teams-card"><div className="tl-service-icons"><ChatCircle weight="fill" /><AppMark small /></div><div><strong>Get notifications in MS Teams</strong><p>Connect now to enable real-time updates for all users in your account.</p></div><button className="tl-blue-button" onClick={() => setToast("Teams connection is ready for product integration")}>Connect users</button><button className="tl-teams-dismiss" onClick={() => setShowTeamsCard(false)} aria-label="Dismiss Teams connection" title="Dismiss Teams connection"><X /></button></div>}
@@ -352,7 +352,7 @@ function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToa
         <header><h2 id="invite-title">Invite to Tanglad</h2><button onClick={onClose} aria-label="Close invite dialog" title="Close invite dialog"><X /></button></header>
         <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
           <div className="tl-invite-modal-row"><label>Invite with email</label><button type="button" className="tl-outline-button" onClick={() => setToast("Workspace directory is ready for product integration")}><UsersThree />Workspace directory</button></div>
-          <div className="tl-email-composer"><textarea value={emails} onChange={(event) => setEmails(event.target.value)} placeholder="Name@example.com, Name@example.com ..." rows={2} aria-label="Email addresses" required /><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Invite role"><option>Member</option><option>Viewer</option></select></div>
+          <div className="tl-email-composer"><textarea value={emails} onChange={(event) => setEmails(event.target.value)} placeholder="Name@example.com, Name@example.com ..." rows={2} aria-label="Email addresses" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} data-gramm="false" data-enable-grammarly="false" data-1p-ignore="true" required /><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Invite role"><option>Member</option><option>Viewer</option></select></div>
           <label className="tl-invite-message"><span>Write a message (optional)</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Add context for new members" rows={3} /></label>
           <footer><button type="button" className="tl-outline-button" onClick={onClose}>Cancel</button><button type="submit" className="tl-blue-button">Invite</button></footer>
         </form>
@@ -418,9 +418,9 @@ function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-
         {items.map((item) => {
           const isActive = active === item.id;
           return (
-            <m.button key={item.id} type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} role="tab" aria-selected={isActive} whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
+            <m.button key={item.id} layout="position" type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} role="tab" aria-selected={isActive} whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
               {item.icon}<span>{item.label}</span>
-              {isActive && <m.span layoutId={`${id}-indicator`} className="tl-tab-indicator" initial={false} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 480, damping: 34, mass: 0.65 }}><m.span key={active} className="tl-tab-indicator-core" initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 38, mass: 0.45 }} /></m.span>}
+              {isActive && <m.span layout="position" layoutId={`${id}-indicator`} className="tl-tab-indicator" initial={false} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 32, mass: 0.62 }}><m.span key={active} className="tl-tab-indicator-core" initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 560, damping: 34, mass: 0.42 }} /></m.span>}
             </m.button>
           );
         })}
