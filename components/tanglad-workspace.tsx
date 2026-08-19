@@ -2,7 +2,9 @@
 
 import {
   Archive,
+  ArrowUUpLeft,
   ArrowLeft,
+  At,
   Bell,
   CalendarBlank,
   CaretDown,
@@ -34,10 +36,12 @@ import {
   Star,
   UserPlus,
   UsersThree,
+  UserCircle,
   X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { LazyMotion, LayoutGroup, domMax, m, useReducedMotion } from "motion/react";
 import "@/app/app/workspace.css";
 
 type Screen = "workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions";
@@ -121,11 +125,15 @@ export function TangladWorkspace() {
   const [mineOnly, setMineOnly] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [cover, setCover] = useState(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const navigate = (next: Screen) => {
     setScreen(next);
     setSidebarOpen(false);
     setToast(null);
+    setNotificationsOpen(false);
+    setInviteModalOpen(false);
   };
 
   const filteredTasks = useMemo(() => {
@@ -164,12 +172,13 @@ export function TangladWorkspace() {
   };
 
   return (
+    <LazyMotion features={domMax}>
     <div className={`tl-app ${navCollapsed ? "is-nav-collapsed" : ""}`}>
       <a className="tl-skip-link" href="#tl-main">Skip to content</a>
 
       <header className="tl-topbar">
         <div className="tl-topbar-brand">
-          <button className="tl-mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><List weight="bold" /></button>
+          <button className="tl-mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation" title="Open navigation"><List weight="bold" /></button>
           <button className="tl-wordmark" onClick={() => navigate("workspace")} aria-label="Open Tanglad workspace">
             <AppMark small />
             <strong>Tanglad</strong>
@@ -184,13 +193,13 @@ export function TangladWorkspace() {
         </label>
 
         <div className="tl-topbar-actions">
-          <button onClick={() => navigate("inbox")} aria-label="Open notifications"><Bell /><span className="tl-unread-count">3</span></button>
-          <button onClick={() => navigate("my-work")} aria-label="Open my work"><Archive /></button>
-          <button onClick={() => navigate("collaborators")} aria-label="Invite people"><UserPlus /></button>
-          <button onClick={() => navigate("permissions")} aria-label="Open settings"><Gear /></button>
-          <button onClick={() => setToast("Help is not connected in this UI preview")} aria-label="Open help"><Question /></button>
-          <button onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher"><DotsNine weight="bold" /></button>
-          <button className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile">MC</button>
+          <button className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" title="Notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
+          <button onClick={() => navigate("my-work")} aria-label="Open my work" title="My work"><Archive /></button>
+          <button onClick={() => { setNotificationsOpen(false); setInviteModalOpen(true); }} aria-label="Invite people" title="Invite people"><UserPlus /></button>
+          <button onClick={() => navigate("permissions")} aria-label="Open settings" title="Settings"><Gear /></button>
+          <button onClick={() => setToast("Help is not connected in this UI preview")} aria-label="Open help" title="Help"><Question /></button>
+          <button onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher" title="App launcher"><DotsNine weight="bold" /></button>
+          <button className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile" title="Mara Cruz profile">MC</button>
         </div>
       </header>
 
@@ -211,9 +220,9 @@ export function TangladWorkspace() {
         <div className="tl-workspace-nav-head">
           <strong>Workspace</strong>
           <div>
-            <button onClick={() => setToast("Workspace search uses the global search field above")} aria-label="Search workspace"><MagnifyingGlass /></button>
-            <button onClick={() => setNavCollapsed((value) => !value)} aria-label={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"}><SidebarSimple /></button>
-            <button className="tl-drawer-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X /></button>
+            <button onClick={() => setToast("Workspace search uses the global search field above")} aria-label="Search workspace" title="Search workspace"><MagnifyingGlass /></button>
+            <button onClick={() => setNavCollapsed((value) => !value)} aria-label={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"} title={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"}><SidebarSimple /></button>
+            <button className="tl-drawer-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" title="Close navigation"><X /></button>
           </div>
         </div>
 
@@ -279,9 +288,12 @@ export function TangladWorkspace() {
         {screen === "my-work" && <MyWorkScreen tasks={filteredTasks} cycleStatus={cycleStatus} setToast={setToast} />}
         {screen === "inbox" && <InboxScreen navigate={navigate} setToast={setToast} />}
         {screen === "reporting" && <ReportingScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
-        {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} />}
+        {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
         {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
       </main>
+
+      {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
+      {inviteModalOpen && <InviteMembersModal onClose={() => setInviteModalOpen(false)} setToast={setToast} />}
 
       {toast && (
         <div className="tl-toast" role="status">
@@ -291,11 +303,66 @@ export function TangladWorkspace() {
         </div>
       )}
     </div>
+    </LazyMotion>
+  );
+}
+
+function NotificationPanel({ onClose, openInvite, setToast }: { onClose: () => void; openInvite: () => void; setToast: (message: string) => void }) {
+  const [tab, setTab] = useState<"all" | "mentioned" | "assigned">("all");
+  const [query, setQuery] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [showTeamsCard, setShowTeamsCard] = useState(true);
+
+  return (
+    <aside className="tl-notification-panel" aria-label="Notifications">
+      <header className="tl-notification-head">
+        <h2>Notifications</h2>
+        <div><button onClick={() => setToast("Notification settings are ready for product integration")} aria-label="Notification settings" title="Notification settings"><Gear /></button><button onClick={() => setToast("Notification options are ready for product integration")} aria-label="Notification options" title="Notification options"><DotsThree /></button><button onClick={onClose} aria-label="Close notifications" title="Close notifications"><X /></button></div>
+      </header>
+      <AnimatedTabs id="notification-tabs" className="tl-notification-tabs" ariaLabel="Notification filters" active={tab} onChange={(value) => setTab(value as typeof tab)} items={[{ id: "all", label: "All" }, { id: "mentioned", label: "Mentioned" }, { id: "assigned", label: "Assigned to me" }]} />
+      <div className="tl-notification-controls">
+        <label className="tl-notification-search"><MagnifyingGlass /><span className="sr-only">Search notifications</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search notifications by people, boards, and more..." /></label>
+        <label className="tl-notification-toggle"><input type="checkbox" checked={unreadOnly} onChange={(event) => setUnreadOnly(event.target.checked)} /><span aria-hidden="true" />Unread only</label>
+      </div>
+      {showTeamsCard && <div className="tl-teams-card"><div className="tl-service-icons"><ChatCircle weight="fill" /><AppMark small /></div><div><strong>Get notifications in MS Teams</strong><p>Connect now to enable real-time updates for all users in your account.</p></div><button className="tl-blue-button" onClick={() => setToast("Teams connection is ready for product integration")}>Connect users</button><button className="tl-teams-dismiss" onClick={() => setShowTeamsCard(false)} aria-label="Dismiss Teams connection" title="Dismiss Teams connection"><X /></button></div>}
+      <div className="tl-notification-empty" aria-live="polite">
+        <div className="tl-notification-empty-art" aria-hidden="true"><span className="tl-notification-count">4</span><div className="tl-notification-mention"><At weight="bold" /><i /></div><UserCircle weight="duotone" /><div className="tl-notification-reply"><ArrowUUpLeft weight="bold" /></div></div>
+        <h3>{query || tab !== "all" || unreadOnly ? "No matching notifications" : "No notifications to show"}</h3>
+        <p>{query || tab !== "all" || unreadOnly ? "Try another filter or clear your search." : "You'll get notified here whenever someone @mentions or replies to you."}</p>
+        <button className="tl-outline-button" onClick={() => { onClose(); openInvite(); }}>Invite new members</button>
+      </div>
+    </aside>
+  );
+}
+
+function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToast: (message: string) => void }) {
+  const [emails, setEmails] = useState("");
+  const [message, setMessage] = useState("");
+  const [role, setRole] = useState("Member");
+  const submit = () => {
+    if (!emails.trim()) return;
+    const count = emails.split(",").map((email) => email.trim()).filter(Boolean).length;
+    setToast(`${count} ${count === 1 ? "invitation" : "invitations"} prepared as ${role}`);
+    onClose();
+  };
+  return (
+    <div className="tl-modal-layer">
+      <button className="tl-modal-scrim" onClick={onClose} aria-label="Close invite dialog" />
+      <section className="tl-invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+        <header><h2 id="invite-title">Invite to Tanglad</h2><button onClick={onClose} aria-label="Close invite dialog" title="Close invite dialog"><X /></button></header>
+        <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
+          <div className="tl-invite-modal-row"><label>Invite with email</label><button type="button" className="tl-outline-button" onClick={() => setToast("Workspace directory is ready for product integration")}><UsersThree />Workspace directory</button></div>
+          <div className="tl-email-composer"><textarea value={emails} onChange={(event) => setEmails(event.target.value)} placeholder="Name@example.com, Name@example.com ..." rows={2} aria-label="Email addresses" required /><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Invite role"><option>Member</option><option>Viewer</option></select></div>
+          <label className="tl-invite-message"><span>Write a message (optional)</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Add context for new members" rows={3} /></label>
+          <footer><button type="button" className="tl-outline-button" onClick={onClose}>Cancel</button><button type="submit" className="tl-blue-button">Invite</button></footer>
+        </form>
+      </section>
+    </div>
   );
 }
 
 function UtilityButton({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
-  return <button className={`tl-utility-button ${active ? "is-active" : ""}`} onClick={onClick}>{icon}<span>{label}</span></button>;
+  return <button className={`tl-utility-button ${active ? "is-active" : ""}`} onClick={onClick} title={label}>{icon}<span>{label}</span></button>;
 }
 
 function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, changeCover, setToast }: {
@@ -317,7 +384,7 @@ function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, 
         <header className="tl-workspace-identity">
           <div className="tl-workspace-tile"><AppMark /><span className="tl-home-badge"><House weight="fill" /></span></div>
           <div className="tl-workspace-title">
-            <div><h1>Main workspace</h1><button onClick={() => setToast("Workspace menu opened in the full product")} aria-label="Workspace menu"><CaretDown /></button></div>
+            <div><h1>Main workspace</h1><button onClick={() => setToast("Workspace menu opened in the full product")} aria-label="Workspace menu" title="Workspace menu"><CaretDown /></button></div>
             <button className="tl-description-button" onClick={() => setToast("Description editing is ready for product integration")}><Plus />Add workspace description</button>
           </div>
           <div className="tl-workspace-actions">
@@ -328,12 +395,7 @@ function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, 
           </div>
         </header>
 
-        <div className="tl-tabs" role="tablist" aria-label="Workspace sections">
-          <TabButton active={activeTab === "recents"} onClick={() => setActiveTab("recents")} icon={<ClockCounterClockwise />} label="Recents" />
-          <TabButton active={activeTab === "content"} onClick={() => setActiveTab("content")} icon={<FolderSimple />} label="Content" />
-          <TabButton active={activeTab === "collaborators"} onClick={() => setActiveTab("collaborators")} icon={<UsersThree />} label="Collaborators" />
-          <TabButton active={activeTab === "permissions"} onClick={() => setActiveTab("permissions")} icon={<Lock />} label="Permissions" />
-        </div>
+        <AnimatedTabs id="workspace-tabs" ariaLabel="Workspace sections" active={activeTab} onChange={(value) => setActiveTab(value as WorkspaceTab)} items={[{ id: "recents", label: "Recents", icon: <ClockCounterClockwise /> }, { id: "content", label: "Content", icon: <FolderSimple /> }, { id: "collaborators", label: "Collaborators", icon: <UsersThree /> }, { id: "permissions", label: "Permissions", icon: <Lock /> }]} />
 
         <div className="tl-tab-content">
           {activeTab === "recents" && <WorkspaceRecents navigate={navigate} />}
@@ -346,8 +408,25 @@ function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, 
   );
 }
 
-function TabButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return <button className={active ? "is-active" : ""} onClick={onClick} role="tab" aria-selected={active}>{icon}<span>{label}</span></button>;
+type AnimatedTabItem = { id: string; label: string; icon?: React.ReactNode };
+
+function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-tabs" }: { id: string; items: AnimatedTabItem[]; active: string; onChange: (id: string) => void; ariaLabel: string; className?: string }) {
+  const reduceMotion = useReducedMotion();
+  return (
+    <LayoutGroup id={id}>
+      <div className={className} role="tablist" aria-label={ariaLabel}>
+        {items.map((item) => {
+          const isActive = active === item.id;
+          return (
+            <m.button key={item.id} type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} role="tab" aria-selected={isActive} whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
+              {item.icon}<span>{item.label}</span>
+              {isActive && <m.span layoutId={`${id}-indicator`} className="tl-tab-indicator" initial={false} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 480, damping: 34, mass: 0.65 }}><m.span key={active} className="tl-tab-indicator-core" initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 38, mass: 0.45 }} /></m.span>}
+            </m.button>
+          );
+        })}
+      </div>
+    </LayoutGroup>
+  );
 }
 
 function WorkspaceRecents({ navigate }: { navigate: (screen: Screen) => void }) {
@@ -414,12 +493,9 @@ function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus,
 }) {
   return (
     <div className="tl-standard-page">
-      <PageHeader title="Tanglad" description="Project work for the product launch." actions={<><button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button><button onClick={() => setToast("Board options are ready for product integration")} aria-label="Board options"><DotsThree /></button></>} />
+      <PageHeader title="Tanglad" description="Project work for the product launch." actions={<><button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button><button onClick={() => setToast("Board options are ready for product integration")} aria-label="Board options" title="Board options"><DotsThree /></button></>} />
       <div className="tl-board-tabs">
-        <div className="tl-tabs" role="tablist" aria-label="Board views">
-          <TabButton active={view === "table"} onClick={() => setView("table")} icon={<Rows />} label="Main table" />
-          <TabButton active={view === "kanban"} onClick={() => setView("kanban")} icon={<Kanban />} label="Board" />
-        </div>
+        <AnimatedTabs id="board-tabs" ariaLabel="Board views" active={view} onChange={(value) => setView(value as BoardView)} items={[{ id: "table", label: "Main table", icon: <Rows /> }, { id: "kanban", label: "Board", icon: <Kanban /> }]} />
         <div className="tl-board-tools">
           <button className={mineOnly ? "is-selected" : ""} onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}><FunnelSimple />{mineOnly ? "Mine only" : "Filter"}</button>
           <button className="tl-blue-button" onClick={() => setComposerOpen(true)}><Plus />New task</button>
@@ -448,7 +524,7 @@ function TaskTable({ tasks, cycleStatus, onAdd, setToast }: { tasks: Task[]; cyc
         if (!groupTasks.length) return null;
         return (
           <section className="tl-task-group" key={group}>
-            <div className="tl-task-group-head"><CaretDown /><h2>{group}</h2><span>{groupTasks.length} tasks</span><button onClick={() => setToast(`${group} options are ready for product integration`)} aria-label={`${group} options`}><DotsThree /></button></div>
+            <div className="tl-task-group-head"><CaretDown /><h2>{group}</h2><span>{groupTasks.length} tasks</span><button onClick={() => setToast(`${group} options are ready for product integration`)} aria-label={`${group} options`} title={`${group} options`}><DotsThree /></button></div>
             <div className="tl-task-table" role="table" aria-label={`${group} tasks`}>
               <div className="tl-task-row is-header" role="row"><span>Task</span><span>Owner</span><span>Status</span><span>Priority</span><span>Due</span><span /></div>
               {groupTasks.map((task) => <TaskRow task={task} cycleStatus={cycleStatus} setToast={setToast} key={task.id} />)}
@@ -465,12 +541,12 @@ function TaskRow({ task, cycleStatus, setToast }: { task: Task; cycleStatus: (id
   const member = members.find((item) => item.initials === task.owner) ?? members[0];
   return (
     <div className="tl-task-row" role="row">
-      <div className="tl-task-name"><button className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`}>{task.status === "Done" && <Check />}</button><strong>{task.name}</strong></div>
+      <div className="tl-task-name"><button className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} title={`Change status for ${task.name}`}>{task.status === "Done" && <Check />}</button><strong>{task.name}</strong></div>
       <div className="tl-task-owner"><Avatar member={member} size="small" /><span>{task.ownerName}</span></div>
       <button className="tl-status-cell" onClick={() => cycleStatus(task.id)}><StatusLabel status={task.status} /></button>
       <div><PriorityLabel priority={task.priority} /></div>
       <div className="tl-task-due"><CalendarBlank />{task.due}</div>
-      <button className="tl-more-button" onClick={() => setToast(`Options for ${task.name} are ready for product integration`)} aria-label={`More options for ${task.name}`}><DotsThree /></button>
+      <button className="tl-more-button" onClick={() => setToast(`Options for ${task.name} are ready for product integration`)} aria-label={`More options for ${task.name}`} title={`More options for ${task.name}`}><DotsThree /></button>
     </div>
   );
 }
@@ -490,7 +566,7 @@ function KanbanView({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStat
         const statusTasks = tasks.filter((task) => task.status === status);
         return (
           <section className="tl-kanban-column" key={status}>
-            <header><StatusLabel status={status} /><span>{statusTasks.length}</span><button onClick={() => setToast(`${status} column options are ready for product integration`)} aria-label={`${status} options`}><DotsThree /></button></header>
+            <header><StatusLabel status={status} /><span>{statusTasks.length}</span><button onClick={() => setToast(`${status} column options are ready for product integration`)} aria-label={`${status} options`} title={`${status} options`}><DotsThree /></button></header>
             <div>
               {statusTasks.map((task) => {
                 const member = members.find((item) => item.initials === task.owner) ?? members[0];
@@ -507,14 +583,20 @@ function KanbanView({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStat
 
 function MyWorkScreen({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStatus: (id: number) => void; setToast: (message: string) => void }) {
   const [activeOnly, setActiveOnly] = useState(false);
+  const [view, setView] = useState<"table" | "calendar">("table");
   const mine = tasks.filter((task) => task.owner === "MC" && (!activeOnly || task.status !== "Done"));
   return (
     <div className="tl-standard-page">
       <PageHeader title="My work" description="Tasks assigned to Mara across Main workspace." actions={<button className={activeOnly ? "tl-blue-button" : "tl-outline-button"} onClick={() => setActiveOnly(!activeOnly)} aria-pressed={activeOnly}><FunnelSimple />{activeOnly ? "Active only" : "Filter active"}</button>} />
-      <div className="tl-summary-line"><span><strong>{mine.length}</strong> assigned</span><span><strong>{mine.filter((task) => task.status === "Done").length}</strong> completed</span><span><strong>{mine.filter((task) => task.status === "Blocked").length}</strong> blocked</span></div>
-      {mine.length ? <TaskTable tasks={mine} cycleStatus={cycleStatus} setToast={setToast} /> : <EmptySearch />}
+      <AnimatedTabs id="my-work-tabs" className="tl-tabs tl-my-work-tabs" ariaLabel="My work views" active={view} onChange={(value) => setView(value as typeof view)} items={[{ id: "table", label: "Table" }, { id: "calendar", label: "Calendar", icon: <CalendarBlank /> }]} />
+      {view === "table" ? <><div className="tl-summary-line"><span><strong>{mine.length}</strong> assigned</span><span><strong>{mine.filter((task) => task.status === "Done").length}</strong> completed</span><span><strong>{mine.filter((task) => task.status === "Blocked").length}</strong> blocked</span></div>{mine.length ? <TaskTable tasks={mine} cycleStatus={cycleStatus} setToast={setToast} /> : <EmptySearch />}</> : <MyWorkCalendar tasks={mine} />}
     </div>
   );
+}
+
+function MyWorkCalendar({ tasks }: { tasks: Task[] }) {
+  const days = ["Mon 18", "Tue 19", "Wed 20", "Thu 21", "Fri 22"];
+  return <section className="tl-calendar-view" aria-label="My work calendar"><div className="tl-calendar-grid">{days.map((day, index) => <div className="tl-calendar-day" key={day}><strong>{day}</strong><span>{index < 2 ? `${index + 1} task${index === 0 ? "" : "s"}` : "Open"}</span>{tasks.filter((task) => task.due.includes(String(19 + index))).slice(0, 2).map((task) => <div className="tl-calendar-task" key={task.id}><span className={`tl-calendar-dot status-${task.status.toLowerCase().replaceAll(" ", "-")}`} /><b>{task.name}</b></div>)}</div>)}</div></section>;
 }
 
 function InboxScreen({ navigate, setToast }: { navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
@@ -535,7 +617,7 @@ function InboxScreen({ navigate, setToast }: { navigate: (screen: Screen) => voi
           {updates.filter((_, index) => filter === "all" || (filter === "mentions" ? index === 0 : index === 1)).map((update) => { const index = updates.indexOf(update); return <button className={selected === index ? "is-selected" : ""} onClick={() => setSelected(index)} key={update.title}><Avatar member={update.person} /><span><strong>{update.title}</strong><small>{update.body}</small></span><time>{update.time}</time></button>; })}
         </div>
         <article className="tl-inbox-detail">
-          <div className="tl-inbox-detail-head"><Avatar member={updates[selected].person} size="large" /><div><strong>{updates[selected].person.name}</strong><small>{updates[selected].time} ago</small></div><button onClick={() => setToast("Update options are ready for product integration")} aria-label="Update options"><DotsThree /></button></div>
+          <div className="tl-inbox-detail-head"><Avatar member={updates[selected].person} size="large" /><div><strong>{updates[selected].person.name}</strong><small>{updates[selected].time} ago</small></div><button onClick={() => setToast("Update options are ready for product integration")} aria-label="Update options" title="Update options"><DotsThree /></button></div>
           <h2>{updates[selected].title}</h2>
           <p>{updates[selected].body}</p>
           <button className="tl-update-context" onClick={() => navigate("board")}><Rows /><span><strong>Tanglad</strong><small>Product launch board</small></span><CaretRight /></button>
@@ -557,8 +639,8 @@ function ReportingScreen({ tasks, members: team, navigate, setToast }: { tasks: 
       <p className="tl-sample-note">Sample workspace data</p>
       <div className="tl-report-summary"><div><span>Total tasks</span><strong>{tasks.length}</strong></div><div><span>Completed</span><strong>{completed}</strong></div><div><span>In review</span><strong>{review}</strong></div><div><span>Blocked</span><strong>{blocked}</strong></div></div>
       <div className="tl-report-grid">
-        <section className="tl-report-panel tl-status-chart"><header><div><h2>Status overview</h2><p>Current tasks by workflow state</p></div><button onClick={() => setToast("Chart options are ready for product integration")} aria-label="Chart options"><DotsThree /></button></header><div className="tl-bar-chart" role="img" aria-label={`${completed} done, ${working} working on it, ${review} in review, ${blocked} blocked`}><Bar label="Done" value={completed} max={tasks.length} tone="blue" /><Bar label="Working on it" value={working} max={tasks.length} tone="cyan" /><Bar label="Review" value={review} max={tasks.length} tone="amber" /><Bar label="Blocked" value={blocked} max={tasks.length} tone="rose" /></div></section>
-        <section className="tl-report-panel"><header><div><h2>Ownership</h2><p>Open tasks by collaborator</p></div><button onClick={() => setToast("Ownership options are ready for product integration")} aria-label="Ownership options"><DotsThree /></button></header><div className="tl-ownership-list">{team.slice(0, 3).map((member) => { const count = tasks.filter((task) => task.owner === member.initials && task.status !== "Done").length; return <div key={member.email}><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.role}</small></span><b>{count}</b></div>; })}</div></section>
+        <section className="tl-report-panel tl-status-chart"><header><div><h2>Status overview</h2><p>Current tasks by workflow state</p></div><button onClick={() => setToast("Chart options are ready for product integration")} aria-label="Chart options" title="Chart options"><DotsThree /></button></header><div className="tl-bar-chart" role="img" aria-label={`${completed} done, ${working} working on it, ${review} in review, ${blocked} blocked`}><Bar label="Done" value={completed} max={tasks.length} tone="blue" /><Bar label="Working on it" value={working} max={tasks.length} tone="cyan" /><Bar label="Review" value={review} max={tasks.length} tone="amber" /><Bar label="Blocked" value={blocked} max={tasks.length} tone="rose" /></div></section>
+        <section className="tl-report-panel"><header><div><h2>Ownership</h2><p>Open tasks by collaborator</p></div><button onClick={() => setToast("Ownership options are ready for product integration")} aria-label="Ownership options" title="Ownership options"><DotsThree /></button></header><div className="tl-ownership-list">{team.slice(0, 3).map((member) => { const count = tasks.filter((task) => task.owner === member.initials && task.status !== "Done").length; return <div key={member.email}><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.role}</small></span><b>{count}</b></div>; })}</div></section>
         <section className="tl-report-panel tl-wide-panel"><header><div><h2>Upcoming dates</h2><p>Tasks due in the next two weeks</p></div><button onClick={() => navigate("board")}>Open board</button></header><div className="tl-upcoming-list">{tasks.slice(0, 5).map((task) => <div key={task.id}><span>{task.due}</span><strong>{task.name}</strong><StatusLabel status={task.status} /></div>)}</div></section>
       </div>
     </div>
@@ -569,22 +651,13 @@ function Bar({ label, value, max, tone }: { label: string; value: number; max: n
   return <div className={`tl-bar tone-${tone}`}><span>{label}</span><div><i style={{ width: `${Math.max(8, (value / max) * 100)}%` }} /></div><strong>{value}</strong></div>;
 }
 
-function CollaboratorsScreen({ members: team, setToast }: { members: Member[]; setToast: (message: string) => void }) {
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const submitInvite = () => {
-    if (!email.trim()) return;
-    setToast(`Invitation prepared for ${email.trim()}`);
-    setEmail("");
-    setInviteOpen(false);
-  };
+function CollaboratorsScreen({ members: team, setToast, openInvite }: { members: Member[]; setToast: (message: string) => void; openInvite: () => void }) {
   return (
     <div className="tl-standard-page">
-      <PageHeader title="Collaborators" description="Manage who can access Main workspace." actions={<button className="tl-blue-button" onClick={() => setInviteOpen(true)}><UserPlus />Invite member</button>} />
-      {inviteOpen && <form className="tl-invite-form" onSubmit={(event) => { event.preventDefault(); submitInvite(); }}><div><label htmlFor="invite-email">Email address</label><input id="invite-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@company.com" required /></div><div><label htmlFor="invite-role">Workspace role</label><select id="invite-role" defaultValue="Member"><option>Member</option><option>Viewer</option></select></div><button className="tl-blue-button" type="submit">Prepare invite</button><button type="button" onClick={() => setInviteOpen(false)} aria-label="Cancel invitation"><X /></button></form>}
+      <PageHeader title="Collaborators" description="Manage who can access Main workspace." actions={<button className="tl-blue-button" onClick={openInvite}><UserPlus />Invite member</button>} />
       <div className="tl-member-table" role="table" aria-label="Workspace collaborators">
         <div className="tl-member-row is-header"><span>Person</span><span>Role</span><span>Assigned items</span><span>Last active</span><span /></div>
-        {team.map((member) => <div className="tl-member-row" key={member.email}><div><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.email}</small></span></div><div><select defaultValue={member.role} onChange={(event) => setToast(`${member.name} will be a ${event.target.value}`)} aria-label={`Role for ${member.name}`}><option>Owner</option><option>Member</option><option>Viewer</option></select></div><span>{member.items}</span><span>{member.lastActive}</span><button onClick={() => setToast(`Member options for ${member.name} are ready for product integration`)} aria-label={`Options for ${member.name}`}><DotsThree /></button></div>)}
+        {team.map((member) => <div className="tl-member-row" key={member.email}><div><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.email}</small></span></div><div><select defaultValue={member.role} onChange={(event) => setToast(`${member.name} will be a ${event.target.value}`)} aria-label={`Role for ${member.name}`}><option>Owner</option><option>Member</option><option>Viewer</option></select></div><span>{member.items}</span><span>{member.lastActive}</span><button onClick={() => setToast(`Member options for ${member.name} are ready for product integration`)} aria-label={`Options for ${member.name}`} title={`Options for ${member.name}`}><DotsThree /></button></div>)}
       </div>
     </div>
   );
