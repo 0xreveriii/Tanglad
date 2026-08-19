@@ -571,24 +571,24 @@ button:focus-visible, a:focus-visible {
 }
 
 .section-heading {
-  max-width: 700px;
-  margin-bottom: clamp(66px, 8vw, 110px);
+  max-width: 860px;
+  margin-bottom: clamp(30px, 4vw, 62px);
 }
 
 .section-heading h2, .disciplines-copy h2, .principle-copy h2, .outcome-layout h2, .closing-content h2 {
   margin: 0;
-  font-size: clamp(45px, 5.5vw, 84px);
+  font-size: clamp(54px, 6vw, 90px);
   font-weight: 590;
   letter-spacing: -0.065em;
-  line-height: 1.02;
+  line-height: 0.96;
 }
 
 .section-heading p, .disciplines-copy > p, .principle-copy > p {
-  max-width: 600px;
-  margin: 24px 0 0;
+  max-width: 700px;
+  margin: 18px 0 0;
   color: var(--ink-soft);
   font-size: 17px;
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .factor-grid {
@@ -599,7 +599,7 @@ button:focus-visible, a:focus-visible {
 
 .factor-shell {
   grid-column: span 5;
-  padding: 6px;
+  padding: 5px;
   border: 1px solid var(--line);
   border-radius: calc(var(--radius) + 6px);
   background: color-mix(in srgb, var(--surface) 64%, transparent);
@@ -612,8 +612,8 @@ button:focus-visible, a:focus-visible {
 
 .factor-card {
   position: relative;
-  min-height: 260px;
-  padding: 26px;
+  min-height: 228px;
+  padding: 22px 22px 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
