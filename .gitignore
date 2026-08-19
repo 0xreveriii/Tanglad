@@ -78,6 +78,9 @@ web_modules/
 .next
 out
 
+# Local Codex/dev scratch output
+.tmp/
+
 # Nuxt.js build / generate output
 .nuxt
 dist
