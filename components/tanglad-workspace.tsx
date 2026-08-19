@@ -196,7 +196,7 @@ export function TangladWorkspace() {
 
       <aside className="tl-utility-rail" aria-label="Primary application navigation">
         <UtilityButton icon={<CirclesFour />} label="Workspace" active={screen === "workspace" || screen === "board"} onClick={() => navigate("workspace")} />
-        <UtilityButton icon={<Lightning />} label="My work" active={screen === "my-work"} onClick={() => navigate("my-work")} />
+        <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={screen === "my-work"} onClick={() => navigate("my-work")} />
         <UtilityButton icon={<Archive />} label="Inbox" active={screen === "inbox"} onClick={() => navigate("inbox")} />
         <span className="tl-rail-divider" />
         <UtilityButton icon={<ChartBar />} label="Reporting" active={screen === "reporting"} onClick={() => navigate("reporting")} />
@@ -223,7 +223,7 @@ export function TangladWorkspace() {
           <CaretDown weight="bold" />
         </button>
 
-        <button className={`tl-nav-row ${screen === "my-work" ? "is-active" : ""}`} onClick={() => navigate("my-work")}><Lightning /><span>My work</span><CaretRight /></button>
+        <button className={`tl-nav-row ${screen === "my-work" ? "is-active" : ""}`} onClick={() => navigate("my-work")}><Lightning weight="bold" /><span>My work</span><CaretRight /></button>
         <button className={`tl-nav-row ${screen === "inbox" ? "is-active" : ""}`} onClick={() => navigate("inbox")}><Archive /><span>Inbox</span><span className="tl-nav-badge">3</span></button>
 
         <div className="tl-nav-label"><span>Content</span><button onClick={() => setToast("Create menu is not connected in this UI preview")} aria-label="Create content"><Plus /></button></div>

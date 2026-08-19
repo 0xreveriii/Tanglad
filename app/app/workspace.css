@@ -256,7 +256,7 @@
 .tl-utility-rail {
   grid-area: rail;
   min-height: 0;
-  padding: 10px 8px;
+  padding: 10px 4px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -267,7 +267,7 @@
 
 .tl-utility-button,
 .tl-utility-link {
-  width: 56px;
+  width: 64px;
   height: var(--tl-rail-item-height);
   min-height: var(--tl-rail-item-height);
   padding: 6px 3px;
@@ -285,8 +285,10 @@
 .tl-utility-button:hover,
 .tl-utility-link:hover { color: var(--tl-text); background: #e8ebf2; }
 .tl-utility-button.is-active { color: var(--tl-blue); background: var(--tl-blue-soft); }
+.tl-utility-button span,
+.tl-utility-link span { white-space: nowrap; }
 .tl-utility-button svg,
-.tl-utility-link svg { width: 20px; height: 20px; }
+.tl-utility-link svg { width: 22px; height: 22px; }
 .tl-rail-divider { height: 1px; margin: 6px 7px; background: var(--tl-line); }
 .tl-rail-spacer { flex: 1; }
 
