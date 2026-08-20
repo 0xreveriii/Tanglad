@@ -33,6 +33,7 @@ import {
   SidebarSimple,
   SlidersHorizontal,
   Star,
+  Tag,
   TrayIcon,
   UserPlus,
   UsersThree,
@@ -40,12 +41,13 @@ import {
   X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { LazyMotion, MotionConfig, domMax, m } from "motion/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
 type Screen = "workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions";
 type WorkspaceTab = "recents" | "content" | "collaborators" | "permissions";
+type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" | "docs";
 type BoardView = "table" | "kanban";
 type TaskStatus = "Working on it" | "Review" | "Done" | "Blocked";
 type TaskPriority = "Low" | "Medium" | "High";
@@ -69,6 +71,52 @@ type Member = {
   lastActive: string;
   items: number;
   tone: string;
+};
+
+type SearchResult = {
+  id: string;
+  section: Exclude<SearchSection, "all">;
+  title: string;
+  detail: string;
+  keywords: string;
+  screen: Screen;
+  dated?: boolean;
+};
+
+const searchLayerMotion = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.2 } },
+  exit: { opacity: 0, transition: { duration: 0.18 } },
+};
+
+const searchDialogMotion = {
+  initial: { opacity: 0, y: 18, scale: 0.985 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.34, ease: [0.2, 0, 0, 1] as [number, number, number, number] } },
+  exit: { opacity: 0, y: 10, scale: 0.99, transition: { duration: 0.18, ease: [0.3, 0, 1, 1] as [number, number, number, number] } },
+};
+
+const searchContentMotion = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: { duration: 0.24, ease: [0.2, 0, 0, 1] as [number, number, number, number] },
+};
+
+const searchSignals = [
+  { x: 34, y: 42, width: 112, fill: "#dcecff", accent: "#0067d9", delay: 0 },
+  { x: 300, y: 38, width: 124, fill: "#dff7ef", accent: "#159b78", delay: 0.16 },
+  { x: 48, y: 162, width: 132, fill: "#fff1c9", accent: "#d69212", delay: 0.32 },
+  { x: 286, y: 158, width: 138, fill: "#ebe7ff", accent: "#6c5ce7", delay: 0.48 },
+];
+
+const searchSignalVariants = {
+  initial: { opacity: 0, scale: 0.86, y: 12 },
+  animate: (delay: number) => ({
+    opacity: [0, 1, 1, 0.88, 1],
+    scale: [0.86, 1.03, 1, 0.985, 1],
+    y: [12, 0, -3, 1, 0],
+    transition: { duration: 2.8, delay, repeat: Infinity, repeatDelay: 0.25, ease: "easeInOut" as const },
+  }),
 };
 
 const initialTasks: Task[] = [
@@ -128,6 +176,21 @@ export function TangladWorkspace() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const openFromKeyboard = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setNotificationsOpen(false);
+        setInviteModalOpen(false);
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", openFromKeyboard);
+    return () => window.removeEventListener("keydown", openFromKeyboard);
+  }, []);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -135,6 +198,18 @@ export function TangladWorkspace() {
     setToast(null);
     setNotificationsOpen(false);
     setInviteModalOpen(false);
+    setSearchOpen(false);
+  };
+
+  const openSearch = () => {
+    setNotificationsOpen(false);
+    setInviteModalOpen(false);
+    setSearchOpen(true);
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    window.setTimeout(() => searchTriggerRef.current?.focus(), 190);
   };
 
   const openWorkspaceNavigation = () => {
@@ -144,13 +219,11 @@ export function TangladWorkspace() {
   };
 
   const filteredTasks = useMemo(() => {
-    const term = search.trim().toLowerCase();
     return tasks.filter((task) => {
-      const matchesText = !term || `${task.name} ${task.ownerName} ${task.status}`.toLowerCase().includes(term);
       const matchesMine = !mineOnly || task.owner === "MC";
-      return matchesText && matchesMine;
+      return matchesMine;
     });
-  }, [mineOnly, search, tasks]);
+  }, [mineOnly, tasks]);
 
   const addTask = () => {
     const name = newTask.trim();
@@ -193,11 +266,11 @@ export function TangladWorkspace() {
           <button className="tl-plans-button" onClick={() => setToast("Plans are not connected in this UI preview")}><Diamond weight="fill" />Plans</button>
         </div>
 
-        <label className="tl-global-search">
+        <button ref={searchTriggerRef} className="tl-global-search" type="button" onClick={openSearch} aria-haspopup="dialog" aria-expanded={searchOpen} aria-controls="tl-search-dialog">
           <MagnifyingGlass weight="bold" />
-          <span className="sr-only">Search Tanglad</span>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search for anything" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} />
-        </label>
+          <span>Search for anything</span>
+          <kbd>Ctrl K</kbd>
+        </button>
 
         <div className="tl-topbar-actions">
           <button className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" title="Notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
@@ -310,6 +383,17 @@ export function TangladWorkspace() {
 
       {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
       {inviteModalOpen && <InviteMembersModal onClose={() => setInviteModalOpen(false)} setToast={setToast} />}
+      <AnimatePresence>
+        {searchOpen && (
+          <SearchEverythingModal
+            query={search}
+            setQuery={setSearch}
+            tasks={tasks}
+            onClose={closeSearch}
+            navigate={navigate}
+          />
+        )}
+      </AnimatePresence>
 
       {toast && (
         <div className="tl-toast" role="status">
@@ -348,6 +432,257 @@ function NotificationPanel({ onClose, openInvite, setToast }: { onClose: () => v
         <button className="tl-outline-button" onClick={() => { onClose(); openInvite(); }}>Invite new members</button>
       </div>
     </aside>
+  );
+}
+
+function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
+  query: string;
+  setQuery: (value: string) => void;
+  tasks: Task[];
+  onClose: () => void;
+  navigate: (screen: Screen) => void;
+}) {
+  const [activeTab, setActiveTab] = useState<SearchSection>("all");
+  const [preparing, setPreparing] = useState(() => !query.trim());
+  const [recentOnly, setRecentOnly] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setPreparing(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleDialogKeys = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleDialogKeys);
+    return () => document.removeEventListener("keydown", handleDialogKeys);
+  }, [onClose]);
+
+  const allResults = useMemo<SearchResult[]>(() => {
+    const fixed: SearchResult[] = [
+      { id: "board-tanglad", section: "boards", title: "Tanglad", detail: "Board · Main workspace", keywords: "tasks product launch table kanban", screen: "board", dated: true },
+      { id: "board-workload", section: "boards", title: "Team workload", detail: "Dashboard · Updated today", keywords: "reporting ownership capacity dashboard", screen: "reporting", dated: true },
+      { id: "file-roadmap", section: "files", title: "Launch roadmap", detail: "Project file · Edited by Inez", keywords: "roadmap launch project file", screen: "board", dated: true },
+      { id: "doc-notes", section: "docs", title: "Launch notes", detail: "Document · Opened Aug 17", keywords: "notes launch document release", screen: "my-work", dated: true },
+      { id: "doc-handbook", section: "docs", title: "Workspace handbook", detail: "Document · Main workspace", keywords: "handbook workspace onboarding guide", screen: "workspace", dated: true },
+    ];
+    const taskResults: SearchResult[] = tasks.map((task) => ({
+      id: `task-${task.id}`,
+      section: "updates",
+      title: task.name,
+      detail: `${task.ownerName} · ${task.status} · ${task.due}`,
+      keywords: `${task.name} ${task.ownerName} ${task.status} ${task.priority} ${task.group}`,
+      screen: "board",
+      dated: true,
+    }));
+    const peopleResults: SearchResult[] = members.map((member) => ({
+      id: `person-${member.initials}`,
+      section: "people",
+      title: member.name,
+      detail: `${member.role} · ${member.email}`,
+      keywords: `${member.name} ${member.email} ${member.role}`,
+      screen: "collaborators",
+    }));
+    const tagResults: SearchResult[] = [...statusOrder, "High", "Medium", "Low"].map((tag) => ({
+      id: `tag-${tag.toLowerCase().replaceAll(" ", "-")}`,
+      section: "tags",
+      title: tag,
+      detail: "Tag · Used in Tanglad",
+      keywords: `${tag} task status priority tag`,
+      screen: "board",
+    }));
+    return [...fixed, ...taskResults, ...peopleResults, ...tagResults];
+  }, [tasks]);
+
+  const availableResults = useMemo(() => recentOnly ? allResults.filter((result) => result.dated) : allResults, [allResults, recentOnly]);
+  const normalizedQuery = query.trim().toLowerCase();
+  const scopedResults = activeTab === "all" ? availableResults : availableResults.filter((result) => result.section === activeTab);
+  const matchingResults = scopedResults.filter((result) => !normalizedQuery || `${result.title} ${result.detail} ${result.keywords}`.toLowerCase().includes(normalizedQuery));
+  const visibleResults = matchingResults.slice(0, 12);
+  const resultCounts = availableResults.reduce<Record<SearchSection, number>>((counts, result) => {
+    counts.all += 1;
+    counts[result.section] += 1;
+    return counts;
+  }, { all: 0, boards: 0, updates: 0, files: 0, people: 0, tags: 0, docs: 0 });
+  const searchTabs: Array<{ id: SearchSection; label: string }> = [
+    { id: "all", label: `All / ${resultCounts.all}` },
+    { id: "boards", label: `Boards / ${resultCounts.boards}` },
+    { id: "updates", label: `Updates / ${resultCounts.updates}` },
+    { id: "files", label: `Files / ${resultCounts.files}` },
+    { id: "people", label: `People / ${resultCounts.people}` },
+    { id: "tags", label: `Tags / ${resultCounts.tags}` },
+    { id: "docs", label: `Docs / ${resultCounts.docs}` },
+  ];
+
+  const chooseTab = (tab: SearchSection, index: number, event?: React.KeyboardEvent<HTMLButtonElement>) => {
+    setPreparing(false);
+    setActiveTab(tab);
+    if (!event) return;
+    let nextIndex = index;
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % searchTabs.length;
+    else if (event.key === "ArrowLeft") nextIndex = (index - 1 + searchTabs.length) % searchTabs.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = searchTabs.length - 1;
+    else return;
+    event.preventDefault();
+    const nextTab = searchTabs[nextIndex].id;
+    setActiveTab(nextTab);
+    window.requestAnimationFrame(() => document.getElementById(`tl-search-tab-${nextTab}`)?.focus());
+  };
+
+  return (
+    <MotionConfig reducedMotion="never">
+      <m.div className="tl-search-layer" {...searchLayerMotion}>
+        <m.div className="tl-search-scrim" onClick={onClose} aria-hidden="true" />
+        <m.section ref={dialogRef} className="tl-search-dialog" id="tl-search-dialog" role="dialog" aria-modal="true" aria-labelledby="tl-search-title" aria-describedby="tl-search-description" {...searchDialogMotion}>
+          <header className="tl-search-head">
+            <MagnifyingGlass weight="bold" />
+            <label htmlFor="tl-search-input" className="sr-only">Search everything in Tanglad</label>
+            <input id="tl-search-input" type="search" value={query} onChange={(event) => { setPreparing(false); setQuery(event.target.value); }} placeholder="Search everything..." autoFocus autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} />
+            <kbd>Ctrl K</kbd>
+            <button type="button" onClick={onClose} aria-label="Close search" title="Close search"><X /></button>
+          </header>
+
+          <div className="tl-search-controls">
+            <div className="tl-search-tabs" role="tablist" aria-label="Search categories">
+              {searchTabs.map((tab, index) => {
+                const isActive = tab.id === activeTab;
+                return (
+                  <button key={tab.id} id={`tl-search-tab-${tab.id}`} type="button" role="tab" aria-selected={isActive} aria-controls="tl-search-results" tabIndex={isActive ? 0 : -1} className={isActive ? "is-active" : ""} onClick={() => chooseTab(tab.id, index)} onKeyDown={(event) => chooseTab(tab.id, index, event)}>
+                    {tab.label}
+                    {isActive && <m.span className="tl-search-tab-indicator" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ type: "spring", stiffness: 620, damping: 38, mass: 0.42 }} style={{ originX: 0.5 }} />}
+                  </button>
+                );
+              })}
+            </div>
+            <button type="button" className={`tl-search-date-filter ${recentOnly ? "is-active" : ""}`} onClick={() => { setPreparing(false); setRecentOnly((value) => !value); }} aria-pressed={recentOnly}><FunnelSimple />{recentOnly ? "Recent only" : "Filter by date"}</button>
+          </div>
+
+          <span className="sr-only" id="tl-search-title">Search everything</span>
+          <span className="sr-only" id="tl-search-description">Search boards, updates, files, people, tags, and documents across Main workspace.</span>
+
+          <div className="tl-search-body" id="tl-search-results" role="tabpanel" aria-labelledby={`tl-search-tab-${activeTab}`}>
+            <AnimatePresence initial={false}>
+              {preparing ? (
+                <m.div className="tl-search-loading-panel" key="search-loading" {...searchContentMotion}>
+                  <TangladSearchLoader />
+                </m.div>
+              ) : (
+                <m.div className="tl-search-results-panel" key={`${activeTab}-${recentOnly}`} {...searchContentMotion}>
+                  <div className="tl-search-results-heading">
+                    <div><strong>{normalizedQuery ? `Results for “${query.trim()}”` : "Recent in Main workspace"}</strong><small>{matchingResults.length} {matchingResults.length === 1 ? "result" : "results"} in this view</small></div>
+                    <kbd>Esc</kbd>
+                  </div>
+                  <span className="sr-only" role="status" aria-live="polite">{matchingResults.length} search results</span>
+                  {visibleResults.length ? (
+                    <div className="tl-search-results-grid">
+                      {visibleResults.map((result) => (
+                        <button type="button" key={result.id} onClick={() => navigate(result.screen)}>
+                          <span className={`tl-search-result-icon is-${result.section}`}><SearchResultGlyph section={result.section} /></span>
+                          <span><strong>{result.title}</strong><small>{result.detail}</small></span>
+                          <span className="tl-search-result-type">{searchSectionName(result.section)}</span>
+                          <CaretRight />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="tl-search-empty">
+                      <span><MagnifyingGlass /></span>
+                      <h2>No results found</h2>
+                      <p>Try a task name, teammate, status, or board.</p>
+                      {query && <button type="button" className="tl-outline-button" onClick={() => setQuery("")}>Clear search</button>}
+                    </div>
+                  )}
+                </m.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </m.section>
+      </m.div>
+    </MotionConfig>
+  );
+}
+
+function searchSectionName(section: SearchResult["section"]) {
+  return ({ boards: "Board", updates: "Update", files: "File", people: "Person", tags: "Tag", docs: "Doc" } as const)[section];
+}
+
+function SearchResultGlyph({ section }: { section: SearchResult["section"] }) {
+  if (section === "boards") return <Rows />;
+  if (section === "updates") return <ClockCounterClockwise />;
+  if (section === "files") return <FolderSimple />;
+  if (section === "people") return <UsersThree />;
+  if (section === "tags") return <Tag />;
+  return <FileText />;
+}
+
+function TangladSearchLoader() {
+  return (
+    <div className="tl-search-loader" role="status" aria-live="polite">
+      <svg viewBox="0 0 460 220" role="img" aria-label="Tanglad work signals weaving into an organized workspace">
+        <defs>
+          <linearGradient id="tl-loader-mark" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#0b78e3" /><stop offset="1" stopColor="#0055bd" /></linearGradient>
+          <filter id="tl-loader-shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="#1b4f89" floodOpacity="0.16" /></filter>
+        </defs>
+
+        <g className="tl-search-loader-grid" aria-hidden="true">
+          <path d="M82 74H378M82 110H378M82 146H378" />
+          <path d="M170 30V190M230 30V190M290 30V190" />
+        </g>
+
+        <m.path d="M146 54C180 54 184 88 207 99" className="tl-loader-thread" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.75, 0.35] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }} />
+        <m.path d="M300 50C270 50 273 85 253 99" className="tl-loader-thread is-mint" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.7, 0.3] }} transition={{ duration: 2.8, delay: 0.16, repeat: Infinity, ease: "easeInOut" }} />
+        <m.path d="M180 174C192 150 205 141 216 130" className="tl-loader-thread is-amber" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.65, 0.28] }} transition={{ duration: 2.8, delay: 0.32, repeat: Infinity, ease: "easeInOut" }} />
+        <m.path d="M286 170C272 151 257 143 246 130" className="tl-loader-thread is-violet" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.65, 0.28] }} transition={{ duration: 2.8, delay: 0.48, repeat: Infinity, ease: "easeInOut" }} />
+
+        {searchSignals.map((signal) => (
+          <m.g key={`${signal.x}-${signal.y}`} custom={signal.delay} variants={searchSignalVariants} initial="initial" animate="animate" filter="url(#tl-loader-shadow)">
+            <rect x={signal.x} y={signal.y} width={signal.width} height="28" rx="8" fill={signal.fill} />
+            <circle cx={signal.x + 16} cy={signal.y + 14} r="5" fill={signal.accent} />
+            <rect x={signal.x + 29} y={signal.y + 10} width={signal.width - 43} height="8" rx="4" fill={signal.accent} opacity="0.72" />
+          </m.g>
+        ))}
+
+        <m.g animate={{ scale: [0.94, 1.04, 1, 1], rotate: [0, -2, 0, 0] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }} style={{ originX: 0.5, originY: 0.5 }} filter="url(#tl-loader-shadow)">
+          <rect x="204" y="84" width="52" height="52" rx="14" fill="url(#tl-loader-mark)" />
+          <circle cx="221" cy="101" r="6" fill="#fff" /><circle cx="239" cy="101" r="6" fill="#fff" />
+          <circle cx="221" cy="119" r="6" fill="#fff" /><circle cx="239" cy="119" r="6" fill="#fff" />
+        </m.g>
+
+        <m.g animate={{ x: [-112, -112, 0, 0, 0, -112], y: [58, 58, 0, -5, 0, 58], rotate: [-8, -8, 2, -2, 0, -8], opacity: [0, 1, 1, 1, 1, 0] }} transition={{ duration: 2.8, times: [0, 0.12, 0.48, 0.6, 0.78, 1], repeat: Infinity, ease: [0.2, 0, 0, 1] }} style={{ originX: 0.5, originY: 0.5 }} filter="url(#tl-loader-shadow)">
+          <rect x="190" y="148" width="80" height="24" rx="7" fill="#ffffff" />
+          <rect x="200" y="156" width="38" height="8" rx="4" fill="#77b7f7" />
+          <circle cx="254" cy="160" r="6" fill="#40c9a2" />
+        </m.g>
+
+        <m.circle cx="174" cy="112" r="5" fill="#40c9a2" animate={{ scale: [0.7, 1.25, 0.7], opacity: [0.35, 1, 0.35] }} transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut" }} />
+        <m.circle cx="285" cy="105" r="4" fill="#f4b942" animate={{ y: [-4, 5, -4], opacity: [0.45, 1, 0.45] }} transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }} />
+        <m.circle cx="275" cy="132" r="4" fill="#7568f5" animate={{ x: [-5, 4, -5], scale: [0.85, 1.15, 0.85] }} transition={{ duration: 1.9, repeat: Infinity, ease: "easeInOut" }} />
+      </svg>
+      <m.div className="tl-search-loader-status" initial={{ opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.35 }}>
+        <span aria-hidden="true"><i /><i /><i /></span>
+        <strong>Weaving your workspace together</strong>
+      </m.div>
+      <m.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.45 }}>Tip: Search tasks, people, statuses, and boards from one place.</m.p>
+    </div>
   );
 }
 
