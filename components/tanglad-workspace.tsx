@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Archive,
   ArrowUUpLeft,
   ArrowLeft,
   At,
@@ -34,14 +33,15 @@ import {
   SidebarSimple,
   SlidersHorizontal,
   Star,
+  TrayIcon,
   UserPlus,
   UsersThree,
   UserCircle,
   X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { LazyMotion, LayoutGroup, domMax, m, useReducedMotion } from "motion/react";
+import { useEffect, useMemo, useState } from "react";
+import { LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
 type Screen = "workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions";
@@ -93,7 +93,7 @@ const statusOrder: TaskStatus[] = ["Working on it", "Review", "Done", "Blocked"]
 const screenLabels: Record<Screen, string> = {
   workspace: "Manage workspace",
   "my-work": "My work",
-  inbox: "Inbox",
+  inbox: "Update feed",
   board: "Tanglad",
   reporting: "Dashboard and reporting",
   collaborators: "Collaborators",
@@ -127,6 +127,7 @@ export function TangladWorkspace() {
   const [cover, setCover] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -134,6 +135,12 @@ export function TangladWorkspace() {
     setToast(null);
     setNotificationsOpen(false);
     setInviteModalOpen(false);
+  };
+
+  const openWorkspaceNavigation = () => {
+    setNavCollapsed(false);
+    setWorkspaceTreeOpen(true);
+    navigate("workspace");
   };
 
   const filteredTasks = useMemo(() => {
@@ -194,7 +201,7 @@ export function TangladWorkspace() {
 
         <div className="tl-topbar-actions">
           <button className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" title="Notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
-          <button onClick={() => navigate("my-work")} aria-label="Open my work" title="My work"><Archive /></button>
+          <button className={screen === "inbox" ? "is-open" : ""} onClick={() => navigate("inbox")} aria-label="Open update feed" title="Update feed"><TrayIcon /></button>
           <button onClick={() => { setNotificationsOpen(false); setInviteModalOpen(true); }} aria-label="Invite people" title="Invite people"><UserPlus /></button>
           <button onClick={() => navigate("permissions")} aria-label="Open settings" title="Settings"><Gear /></button>
           <button onClick={() => setToast("Help is not connected in this UI preview")} aria-label="Open help" title="Help"><Question /></button>
@@ -204,9 +211,16 @@ export function TangladWorkspace() {
       </header>
 
       <aside className="tl-utility-rail" aria-label="Primary application navigation">
-        <UtilityButton icon={<CirclesFour />} label="Workspace" active={screen === "workspace" || screen === "board"} onClick={() => navigate("workspace")} />
+        <UtilityButton
+          icon={<CirclesFour />}
+          label="Workspace"
+          active={screen === "workspace" || screen === "board" || screen === "collaborators" || screen === "permissions"}
+          onClick={openWorkspaceNavigation}
+          controls="workspace-children"
+          expanded={!navCollapsed && workspaceTreeOpen}
+        />
         <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={screen === "my-work"} onClick={() => navigate("my-work")} />
-        <UtilityButton icon={<Archive />} label="Inbox" active={screen === "inbox"} onClick={() => navigate("inbox")} />
+        <UtilityButton icon={<TrayIcon />} label="Update feed" active={screen === "inbox"} onClick={() => navigate("inbox")} />
         <span className="tl-rail-divider" />
         <UtilityButton icon={<ChartBar />} label="Reporting" active={screen === "reporting"} onClick={() => navigate("reporting")} />
         <UtilityButton icon={<Star />} label="Favorites" active={false} onClick={() => navigate("board")} />
@@ -226,27 +240,29 @@ export function TangladWorkspace() {
           </div>
         </div>
 
-        <button className="tl-workspace-switcher" onClick={() => navigate("workspace")}>
+        <button
+          className="tl-workspace-switcher"
+          onClick={() => setWorkspaceTreeOpen((value) => !value)}
+          aria-expanded={workspaceTreeOpen}
+          aria-controls="workspace-children"
+        >
           <span className="tl-workspace-switcher-mark"><AppMark small /></span>
           <span><strong>Main workspace</strong><small>4 members</small></span>
-          <CaretDown weight="bold" />
+          <CaretDown className={workspaceTreeOpen ? "is-open" : ""} weight="bold" />
         </button>
 
         <button className={`tl-nav-row ${screen === "my-work" ? "is-active" : ""}`} onClick={() => navigate("my-work")}><Lightning weight="bold" /><span>My work</span><CaretRight /></button>
-        <button className={`tl-nav-row ${screen === "inbox" ? "is-active" : ""}`} onClick={() => navigate("inbox")}><Archive /><span>Inbox</span><span className="tl-nav-badge">3</span></button>
+        <button className={`tl-nav-row ${screen === "inbox" ? "is-active" : ""}`} onClick={() => navigate("inbox")}><TrayIcon /><span>Update feed</span><span className="tl-nav-badge">3</span></button>
 
-        <div className="tl-nav-label"><span>Content</span><button onClick={() => setToast("Create menu is not connected in this UI preview")} aria-label="Create content"><Plus /></button></div>
-        <nav className="tl-content-nav">
-          <button className={screen === "workspace" ? "is-active" : ""} onClick={() => navigate("workspace")}><CirclesFour /><span>Manage workspace</span></button>
-          <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board")}><Rows /><span>Tanglad</span></button>
-          <button className={screen === "reporting" ? "is-active" : ""} onClick={() => navigate("reporting")}><ChartBar /><span>Dashboard and reporting</span></button>
-        </nav>
-
-        <div className="tl-nav-label"><span>Team</span></div>
-        <nav className="tl-content-nav">
-          <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators")}><UsersThree /><span>Collaborators</span></button>
-          <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions")}><Lock /><span>Permissions</span></button>
-        </nav>
+        {workspaceTreeOpen && (
+          <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
+            <button className={screen === "workspace" ? "is-active" : ""} onClick={() => navigate("workspace")}><House /><span>Overview</span></button>
+            <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board")}><Rows /><span>Tanglad</span></button>
+            <button className={screen === "reporting" ? "is-active" : ""} onClick={() => navigate("reporting")}><ChartBar /><span>Reporting</span></button>
+            <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators")}><UsersThree /><span>Collaborators</span></button>
+            <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions")}><Lock /><span>Permissions</span></button>
+          </nav>
+        )}
 
         <div className="tl-nav-spacer" />
         <div className="tl-storage-line"><span>Workspace storage</span><strong>UI preview</strong></div>
@@ -286,7 +302,7 @@ export function TangladWorkspace() {
           />
         )}
         {screen === "my-work" && <MyWorkScreen tasks={filteredTasks} cycleStatus={cycleStatus} setToast={setToast} />}
-        {screen === "inbox" && <InboxScreen navigate={navigate} setToast={setToast} />}
+        {screen === "inbox" && <UpdateFeedScreen navigate={navigate} setToast={setToast} />}
         {screen === "reporting" && <ReportingScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
         {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
         {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
@@ -361,8 +377,8 @@ function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToa
   );
 }
 
-function UtilityButton({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
-  return <button className={`tl-utility-button ${active ? "is-active" : ""}`} onClick={onClick} title={label}>{icon}<span>{label}</span></button>;
+function UtilityButton({ icon, label, active, onClick, controls, expanded }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void; controls?: string; expanded?: boolean }) {
+  return <button className={`tl-utility-button ${active ? "is-active" : ""}`} onClick={onClick} title={label} aria-controls={controls} aria-expanded={expanded}>{icon}<span>{label}</span></button>;
 }
 
 function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, changeCover, setToast }: {
@@ -411,21 +427,35 @@ function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, 
 type AnimatedTabItem = { id: string; label: string; icon?: React.ReactNode };
 
 function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-tabs" }: { id: string; items: AnimatedTabItem[]; active: string; onChange: (id: string) => void; ariaLabel: string; className?: string }) {
-  const reduceMotion = useReducedMotion();
+  const [animationsReady, setAnimationsReady] = useState(false);
+
+  useEffect(() => setAnimationsReady(true), []);
+
   return (
-    <LayoutGroup id={id}>
+    <MotionConfig reducedMotion="never">
       <div className={className} role="tablist" aria-label={ariaLabel}>
         {items.map((item) => {
           const isActive = active === item.id;
           return (
-            <m.button key={item.id} layout="position" type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} role="tab" aria-selected={isActive} whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
+            <m.button key={item.id} type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} role="tab" aria-selected={isActive} whileTap={{ scale: 0.98 }}>
               {item.icon}<span>{item.label}</span>
-              {isActive && <m.span layout="position" layoutId={`${id}-indicator`} className="tl-tab-indicator" initial={false} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 32, mass: 0.62 }}><m.span key={active} className="tl-tab-indicator-core" initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 560, damping: 34, mass: 0.42 }} /></m.span>}
+              {isActive && (
+                <m.span
+                  key={`${id}-${item.id}`}
+                  className="tl-tab-indicator"
+                  initial={animationsReady ? { scaleX: 0 } : false}
+                  animate={{ scaleX: 1 }}
+                  transition={{ type: "spring", stiffness: 650, damping: 38, mass: 0.4 }}
+                  style={{ originX: 0.5, willChange: "transform" }}
+                >
+                  <span className="tl-tab-indicator-core" />
+                </m.span>
+              )}
             </m.button>
           );
         })}
       </div>
-    </LayoutGroup>
+    </MotionConfig>
   );
 }
 
@@ -599,7 +629,7 @@ function MyWorkCalendar({ tasks }: { tasks: Task[] }) {
   return <section className="tl-calendar-view" aria-label="My work calendar"><div className="tl-calendar-grid">{days.map((day, index) => <div className="tl-calendar-day" key={day}><strong>{day}</strong><span>{index < 2 ? `${index + 1} task${index === 0 ? "" : "s"}` : "Open"}</span>{tasks.filter((task) => task.due.includes(String(19 + index))).slice(0, 2).map((task) => <div className="tl-calendar-task" key={task.id}><span className={`tl-calendar-dot status-${task.status.toLowerCase().replaceAll(" ", "-")}`} /><b>{task.name}</b></div>)}</div>)}</div></section>;
 }
 
-function InboxScreen({ navigate, setToast }: { navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
+function UpdateFeedScreen({ navigate, setToast }: { navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
   const [selected, setSelected] = useState(0);
   const [filter, setFilter] = useState<"all" | "mentions" | "assigned">("all");
   const [reply, setReply] = useState("");
@@ -610,7 +640,7 @@ function InboxScreen({ navigate, setToast }: { navigate: (screen: Screen) => voi
   ];
   return (
     <div className="tl-standard-page tl-inbox-page">
-      <PageHeader title="Inbox" description="Updates, mentions, and workspace activity." actions={<button className="tl-outline-button" onClick={() => setToast("All updates marked as read")}><Check />Mark all read</button>} />
+      <PageHeader title="Update feed" description="Updates, mentions, and workspace activity." actions={<button className="tl-outline-button" onClick={() => setToast("All updates marked as read")}><Check />Mark all read</button>} />
       <div className="tl-inbox-layout">
         <div className="tl-inbox-list">
           <div className="tl-inbox-filter"><button className={filter === "all" ? "is-active" : ""} onClick={() => setFilter("all")}>All updates</button><button className={filter === "mentions" ? "is-active" : ""} onClick={() => { setFilter("mentions"); setSelected(0); }}>Mentions</button><button className={filter === "assigned" ? "is-active" : ""} onClick={() => { setFilter("assigned"); setSelected(1); }}>Assigned</button></div>
