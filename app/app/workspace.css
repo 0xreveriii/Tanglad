@@ -1234,6 +1234,72 @@
   .tl-toast { left: 12px; right: 12px; bottom: 12px; }
 }
 
+/* Keep the workspace controls compact and give the collapsed navigation its
+   own single-icon treatment so the switcher and add action cannot collide. */
+.tl-workspace-switcher {
+  min-height: 40px;
+  height: 40px;
+}
+
+.tl-workspace-nav-head {
+  padding-inline: 0;
+}
+
+.tl-workspace-switcher-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 8px;
+}
+
+.tl-workspace-switcher-row .tl-workspace-switcher {
+  width: 100%;
+}
+
+.tl-workspace-add {
+  width: 40px;
+  height: 40px;
+}
+
+.tl-app.is-nav-collapsed .tl-workspace-switcher-row {
+  grid-template-columns: 40px;
+  justify-content: center;
+  gap: 0;
+}
+
+.tl-app.is-nav-collapsed .tl-workspace-switcher-row .tl-workspace-switcher {
+  width: 40px;
+  min-width: 40px;
+  flex: 0 0 40px;
+  padding: 5px;
+}
+
+.tl-app.is-nav-collapsed .tl-workspace-add {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .tl-workspace-switcher-row {
+    grid-template-columns: minmax(0, 1fr) 40px;
+  }
+
+  .tl-app.is-nav-collapsed .tl-workspace-switcher-row {
+    grid-template-columns: minmax(0, 1fr) 40px;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .tl-app.is-nav-collapsed .tl-workspace-switcher-row .tl-workspace-switcher {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    padding: 5px 8px;
+  }
+
+  .tl-app.is-nav-collapsed .tl-workspace-add {
+    display: grid;
+  }
+}
+
 @media (max-width: 900px) {
   .tl-insights-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-insights-middle-grid,
@@ -1263,4 +1329,33 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* Main workspace body follows the reference composition; Tanglad navigation stays unchanged. */
+.tl-cover { height: 211px; background: #f0f2f5; }
+.tl-cover.cover-1 { background: #eef1f6; }
+.tl-cover.cover-2 { background: #f1f0f5; }
+.tl-workspace-overview { width: calc(100% - 128px); max-width: none; }
+.tl-workspace-identity { min-height: 144px; gap: 22px; }
+.tl-workspace-tile { margin-top: -38px; border-radius: 14px; }
+.tl-workspace-tile .tl-mark { width: 96px; height: 96px; border-radius: 18px; }
+.tl-workspace-title h1 { font-size: clamp(28px, 3vw, 34px); font-weight: 500; }
+.tl-workspace-actions { gap: 4px; }
+.tl-workspace-actions > button { min-height: 36px; padding-inline: 10px; font-weight: 500; }
+.tl-tabs { min-height: 48px; }
+.tl-tabs button { padding-inline: 16px; font-size: 14px; }
+.tl-tab-content { padding-top: 28px; }
+.tl-section-heading { min-height: 50px; margin-bottom: 16px; }
+.tl-content-list button { min-height: 57px; padding-inline: 12px; }
+
+@media (max-width: 860px) {
+  .tl-app,
+  .tl-app.is-nav-collapsed { grid-template-rows: 58px minmax(0, 1fr); }
+  .tl-workspace-overview { width: calc(100% - 30px); }
+  .tl-cover { height: 150px; }
+}
+
+@media (max-width: 620px) {
+  .tl-workspace-overview { width: calc(100% - 30px); }
+  .tl-cover { height: 124px; }
 }
