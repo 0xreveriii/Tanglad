@@ -45,10 +45,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
-type Screen = "workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions";
+type Screen = "workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions" | "favorites";
+type PrimarySection = "workspace" | "my-work" | "inbox" | "favorites";
 type WorkspaceTab = "recents" | "content" | "collaborators" | "permissions";
 type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" | "docs";
 type BoardView = "table" | "kanban";
+type MyWorkView = "table" | "calendar";
+type UpdateFilter = "all" | "mentions" | "assigned";
+type ReportingFocus = "overview" | "status" | "ownership" | "upcoming";
 type TaskStatus = "Working on it" | "Review" | "Done" | "Blocked";
 type TaskPriority = "Low" | "Medium" | "High";
 
@@ -158,7 +162,15 @@ const screenLabels: Record<Screen, string> = {
   reporting: "Dashboard and reporting",
   collaborators: "Collaborators",
   permissions: "Permissions",
+  favorites: "Favorites",
 };
+
+function primarySectionForScreen(screen: Screen): PrimarySection {
+  if (screen === "my-work") return "my-work";
+  if (screen === "inbox") return "inbox";
+  if (screen === "favorites") return "favorites";
+  return "workspace";
+}
 
 function AppMark({ small = false }: { small?: boolean }) {
   return (
@@ -174,8 +186,13 @@ function Avatar({ member, size = "normal" }: { member: Pick<Member, "initials" |
 
 export function TangladWorkspace() {
   const [screen, setScreen] = useState<Screen>("workspace");
+  const [primarySection, setPrimarySection] = useState<PrimarySection>("workspace");
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("recents");
   const [boardView, setBoardView] = useState<BoardView>("table");
+  const [myWorkView, setMyWorkView] = useState<MyWorkView>("table");
+  const [myWorkActiveOnly, setMyWorkActiveOnly] = useState(false);
+  const [updateFilter, setUpdateFilter] = useState<UpdateFilter>("all");
+  const [reportingFocus, setReportingFocus] = useState<ReportingFocus>("overview");
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -204,8 +221,9 @@ export function TangladWorkspace() {
     return () => window.removeEventListener("keydown", openFromKeyboard);
   }, []);
 
-  const navigate = (next: Screen) => {
+  const navigate = (next: Screen, parent: PrimarySection = primarySectionForScreen(next)) => {
     setScreen(next);
+    setPrimarySection(parent);
     setSidebarOpen(false);
     setToast(null);
     setNotificationsOpen(false);
@@ -224,10 +242,28 @@ export function TangladWorkspace() {
     window.setTimeout(() => searchTriggerRef.current?.focus(), 190);
   };
 
+  const openParent = (parent: PrimarySection) => {
+    setNavCollapsed(false);
+    setPrimarySection(parent);
+    if (parent === "workspace") {
+      setWorkspaceTreeOpen(true);
+      navigate("workspace", "workspace");
+    } else if (parent === "my-work") {
+      setMyWorkView("table");
+      setMyWorkActiveOnly(false);
+      navigate("my-work", "my-work");
+    } else if (parent === "inbox") {
+      setUpdateFilter("all");
+      navigate("inbox", "inbox");
+    } else {
+      navigate("favorites", "favorites");
+    }
+  };
+
   const openWorkspaceNavigation = () => {
     setNavCollapsed(false);
     setWorkspaceTreeOpen(true);
-    navigate("workspace");
+    openParent("workspace");
   };
 
   const filteredTasks = useMemo(() => {
@@ -299,16 +335,15 @@ export function TangladWorkspace() {
         <UtilityButton
           icon={<CirclesFour />}
           label="Workspace"
-          active={screen === "workspace" || screen === "board" || screen === "collaborators" || screen === "permissions"}
+          active={primarySection === "workspace"}
           onClick={openWorkspaceNavigation}
           controls="workspace-children"
           expanded={!navCollapsed && workspaceTreeOpen}
         />
-        <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={screen === "my-work"} onClick={() => navigate("my-work")} />
-        <UtilityButton icon={<TrayIcon />} label="Update feed" active={screen === "inbox"} onClick={() => navigate("inbox")} />
+        <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
+        <UtilityButton icon={<TrayIcon />} label="Update feed" active={primarySection === "inbox"} onClick={() => openParent("inbox")} />
         <span className="tl-rail-divider" />
-        <UtilityButton icon={<ChartBar />} label="Reporting" active={screen === "reporting"} onClick={() => navigate("reporting")} />
-        <UtilityButton icon={<Star />} label="Favorites" active={false} onClick={() => navigate("board")} />
+        <UtilityButton icon={<Star />} label="Favorites" active={primarySection === "favorites"} onClick={() => openParent("favorites")} />
         <div className="tl-rail-spacer" />
         <Link className="tl-utility-link" href="/"><ArrowLeft /><span>Website</span></Link>
       </aside>
@@ -317,7 +352,7 @@ export function TangladWorkspace() {
 
       <aside className={`tl-workspace-nav ${sidebarOpen ? "is-open" : ""}`} aria-label="Workspace navigation">
         <div className="tl-workspace-nav-head">
-          <strong>Workspace</strong>
+          <strong>{primarySection === "workspace" ? "Workspace" : primarySection === "my-work" ? "My work" : primarySection === "inbox" ? "Update feed" : "Favorites"}</strong>
           <div>
             <button onClick={() => setToast("Workspace search uses the global search field above")} aria-label="Search workspace" title="Search workspace"><MagnifyingGlass /></button>
             <button onClick={() => setNavCollapsed((value) => !value)} aria-label={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"} title={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"}><SidebarSimple /></button>
@@ -325,29 +360,50 @@ export function TangladWorkspace() {
           </div>
         </div>
 
-        <button
-          className="tl-workspace-switcher"
-          onClick={() => setWorkspaceTreeOpen((value) => !value)}
-          aria-expanded={workspaceTreeOpen}
-          aria-controls="workspace-children"
-        >
-          <span className="tl-workspace-switcher-mark"><AppMark small /></span>
-          <span><strong>Main workspace</strong><small>4 members</small></span>
-          <CaretDown className={workspaceTreeOpen ? "is-open" : ""} weight="bold" />
-        </button>
+        {primarySection === "workspace" && <>
+          <button
+            className="tl-workspace-switcher"
+            onClick={() => setWorkspaceTreeOpen((value) => !value)}
+            aria-expanded={workspaceTreeOpen}
+            aria-controls="workspace-children"
+          >
+            <span className="tl-workspace-switcher-mark"><AppMark small /></span>
+            <span><strong>Main workspace</strong><small>4 members</small></span>
+            <CaretDown className={workspaceTreeOpen ? "is-open" : ""} weight="bold" />
+          </button>
 
-        <button className={`tl-nav-row ${screen === "my-work" ? "is-active" : ""}`} onClick={() => navigate("my-work")}><Lightning weight="bold" /><span>My work</span><CaretRight /></button>
-        <button className={`tl-nav-row ${screen === "inbox" ? "is-active" : ""}`} onClick={() => navigate("inbox")}><TrayIcon /><span>Update feed</span><span className="tl-nav-badge">3</span></button>
+          {workspaceTreeOpen && (
+            <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
+              <button className={screen === "workspace" ? "is-active" : ""} onClick={() => navigate("workspace", "workspace")}><House /><span>Overview</span></button>
+              <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
+              <button className={screen === "reporting" ? "is-active" : ""} onClick={() => { setReportingFocus("overview"); navigate("reporting", "workspace"); }}><ChartBar /><span>Reporting</span></button>
+              {screen === "reporting" && <nav className="tl-workspace-tree tl-reporting-tree" aria-label="Reporting sections">
+                <button className={reportingFocus === "overview" ? "is-active" : ""} onClick={() => setReportingFocus("overview")}><House /><span>Overview</span></button>
+                <button className={reportingFocus === "status" ? "is-active" : ""} onClick={() => setReportingFocus("status")}><ChartBar /><span>Status overview</span></button>
+                <button className={reportingFocus === "ownership" ? "is-active" : ""} onClick={() => setReportingFocus("ownership")}><UsersThree /><span>Ownership</span></button>
+                <button className={reportingFocus === "upcoming" ? "is-active" : ""} onClick={() => setReportingFocus("upcoming")}><CalendarBlank /><span>Upcoming dates</span></button>
+              </nav>}
+              <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
+              <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
+            </nav>
+          )}
+        </>}
 
-        {workspaceTreeOpen && (
-          <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
-            <button className={screen === "workspace" ? "is-active" : ""} onClick={() => navigate("workspace")}><House /><span>Overview</span></button>
-            <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board")}><Rows /><span>Tanglad</span></button>
-            <button className={screen === "reporting" ? "is-active" : ""} onClick={() => navigate("reporting")}><ChartBar /><span>Reporting</span></button>
-            <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators")}><UsersThree /><span>Collaborators</span></button>
-            <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions")}><Lock /><span>Permissions</span></button>
-          </nav>
-        )}
+        {primarySection === "my-work" && <nav className="tl-content-nav" aria-label="My work sections">
+          <button className={myWorkView === "table" ? "is-active" : ""} onClick={() => setMyWorkView("table")}><List /><span>Table</span></button>
+          <button className={myWorkView === "calendar" ? "is-active" : ""} onClick={() => setMyWorkView("calendar")}><CalendarBlank /><span>Calendar</span></button>
+          <button className={myWorkActiveOnly ? "is-active" : ""} onClick={() => setMyWorkActiveOnly((value) => !value)}><FunnelSimple /><span>Active only</span></button>
+        </nav>}
+
+        {primarySection === "inbox" && <nav className="tl-content-nav" aria-label="Update feed sections">
+          <button className={updateFilter === "all" ? "is-active" : ""} onClick={() => setUpdateFilter("all")}><TrayIcon /><span>All updates</span><span className="tl-nav-badge">3</span></button>
+          <button className={updateFilter === "mentions" ? "is-active" : ""} onClick={() => setUpdateFilter("mentions")}><At /><span>Mentions</span></button>
+          <button className={updateFilter === "assigned" ? "is-active" : ""} onClick={() => setUpdateFilter("assigned")}><Check /><span>Assigned</span></button>
+        </nav>}
+
+        {primarySection === "favorites" && <nav className="tl-content-nav" aria-label="Favorites sections">
+          <button className="is-active" onClick={() => navigate("favorites", "favorites")}><Star /><span>All favorites</span></button>
+        </nav>}
 
         <div className="tl-nav-spacer" />
         <div className="tl-storage-line"><span>Workspace storage</span><strong>UI preview</strong></div>
@@ -386,11 +442,12 @@ export function TangladWorkspace() {
             setToast={setToast}
           />
         )}
-        {screen === "my-work" && <MyWorkScreen tasks={filteredTasks} cycleStatus={cycleStatus} setToast={setToast} />}
-        {screen === "inbox" && <UpdateFeedScreen navigate={navigate} setToast={setToast} />}
-        {screen === "reporting" && <ReportingScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
+        {screen === "my-work" && <MyWorkScreen tasks={tasks} view={myWorkView} activeOnly={myWorkActiveOnly} cycleStatus={cycleStatus} setToast={setToast} />}
+        {screen === "inbox" && <UpdateFeedScreen filter={updateFilter} navigate={navigate} setToast={setToast} />}
+        {screen === "reporting" && <ReportingScreen tasks={tasks} members={members} focus={reportingFocus} navigate={navigate} setToast={setToast} />}
         {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
         {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
+        {screen === "favorites" && <FavoritesScreen />}
       </main>
 
       {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
@@ -958,14 +1015,11 @@ function KanbanView({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStat
   );
 }
 
-function MyWorkScreen({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStatus: (id: number) => void; setToast: (message: string) => void }) {
-  const [activeOnly, setActiveOnly] = useState(false);
-  const [view, setView] = useState<"table" | "calendar">("table");
+function MyWorkScreen({ tasks, view, activeOnly, cycleStatus, setToast }: { tasks: Task[]; view: MyWorkView; activeOnly: boolean; cycleStatus: (id: number) => void; setToast: (message: string) => void }) {
   const mine = tasks.filter((task) => task.owner === "MC" && (!activeOnly || task.status !== "Done"));
   return (
     <div className="tl-standard-page">
-      <PageHeader title="My work" description="Tasks assigned to Mara across Main workspace." actions={<button className={activeOnly ? "tl-blue-button" : "tl-outline-button"} onClick={() => setActiveOnly(!activeOnly)} aria-pressed={activeOnly}><FunnelSimple />{activeOnly ? "Active only" : "Filter active"}</button>} />
-      <AnimatedTabs id="my-work-tabs" className="tl-tabs tl-my-work-tabs" ariaLabel="My work views" active={view} onChange={(value) => setView(value as typeof view)} items={[{ id: "table", label: "Table" }, { id: "calendar", label: "Calendar", icon: <CalendarBlank /> }]} />
+      <PageHeader title="My work" description="Tasks assigned to Mara across Main workspace." />
       {view === "table" ? <><div className="tl-summary-line"><span><strong>{mine.length}</strong> assigned</span><span><strong>{mine.filter((task) => task.status === "Done").length}</strong> completed</span><span><strong>{mine.filter((task) => task.status === "Blocked").length}</strong> blocked</span></div>{mine.length ? <TaskTable tasks={mine} cycleStatus={cycleStatus} setToast={setToast} /> : <EmptySearch />}</> : <MyWorkCalendar tasks={mine} />}
     </div>
   );
@@ -976,10 +1030,10 @@ function MyWorkCalendar({ tasks }: { tasks: Task[] }) {
   return <section className="tl-calendar-view" aria-label="My work calendar"><div className="tl-calendar-grid">{days.map((day, index) => <div className="tl-calendar-day" key={day}><strong>{day}</strong><span>{index < 2 ? `${index + 1} task${index === 0 ? "" : "s"}` : "Open"}</span>{tasks.filter((task) => task.due.includes(String(19 + index))).slice(0, 2).map((task) => <div className="tl-calendar-task" key={task.id}><span className={`tl-calendar-dot status-${task.status.toLowerCase().replaceAll(" ", "-")}`} /><b>{task.name}</b></div>)}</div>)}</div></section>;
 }
 
-function UpdateFeedScreen({ navigate, setToast }: { navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
+function UpdateFeedScreen({ filter, navigate, setToast }: { filter: UpdateFilter; navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
   const [selected, setSelected] = useState(0);
-  const [filter, setFilter] = useState<"all" | "mentions" | "assigned">("all");
   const [reply, setReply] = useState("");
+  useEffect(() => setSelected(filter === "assigned" ? 1 : 0), [filter]);
   const updates = [
     { person: members[1], title: "Inez mentioned you in Launch page copy", body: "Can you check the final section before review?", time: "12 min" },
     { person: members[2], title: "Rafi changed a task to Review", body: "Workspace permissions is ready for a second pass.", time: "1 hour" },
@@ -990,7 +1044,6 @@ function UpdateFeedScreen({ navigate, setToast }: { navigate: (screen: Screen) =
       <PageHeader title="Update feed" description="Updates, mentions, and workspace activity." actions={<button className="tl-outline-button" onClick={() => setToast("All updates marked as read")}><Check />Mark all read</button>} />
       <div className="tl-inbox-layout">
         <div className="tl-inbox-list">
-          <div className="tl-inbox-filter"><button className={filter === "all" ? "is-active" : ""} onClick={() => setFilter("all")}>All updates</button><button className={filter === "mentions" ? "is-active" : ""} onClick={() => { setFilter("mentions"); setSelected(0); }}>Mentions</button><button className={filter === "assigned" ? "is-active" : ""} onClick={() => { setFilter("assigned"); setSelected(1); }}>Assigned</button></div>
           {updates.filter((_, index) => filter === "all" || (filter === "mentions" ? index === 0 : index === 1)).map((update) => { const index = updates.indexOf(update); return <button className={selected === index ? "is-selected" : ""} onClick={() => setSelected(index)} key={update.title}><Avatar member={update.person} /><span><strong>{update.title}</strong><small>{update.body}</small></span><time>{update.time}</time></button>; })}
         </div>
         <article className="tl-inbox-detail">
@@ -1005,27 +1058,40 @@ function UpdateFeedScreen({ navigate, setToast }: { navigate: (screen: Screen) =
   );
 }
 
-function ReportingScreen({ tasks, members: team, navigate, setToast }: { tasks: Task[]; members: Member[]; navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
+function ReportingScreen({ tasks, members: team, focus, navigate, setToast }: { tasks: Task[]; members: Member[]; focus: ReportingFocus; navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
   const completed = tasks.filter((task) => task.status === "Done").length;
   const working = tasks.filter((task) => task.status === "Working on it").length;
   const review = tasks.filter((task) => task.status === "Review").length;
   const blocked = tasks.filter((task) => task.status === "Blocked").length;
+  const statusPanel = <section className="tl-report-panel tl-status-chart"><header><div><h2>Status overview</h2><p>Current tasks by workflow state</p></div><button onClick={() => setToast("Chart options are ready for product integration")} aria-label="Chart options" title="Chart options"><DotsThree /></button></header><div className="tl-bar-chart" role="img" aria-label={`${completed} done, ${working} working on it, ${review} in review, ${blocked} blocked`}><Bar label="Done" value={completed} max={tasks.length} tone="blue" /><Bar label="Working on it" value={working} max={tasks.length} tone="cyan" /><Bar label="Review" value={review} max={tasks.length} tone="amber" /><Bar label="Blocked" value={blocked} max={tasks.length} tone="rose" /></div></section>;
+  const ownershipPanel = <section className="tl-report-panel"><header><div><h2>Ownership</h2><p>Open tasks by collaborator</p></div><button onClick={() => setToast("Ownership options are ready for product integration")} aria-label="Ownership options" title="Ownership options"><DotsThree /></button></header><div className="tl-ownership-list">{team.slice(0, 3).map((member) => { const count = tasks.filter((task) => task.owner === member.initials && task.status !== "Done").length; return <div key={member.email}><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.role}</small></span><b>{count}</b></div>; })}</div></section>;
+  const upcomingPanel = <section className="tl-report-panel tl-wide-panel"><header><div><h2>Upcoming dates</h2><p>Tasks due in the next two weeks</p></div><button onClick={() => navigate("board")}>Open board</button></header><div className="tl-upcoming-list">{tasks.slice(0, 5).map((task) => <div key={task.id}><span>{task.due}</span><strong>{task.name}</strong><StatusLabel status={task.status} /></div>)}</div></section>;
+  const focusedPanel = focus === "status" ? statusPanel : focus === "ownership" ? ownershipPanel : upcomingPanel;
   return (
     <div className="tl-standard-page">
       <PageHeader title="Dashboard and reporting" description="A workspace-level view of progress and ownership." actions={<><button className="tl-outline-button" onClick={() => setToast("Dashboard customization is ready for product integration")}><SlidersHorizontal />Customize</button><button className="tl-blue-button" onClick={() => setToast("Widget picker is ready for product integration")}><Plus />Add widget</button></>} />
       <p className="tl-sample-note">Sample workspace data</p>
       <div className="tl-report-summary"><div><span>Total tasks</span><strong>{tasks.length}</strong></div><div><span>Completed</span><strong>{completed}</strong></div><div><span>In review</span><strong>{review}</strong></div><div><span>Blocked</span><strong>{blocked}</strong></div></div>
-      <div className="tl-report-grid">
-        <section className="tl-report-panel tl-status-chart"><header><div><h2>Status overview</h2><p>Current tasks by workflow state</p></div><button onClick={() => setToast("Chart options are ready for product integration")} aria-label="Chart options" title="Chart options"><DotsThree /></button></header><div className="tl-bar-chart" role="img" aria-label={`${completed} done, ${working} working on it, ${review} in review, ${blocked} blocked`}><Bar label="Done" value={completed} max={tasks.length} tone="blue" /><Bar label="Working on it" value={working} max={tasks.length} tone="cyan" /><Bar label="Review" value={review} max={tasks.length} tone="amber" /><Bar label="Blocked" value={blocked} max={tasks.length} tone="rose" /></div></section>
-        <section className="tl-report-panel"><header><div><h2>Ownership</h2><p>Open tasks by collaborator</p></div><button onClick={() => setToast("Ownership options are ready for product integration")} aria-label="Ownership options" title="Ownership options"><DotsThree /></button></header><div className="tl-ownership-list">{team.slice(0, 3).map((member) => { const count = tasks.filter((task) => task.owner === member.initials && task.status !== "Done").length; return <div key={member.email}><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.role}</small></span><b>{count}</b></div>; })}</div></section>
-        <section className="tl-report-panel tl-wide-panel"><header><div><h2>Upcoming dates</h2><p>Tasks due in the next two weeks</p></div><button onClick={() => navigate("board")}>Open board</button></header><div className="tl-upcoming-list">{tasks.slice(0, 5).map((task) => <div key={task.id}><span>{task.due}</span><strong>{task.name}</strong><StatusLabel status={task.status} /></div>)}</div></section>
-      </div>
+      <div className="tl-report-grid">{focus === "overview" ? <>{statusPanel}{ownershipPanel}{upcomingPanel}</> : focusedPanel}</div>
     </div>
   );
 }
 
 function Bar({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {
   return <div className={`tl-bar tone-${tone}`}><span>{label}</span><div><i style={{ width: `${Math.max(8, (value / max) * 100)}%` }} /></div><strong>{value}</strong></div>;
+}
+
+function FavoritesScreen() {
+  return (
+    <div className="tl-standard-page tl-favorites-page">
+      <PageHeader title="Favorites" description="Saved boards, updates, and workspace items in one place." />
+      <section className="tl-favorites-empty" aria-label="No favorites saved">
+        <Star weight="duotone" />
+        <h2>No favorites yet</h2>
+        <p>Items you save will appear here for quick access.</p>
+      </section>
+    </div>
+  );
 }
 
 function CollaboratorsScreen({ members: team, setToast, openInvite }: { members: Member[]; setToast: (message: string) => void; openInvite: () => void }) {
