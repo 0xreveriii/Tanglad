@@ -523,13 +523,13 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
     return counts;
   }, { all: 0, boards: 0, updates: 0, files: 0, people: 0, tags: 0, docs: 0 });
   const searchTabs: Array<{ id: SearchSection; label: string }> = [
-    { id: "all", label: `All / ${resultCounts.all}` },
-    { id: "boards", label: `Boards / ${resultCounts.boards}` },
-    { id: "updates", label: `Updates / ${resultCounts.updates}` },
-    { id: "files", label: `Files / ${resultCounts.files}` },
-    { id: "people", label: `People / ${resultCounts.people}` },
-    { id: "tags", label: `Tags / ${resultCounts.tags}` },
-    { id: "docs", label: `Docs / ${resultCounts.docs}` },
+    { id: "all", label: `All ${resultCounts.all}` },
+    { id: "boards", label: `Boards ${resultCounts.boards}` },
+    { id: "updates", label: `Updates ${resultCounts.updates}` },
+    { id: "files", label: `Files ${resultCounts.files}` },
+    { id: "people", label: `People ${resultCounts.people}` },
+    { id: "tags", label: `Tags ${resultCounts.tags}` },
+    { id: "docs", label: `Docs ${resultCounts.docs}` },
   ];
 
   const chooseTab = (tab: SearchSection, index: number, event?: React.KeyboardEvent<HTMLButtonElement>) => {
