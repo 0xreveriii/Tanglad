@@ -102,6 +102,18 @@ const searchContentMotion = {
   transition: { duration: 0.24, ease: [0.2, 0, 0, 1] as [number, number, number, number] },
 };
 
+const inviteLayerMotion = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.2 } },
+  exit: { opacity: 0, transition: { duration: 0.18 } },
+};
+
+const inviteDialogMotion = {
+  initial: { opacity: 0, y: 18, scale: 0.985 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.34, ease: [0.2, 0, 0, 1] as [number, number, number, number] } },
+  exit: { opacity: 0, y: 10, scale: 0.99, transition: { duration: 0.18, ease: [0.3, 0, 1, 1] as [number, number, number, number] } },
+};
+
 const searchSignals = [
   { x: 34, y: 42, width: 112, fill: "#dcecff", accent: "#0067d9", delay: 0 },
   { x: 300, y: 38, width: 124, fill: "#dff7ef", accent: "#159b78", delay: 0.16 },
@@ -382,8 +394,8 @@ export function TangladWorkspace() {
       </main>
 
       {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
-      {inviteModalOpen && <InviteMembersModal onClose={() => setInviteModalOpen(false)} setToast={setToast} />}
       <AnimatePresence>
+        {inviteModalOpen && <InviteMembersModal onClose={() => setInviteModalOpen(false)} setToast={setToast} />}
         {searchOpen && (
           <SearchEverythingModal
             query={search}
@@ -697,9 +709,9 @@ function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToa
     onClose();
   };
   return (
-    <div className="tl-modal-layer">
-      <button className="tl-modal-scrim" onClick={onClose} aria-label="Close invite dialog" />
-      <section className="tl-invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+    <m.div className="tl-modal-layer" {...inviteLayerMotion}>
+      <m.button className="tl-modal-scrim" onClick={onClose} aria-label="Close invite dialog" {...inviteLayerMotion} />
+      <m.section className="tl-invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title" {...inviteDialogMotion}>
         <header><h2 id="invite-title">Invite to Tanglad</h2><button onClick={onClose} aria-label="Close invite dialog" title="Close invite dialog"><X /></button></header>
         <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
           <div className="tl-invite-modal-row"><label>Invite with email</label><button type="button" className="tl-outline-button" onClick={() => setToast("Workspace directory is ready for product integration")}><UsersThree />Workspace directory</button></div>
@@ -707,8 +719,8 @@ function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToa
           <label className="tl-invite-message"><span>Write a message (optional)</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Add context for new members" rows={3} /></label>
           <footer><button type="button" className="tl-outline-button" onClick={onClose}>Cancel</button><button type="submit" className="tl-blue-button">Invite</button></footer>
         </form>
-      </section>
-    </div>
+      </m.section>
+    </m.div>
   );
 }
 
