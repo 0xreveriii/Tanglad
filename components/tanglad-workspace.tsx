@@ -1108,11 +1108,11 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
       </div>
 
       <div className="tl-insights-grid tl-insights-middle-grid">
-        <InsightWidget title="Tasks by status" description="Distribution across the current workflow" onMenu={() => showToast("Status widget options are ready")}>
+        <InsightWidget title="Tasks by status" onMenu={() => showToast("Status widget options are ready")}>
           <div className="tl-status-donut" style={{ background: `conic-gradient(#e3b64f 0 ${workingPercent}%, #65b38a ${workingPercent}% ${workingPercent + donePercent}%, #d7656f ${workingPercent + donePercent}% 100%)` }}><div><strong>{allTasks}</strong><span>tasks</span></div></div>
           <div className="tl-insights-legend"><span><i className="is-amber" />Working on it <b>{working}</b></span><span><i className="is-green" />Done <b>{done}</b></span><span><i className="is-rose" />Stuck <b>{stuck}</b></span></div>
         </InsightWidget>
-        <InsightWidget title="Tasks by owner" description="Assigned workload across the team" onMenu={() => showToast("Owner widget options are ready")}>
+        <InsightWidget title="Tasks by owner" onMenu={() => showToast("Owner widget options are ready")}>
           <div className="tl-owner-chart" role="img" aria-label="Task counts by owner">
             <div className="tl-owner-y-axis" aria-hidden="true">{[ownerMax, ownerMax * 0.75, ownerMax * 0.5, ownerMax * 0.25, 0].map((tick) => <span key={tick}>{Number.isInteger(tick) ? tick : tick.toFixed(2).replace(/0$/, "")}</span>)}</div>
             <div className="tl-owner-plot">{ownerCounts.map(({ member, count }) => <div className="tl-owner-bar" key={member.initials}><strong>{count}</strong><i style={{ height: `${Math.max(count ? 10 : 0, (count / ownerMax) * 100)}%` }} /><Avatar member={member} size="small" /></div>)}</div>
@@ -1122,10 +1122,10 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
       </div>
 
       <div className="tl-insights-grid tl-insights-bottom-grid">
-        <InsightWidget title="Overdue tasks" description={`${overdueTasks.length} tasks past their target date`} onMenu={() => showToast("Overdue widget options are ready")}>
+        <InsightWidget title="Overdue tasks" onMenu={() => showToast("Overdue widget options are ready")}>
           <div className="tl-insights-horizontal-bars">{overdueByStatus.map((item) => <div className="tl-insights-horizontal-bar" key={item.label}><span>{item.label}</span><div><i className={`is-${item.tone}`} style={{ width: `${Math.max(item.value ? 12 : 0, (item.value / Math.max(1, overdueTasks.length)) * 100)}%` }} /></div><b>{item.value}</b></div>)}</div>
         </InsightWidget>
-        <InsightWidget title="Tasks by due date" description="Upcoming task volume by delivery date" onMenu={() => showToast("Due date widget options are ready")}>
+        <InsightWidget title="Tasks by due date" onMenu={() => showToast("Due date widget options are ready")}>
           <div className="tl-due-chart" role="img" aria-label="Tasks grouped by due date">{dueDates.map((date) => <div className="tl-due-bar" key={date}><strong>{filteredTasks.filter((task) => task.due === date).length}</strong><i style={{ height: `${Math.max(8, (filteredTasks.filter((task) => task.due === date).length / dueMax) * 100)}%` }} /><span>{date.replace("Aug ", "")}</span></div>)}</div>
         </InsightWidget>
       </div>
@@ -1137,8 +1137,8 @@ function InsightMetric({ label, value, tone, onFilter, onMenu }: { label: string
   return <article className={`tl-insight-metric is-${tone}`}><div><span className="tl-insight-label"><DotsSixVertical weight="bold" /><span>{label}</span></span><span className="tl-insight-metric-actions"><button onClick={onFilter} aria-label={`Filter ${label}`} title={`Filter ${label}`}><FunnelSimple weight="bold" /></button><button onClick={onMenu} aria-label={`${label} options`} title={`${label} options`}><DotsThree weight="bold" /></button></span></div><strong>{value}</strong></article>;
 }
 
-function InsightWidget({ title, description, onMenu, children }: { title: string; description: string; onMenu: () => void; children: React.ReactNode }) {
-  return <section className="tl-insight-widget"><header><div><span className="tl-insight-widget-title"><DotsSixVertical className="tl-insight-widget-drag" weight="bold" /><h2>{title}</h2><button onClick={onMenu} aria-label={`Filter ${title}`} title={`Filter ${title}`}><FunnelSimple /></button></span><p>{description}</p></div><button onClick={onMenu} aria-label={`${title} options`} title={`${title} options`}><DotsThree /></button></header>{children}</section>;
+function InsightWidget({ title, onMenu, children }: { title: string; onMenu: () => void; children: React.ReactNode }) {
+  return <section className="tl-insight-widget"><header><div><span className="tl-insight-widget-title"><DotsSixVertical className="tl-insight-widget-drag" weight="bold" /><h2>{title}</h2><button onClick={onMenu} aria-label={`Filter ${title}`} title={`Filter ${title}`}><FunnelSimple /></button></span></div><button onClick={onMenu} aria-label={`${title} options`} title={`${title} options`}><DotsThree /></button></header>{children}</section>;
 }
 
 function Bar({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {

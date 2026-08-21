@@ -1451,8 +1451,8 @@
   border-bottom: 1px solid var(--tl-line);
 }
 
-.tl-insight-widget h2 { font-size: 18px; }
-.tl-insight-widget p { font-size: 11px; }
+.tl-insight-widget h2 { font-size: 21px; font-weight: 500; line-height: 1; }
+.tl-insight-widget p { font-size: 12px; }
 .tl-insight-widget header > button { width: 32px; height: 32px; }
 .tl-insight-widget-title { display: inline-flex; align-items: center; gap: 9px; }
 .tl-insight-widget-drag { width: 18px; height: 18px; flex: 0 0 18px; color: #1f2937; opacity: 0; transition: opacity 140ms ease; }
