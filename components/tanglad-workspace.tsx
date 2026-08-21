@@ -45,14 +45,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
-type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions" | "favorites";
+type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "insights" | "collaborators" | "permissions" | "favorites";
 type PrimarySection = "workspace" | "my-work" | "inbox" | "favorites";
 type WorkspaceTab = "recents" | "content" | "collaborators" | "permissions";
 type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" | "docs";
 type BoardView = "table" | "kanban";
 type MyWorkView = "table" | "calendar";
 type UpdateFilter = "all" | "mentions" | "assigned";
-type ReportingFocus = "overview" | "status" | "ownership" | "upcoming";
 type TaskStatus = "Working on it" | "Review" | "Done" | "Blocked";
 type TaskPriority = "Low" | "Medium" | "High";
 
@@ -159,7 +158,7 @@ const screenLabels: Record<Screen, string> = {
   "my-work": "My work",
   inbox: "Update feed",
   board: "Tanglad",
-  reporting: "Dashboard and reporting",
+  insights: "Insights",
   collaborators: "Collaborators",
   permissions: "Permissions",
   favorites: "Favorites",
@@ -192,7 +191,6 @@ export function TangladWorkspace() {
   const [myWorkView, setMyWorkView] = useState<MyWorkView>("table");
   const [myWorkActiveOnly, setMyWorkActiveOnly] = useState(false);
   const [updateFilter, setUpdateFilter] = useState<UpdateFilter>("all");
-  const [reportingFocus, setReportingFocus] = useState<ReportingFocus>("overview");
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -361,28 +359,25 @@ export function TangladWorkspace() {
         </div>
 
         {primarySection === "workspace" && <>
-          <button
-            className="tl-workspace-switcher"
-            onClick={() => setWorkspaceTreeOpen((value) => !value)}
-            aria-expanded={workspaceTreeOpen}
-            aria-controls="workspace-children"
-          >
-            <span className="tl-workspace-switcher-mark"><AppMark small /></span>
-            <span><strong>Main workspace</strong><small>4 members</small></span>
-            <CaretDown className={workspaceTreeOpen ? "is-open" : ""} weight="bold" />
-          </button>
+          <div className="tl-workspace-switcher-row">
+            <button
+              className="tl-workspace-switcher"
+              onClick={() => setWorkspaceTreeOpen((value) => !value)}
+              aria-expanded={workspaceTreeOpen}
+              aria-controls="workspace-children"
+            >
+              <span className="tl-workspace-switcher-mark"><AppMark small /></span>
+              <span><strong>Main workspace</strong><small>4 members</small></span>
+              <CaretDown className={workspaceTreeOpen ? "is-open" : ""} weight="bold" />
+            </button>
+            <button className="tl-workspace-add" onClick={() => setToast("New workspace creation is ready for product integration")} aria-label="Add workspace" title="Add workspace"><Plus /></button>
+          </div>
 
           {workspaceTreeOpen && (
             <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
               <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
               <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
-              <button className={screen === "reporting" ? "is-active" : ""} onClick={() => { setReportingFocus("overview"); navigate("reporting", "workspace"); }}><ChartBar /><span>Reporting</span></button>
-              {screen === "reporting" && <nav className="tl-workspace-tree tl-reporting-tree" aria-label="Reporting sections">
-                <button className={reportingFocus === "overview" ? "is-active" : ""} onClick={() => setReportingFocus("overview")}><House /><span>Overview</span></button>
-                <button className={reportingFocus === "status" ? "is-active" : ""} onClick={() => setReportingFocus("status")}><ChartBar /><span>Status overview</span></button>
-                <button className={reportingFocus === "ownership" ? "is-active" : ""} onClick={() => setReportingFocus("ownership")}><UsersThree /><span>Ownership</span></button>
-                <button className={reportingFocus === "upcoming" ? "is-active" : ""} onClick={() => setReportingFocus("upcoming")}><CalendarBlank /><span>Upcoming dates</span></button>
-              </nav>}
+              <button className={screen === "insights" ? "is-active" : ""} onClick={() => navigate("insights", "workspace")}><ChartBar /><span>Insights</span></button>
               <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
               <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
             </nav>
@@ -444,7 +439,7 @@ export function TangladWorkspace() {
         )}
         {screen === "my-work" && <MyWorkScreen tasks={tasks} view={myWorkView} activeOnly={myWorkActiveOnly} cycleStatus={cycleStatus} setToast={setToast} />}
         {screen === "inbox" && <UpdateFeedScreen filter={updateFilter} navigate={navigate} setToast={setToast} />}
-        {screen === "reporting" && <ReportingScreen tasks={tasks} members={members} focus={reportingFocus} navigate={navigate} setToast={setToast} />}
+        {screen === "insights" && <InsightsScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
         {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
         {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
         {screen === "favorites" && <FavoritesScreen />}
@@ -548,7 +543,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
   const allResults = useMemo<SearchResult[]>(() => {
     const fixed: SearchResult[] = [
       { id: "board-tanglad", section: "boards", title: "Tanglad", detail: "Board · Main workspace", keywords: "tasks product launch table kanban", screen: "board", dated: true },
-      { id: "board-workload", section: "boards", title: "Team workload", detail: "Dashboard · Updated today", keywords: "reporting ownership capacity dashboard", screen: "reporting", dated: true },
+      { id: "board-workload", section: "boards", title: "Team workload", detail: "Dashboard · Updated today", keywords: "insights reporting ownership capacity dashboard", screen: "insights", dated: true },
       { id: "file-roadmap", section: "files", title: "Launch roadmap", detail: "Project file · Edited by Inez", keywords: "roadmap launch project file", screen: "board", dated: true },
       { id: "doc-notes", section: "docs", title: "Launch notes", detail: "Document · Opened Aug 17", keywords: "notes launch document release", screen: "my-work", dated: true },
       { id: "doc-handbook", section: "docs", title: "Workspace handbook", detail: "Document · Main workspace", keywords: "handbook workspace onboarding guide", screen: "manage-workspace", dated: true },
@@ -869,7 +864,7 @@ function WorkspaceRecents({ navigate }: { navigate: (screen: Screen) => void }) 
       <div className="tl-section-heading"><h2 id="recent-heading">Recently opened</h2><button onClick={() => navigate("board")}>View all content</button></div>
       <div className="tl-content-list">
         <button onClick={() => navigate("board")}><span className="tl-file-icon is-board"><Rows /></span><span><strong>Tanglad</strong><small>Board</small></span><span>Opened today</span><Star /></button>
-        <button onClick={() => navigate("reporting")}><span className="tl-file-icon is-report"><ChartBar /></span><span><strong>Team workload</strong><small>Dashboard</small></span><span>Opened yesterday</span><Star /></button>
+        <button onClick={() => navigate("insights")}><span className="tl-file-icon is-report"><ChartBar /></span><span><strong>Team workload</strong><small>Insights</small></span><span>Opened yesterday</span><Star /></button>
         <button onClick={() => navigate("my-work")}><span className="tl-file-icon is-doc"><FileText /></span><span><strong>Launch notes</strong><small>Document</small></span><span>Opened Aug 17</span><Star /></button>
       </div>
     </section>
@@ -882,7 +877,7 @@ function WorkspaceContent({ navigate }: { navigate: (screen: Screen) => void }) 
       <div className="tl-section-heading"><div><h2 id="content-heading">Workspace content</h2><p>Boards, dashboards, and documents available to this workspace.</p></div><button className="tl-blue-button" onClick={() => navigate("board")}><Plus />New board</button></div>
       <div className="tl-content-list is-detailed">
         <button onClick={() => navigate("board")}><span className="tl-file-icon is-board"><Rows /></span><span><strong>Tanglad</strong><small>Owned by Mara Cruz</small></span><span>Board</span><span>Today</span><DotsThree /></button>
-        <button onClick={() => navigate("reporting")}><span className="tl-file-icon is-report"><ChartBar /></span><span><strong>Dashboard and reporting</strong><small>Owned by Inez Kim</small></span><span>Dashboard</span><span>Yesterday</span><DotsThree /></button>
+        <button onClick={() => navigate("insights")}><span className="tl-file-icon is-report"><ChartBar /></span><span><strong>Team insights</strong><small>Owned by Inez Kim</small></span><span>Dashboard</span><span>Yesterday</span><DotsThree /></button>
         <button onClick={() => navigate("my-work")}><span className="tl-file-icon is-doc"><FileText /></span><span><strong>Launch notes</strong><small>Owned by Mara Cruz</small></span><span>Document</span><span>Aug 17</span><DotsThree /></button>
       </div>
     </section>
@@ -1058,23 +1053,81 @@ function UpdateFeedScreen({ filter, navigate, setToast }: { filter: UpdateFilter
   );
 }
 
-function ReportingScreen({ tasks, members: team, focus, navigate, setToast }: { tasks: Task[]; members: Member[]; focus: ReportingFocus; navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
-  const completed = tasks.filter((task) => task.status === "Done").length;
-  const working = tasks.filter((task) => task.status === "Working on it").length;
-  const review = tasks.filter((task) => task.status === "Review").length;
-  const blocked = tasks.filter((task) => task.status === "Blocked").length;
-  const statusPanel = <section className="tl-report-panel tl-status-chart"><header><div><h2>Status overview</h2><p>Current tasks by workflow state</p></div><button onClick={() => setToast("Chart options are ready for product integration")} aria-label="Chart options" title="Chart options"><DotsThree /></button></header><div className="tl-bar-chart" role="img" aria-label={`${completed} done, ${working} working on it, ${review} in review, ${blocked} blocked`}><Bar label="Done" value={completed} max={tasks.length} tone="blue" /><Bar label="Working on it" value={working} max={tasks.length} tone="cyan" /><Bar label="Review" value={review} max={tasks.length} tone="amber" /><Bar label="Blocked" value={blocked} max={tasks.length} tone="rose" /></div></section>;
-  const ownershipPanel = <section className="tl-report-panel"><header><div><h2>Ownership</h2><p>Open tasks by collaborator</p></div><button onClick={() => setToast("Ownership options are ready for product integration")} aria-label="Ownership options" title="Ownership options"><DotsThree /></button></header><div className="tl-ownership-list">{team.slice(0, 3).map((member) => { const count = tasks.filter((task) => task.owner === member.initials && task.status !== "Done").length; return <div key={member.email}><Avatar member={member} /><span><strong>{member.name}</strong><small>{member.role}</small></span><b>{count}</b></div>; })}</div></section>;
-  const upcomingPanel = <section className="tl-report-panel tl-wide-panel"><header><div><h2>Upcoming dates</h2><p>Tasks due in the next two weeks</p></div><button onClick={() => navigate("board")}>Open board</button></header><div className="tl-upcoming-list">{tasks.slice(0, 5).map((task) => <div key={task.id}><span>{task.due}</span><strong>{task.name}</strong><StatusLabel status={task.status} /></div>)}</div></section>;
-  const focusedPanel = focus === "status" ? statusPanel : focus === "ownership" ? ownershipPanel : upcomingPanel;
+function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: Task[]; members: Member[]; navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredTasks = tasks.filter((task) => !normalizedQuery || `${task.name} ${task.ownerName} ${task.status} ${task.priority}`.toLowerCase().includes(normalizedQuery));
+  const allTasks = filteredTasks.length;
+  const inProgress = filteredTasks.filter((task) => task.status === "Working on it" || task.status === "Review").length;
+  const stuck = filteredTasks.filter((task) => task.status === "Blocked").length;
+  const done = filteredTasks.filter((task) => task.status === "Done").length;
+  const working = filteredTasks.filter((task) => task.status === "Working on it" || task.status === "Review").length;
+  const workingPercent = allTasks ? (working / allTasks) * 100 : 0;
+  const donePercent = allTasks ? (done / allTasks) * 100 : 0;
+  const ownerCounts = team.map((member) => ({ member, count: filteredTasks.filter((task) => task.owner === member.initials).length }));
+  const ownerMax = Math.max(1, ...ownerCounts.map(({ count }) => count));
+  const overdueTasks = filteredTasks.filter((task) => Number(task.due.match(/\d+/)?.[0] ?? 0) < 21);
+  const overdueByStatus = [
+    { label: "Working", value: overdueTasks.filter((task) => task.status === "Working on it" || task.status === "Review").length, tone: "amber" },
+    { label: "Stuck", value: overdueTasks.filter((task) => task.status === "Blocked").length, tone: "rose" },
+    { label: "Done", value: overdueTasks.filter((task) => task.status === "Done").length, tone: "green" },
+  ];
+  const dueDates = Array.from(new Set(filteredTasks.map((task) => task.due))).sort((a, b) => Number(a.match(/\d+/)?.[0] ?? 0) - Number(b.match(/\d+/)?.[0] ?? 0));
+  const dueMax = Math.max(1, ...dueDates.map((date) => filteredTasks.filter((task) => task.due === date).length));
+  const showToast = (message: string) => setToast(message);
+
   return (
-    <div className="tl-standard-page">
-      <PageHeader title="Dashboard and reporting" description="A workspace-level view of progress and ownership." actions={<><button className="tl-outline-button" onClick={() => setToast("Dashboard customization is ready for product integration")}><SlidersHorizontal />Customize</button><button className="tl-blue-button" onClick={() => setToast("Widget picker is ready for product integration")}><Plus />Add widget</button></>} />
-      <p className="tl-sample-note">Sample workspace data</p>
-      <div className="tl-report-summary"><div><span>Total tasks</span><strong>{tasks.length}</strong></div><div><span>Completed</span><strong>{completed}</strong></div><div><span>In review</span><strong>{review}</strong></div><div><span>Blocked</span><strong>{blocked}</strong></div></div>
-      <div className="tl-report-grid">{focus === "overview" ? <>{statusPanel}{ownershipPanel}{upcomingPanel}</> : focusedPanel}</div>
+    <div className="tl-standard-page tl-insights-page">
+      <PageHeader title="Insights" description="A live view of task progress, ownership, and delivery risk." actions={<button className="tl-blue-button" onClick={() => showToast("Widget picker is ready for product integration")}><Plus />Add widget</button>} />
+
+      <div className="tl-insights-toolbar">
+        <button className="tl-insights-source" onClick={() => navigate("board")}><Rows /><span><strong>1 connected board</strong><small>Tanglad</small></span><CaretRight /></button>
+        <label className="tl-insights-search"><MagnifyingGlass /><span className="sr-only">Filter insights</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Type to filter" /></label>
+        <button className="tl-insights-control" onClick={() => showToast("People filter is ready for product integration")}><UsersThree />People</button>
+        <button className="tl-insights-control" onClick={() => showToast("Global insight filters are ready for product integration")}><FunnelSimple />Filter</button>
+        <div className="tl-insights-view-actions">
+          <button onClick={() => showToast("Insights export is ready for product integration")}>Export</button>
+          <button onClick={() => showToast("Invite flow opened from Insights")}><UserPlus />Invite</button>
+          <button onClick={() => navigate("permissions")}><Gear />Settings</button>
+        </div>
+      </div>
+
+      <div className="tl-insights-kpis">
+        <InsightMetric label="All tasks" value={allTasks} tone="blue" onFilter={() => showToast("All tasks filter options are ready")} onMenu={() => showToast("All tasks metric options are ready")} />
+        <InsightMetric label="In progress" value={inProgress} tone="amber" onFilter={() => showToast("In progress filter options are ready")} onMenu={() => showToast("In progress metric options are ready")} />
+        <InsightMetric label="Stuck" value={stuck} tone="rose" onFilter={() => showToast("Stuck filter options are ready")} onMenu={() => showToast("Stuck metric options are ready")} />
+        <InsightMetric label="Done" value={done} tone="green" onFilter={() => showToast("Done filter options are ready")} onMenu={() => showToast("Done metric options are ready")} />
+      </div>
+
+      <div className="tl-insights-grid tl-insights-middle-grid">
+        <InsightWidget title="Tasks by status" description="Distribution across the current workflow" onMenu={() => showToast("Status widget options are ready")}>
+          <div className="tl-status-donut" style={{ background: `conic-gradient(#e3b64f 0 ${workingPercent}%, #65b38a ${workingPercent}% ${workingPercent + donePercent}%, #d7656f ${workingPercent + donePercent}% 100%)` }}><div><strong>{allTasks}</strong><span>tasks</span></div></div>
+          <div className="tl-insights-legend"><span><i className="is-amber" />Working on it <b>{working}</b></span><span><i className="is-green" />Done <b>{done}</b></span><span><i className="is-rose" />Stuck <b>{stuck}</b></span></div>
+        </InsightWidget>
+        <InsightWidget title="Tasks by owner" description="Assigned workload across the team" onMenu={() => showToast("Owner widget options are ready")}>
+          <div className="tl-owner-chart" role="img" aria-label="Task counts by owner">{ownerCounts.map(({ member, count }) => <div className="tl-owner-bar" key={member.initials}><strong>{count}</strong><i style={{ height: `${Math.max(8, (count / ownerMax) * 100)}%` }} /><Avatar member={member} size="small" /></div>)}</div>
+          <div className="tl-owner-axis">{ownerCounts.map(({ member }) => <span key={member.initials}>{member.name.split(" ")[0]}</span>)}</div>
+        </InsightWidget>
+      </div>
+
+      <div className="tl-insights-grid tl-insights-bottom-grid">
+        <InsightWidget title="Overdue tasks" description={`${overdueTasks.length} tasks past their target date`} onMenu={() => showToast("Overdue widget options are ready")}>
+          <div className="tl-insights-horizontal-bars">{overdueByStatus.map((item) => <div className="tl-insights-horizontal-bar" key={item.label}><span>{item.label}</span><div><i className={`is-${item.tone}`} style={{ width: `${Math.max(item.value ? 12 : 0, (item.value / Math.max(1, overdueTasks.length)) * 100)}%` }} /></div><b>{item.value}</b></div>)}</div>
+        </InsightWidget>
+        <InsightWidget title="Tasks by due date" description="Upcoming task volume by delivery date" onMenu={() => showToast("Due date widget options are ready")}>
+          <div className="tl-due-chart" role="img" aria-label="Tasks grouped by due date">{dueDates.map((date) => <div className="tl-due-bar" key={date}><strong>{filteredTasks.filter((task) => task.due === date).length}</strong><i style={{ height: `${Math.max(8, (filteredTasks.filter((task) => task.due === date).length / dueMax) * 100)}%` }} /><span>{date.replace("Aug ", "")}</span></div>)}</div>
+        </InsightWidget>
+      </div>
     </div>
   );
+}
+
+function InsightMetric({ label, value, tone, onFilter, onMenu }: { label: string; value: number; tone: string; onFilter: () => void; onMenu: () => void }) {
+  return <article className={`tl-insight-metric is-${tone}`}><div><span>{label}</span><span className="tl-insight-metric-actions"><button onClick={onFilter} aria-label={`Filter ${label}`} title={`Filter ${label}`}><FunnelSimple /></button><button onClick={onMenu} aria-label={`${label} options`} title={`${label} options`}><DotsThree /></button></span></div><strong>{value}</strong><small>{label === "All tasks" ? "Across connected sources" : label === "In progress" ? "Active work" : label === "Stuck" ? "Needs attention" : "Completed"}</small></article>;
+}
+
+function InsightWidget({ title, description, onMenu, children }: { title: string; description: string; onMenu: () => void; children: React.ReactNode }) {
+  return <section className="tl-insight-widget"><header><div><h2>{title}</h2><p>{description}</p></div><button onClick={onMenu} aria-label={`${title} options`} title={`${title} options`}><DotsThree /></button></header>{children}</section>;
 }
 
 function Bar({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {
