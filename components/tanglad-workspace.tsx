@@ -15,6 +15,7 @@ import {
   ClockCounterClockwise,
   Diamond,
   DotsNine,
+  DotsSixVertical,
   DotsThree,
   FileText,
   FolderSimple,
@@ -1078,16 +1079,23 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
 
   return (
     <div className="tl-standard-page tl-insights-page">
-      <PageHeader title="Insights" description="A live view of task progress, ownership, and delivery risk." actions={<button className="tl-blue-button" onClick={() => showToast("Widget picker is ready for product integration")}><Plus />Add widget</button>} />
+      <header className="tl-insights-header">
+        <h1>Insights</h1>
+        <div className="tl-insights-header-actions">
+          <button className="tl-outline-button" onClick={() => showToast("Insights export is ready for product integration")}>Export <CaretDown /></button>
+          <button className="tl-outline-button" onClick={() => showToast("Invite flow opened from Insights")}><UserPlus />Invite</button>
+          <button onClick={() => showToast("Insights options are ready for product integration")} aria-label="Insights options" title="Insights options"><DotsThree /></button>
+        </div>
+      </header>
 
       <div className="tl-insights-toolbar">
+        <button className="tl-blue-button" onClick={() => showToast("Widget picker is ready for product integration")}><Plus />Add widget</button>
         <button className="tl-insights-source" onClick={() => navigate("board")}><Rows /><span><strong>1 connected board</strong><small>Tanglad</small></span><CaretRight /></button>
         <label className="tl-insights-search"><MagnifyingGlass /><span className="sr-only">Filter insights</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Type to filter" /></label>
+        <button className="tl-insights-save" onClick={() => showToast("Insights view saved")} aria-label="Save insights view" title="Save insights view"><Check /></button>
         <button className="tl-insights-control" onClick={() => showToast("People filter is ready for product integration")}><UsersThree />People</button>
         <button className="tl-insights-control" onClick={() => showToast("Global insight filters are ready for product integration")}><FunnelSimple />Filter</button>
         <div className="tl-insights-view-actions">
-          <button onClick={() => showToast("Insights export is ready for product integration")}>Export</button>
-          <button onClick={() => showToast("Invite flow opened from Insights")}><UserPlus />Invite</button>
           <button onClick={() => navigate("permissions")}><Gear />Settings</button>
         </div>
       </div>
@@ -1105,7 +1113,10 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
           <div className="tl-insights-legend"><span><i className="is-amber" />Working on it <b>{working}</b></span><span><i className="is-green" />Done <b>{done}</b></span><span><i className="is-rose" />Stuck <b>{stuck}</b></span></div>
         </InsightWidget>
         <InsightWidget title="Tasks by owner" description="Assigned workload across the team" onMenu={() => showToast("Owner widget options are ready")}>
-          <div className="tl-owner-chart" role="img" aria-label="Task counts by owner">{ownerCounts.map(({ member, count }) => <div className="tl-owner-bar" key={member.initials}><strong>{count}</strong><i style={{ height: `${Math.max(8, (count / ownerMax) * 100)}%` }} /><Avatar member={member} size="small" /></div>)}</div>
+          <div className="tl-owner-chart" role="img" aria-label="Task counts by owner">
+            <div className="tl-owner-y-axis" aria-hidden="true">{[ownerMax, ownerMax * 0.75, ownerMax * 0.5, ownerMax * 0.25, 0].map((tick) => <span key={tick}>{Number.isInteger(tick) ? tick : tick.toFixed(2).replace(/0$/, "")}</span>)}</div>
+            <div className="tl-owner-plot">{ownerCounts.map(({ member, count }) => <div className="tl-owner-bar" key={member.initials}><strong>{count}</strong><i style={{ height: `${Math.max(count ? 10 : 0, (count / ownerMax) * 100)}%` }} /><Avatar member={member} size="small" /></div>)}</div>
+          </div>
           <div className="tl-owner-axis">{ownerCounts.map(({ member }) => <span key={member.initials}>{member.name.split(" ")[0]}</span>)}</div>
         </InsightWidget>
       </div>
@@ -1123,11 +1134,11 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
 }
 
 function InsightMetric({ label, value, tone, onFilter, onMenu }: { label: string; value: number; tone: string; onFilter: () => void; onMenu: () => void }) {
-  return <article className={`tl-insight-metric is-${tone}`}><div><span>{label}</span><span className="tl-insight-metric-actions"><button onClick={onFilter} aria-label={`Filter ${label}`} title={`Filter ${label}`}><FunnelSimple /></button><button onClick={onMenu} aria-label={`${label} options`} title={`${label} options`}><DotsThree /></button></span></div><strong>{value}</strong><small>{label === "All tasks" ? "Across connected sources" : label === "In progress" ? "Active work" : label === "Stuck" ? "Needs attention" : "Completed"}</small></article>;
+  return <article className={`tl-insight-metric is-${tone}`}><div><span className="tl-insight-label"><DotsSixVertical weight="bold" /><span>{label}</span></span><span className="tl-insight-metric-actions"><button onClick={onFilter} aria-label={`Filter ${label}`} title={`Filter ${label}`}><FunnelSimple weight="bold" /></button><button onClick={onMenu} aria-label={`${label} options`} title={`${label} options`}><DotsThree weight="bold" /></button></span></div><strong>{value}</strong></article>;
 }
 
 function InsightWidget({ title, description, onMenu, children }: { title: string; description: string; onMenu: () => void; children: React.ReactNode }) {
-  return <section className="tl-insight-widget"><header><div><h2>{title}</h2><p>{description}</p></div><button onClick={onMenu} aria-label={`${title} options`} title={`${title} options`}><DotsThree /></button></header>{children}</section>;
+  return <section className="tl-insight-widget"><header><div><span className="tl-insight-widget-title"><DotsSixVertical className="tl-insight-widget-drag" weight="bold" /><h2>{title}</h2><button onClick={onMenu} aria-label={`Filter ${title}`} title={`Filter ${title}`}><FunnelSimple /></button></span><p>{description}</p></div><button onClick={onMenu} aria-label={`${title} options`} title={`${title} options`}><DotsThree /></button></header>{children}</section>;
 }
 
 function Bar({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {
