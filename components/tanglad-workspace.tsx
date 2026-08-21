@@ -45,7 +45,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
-type Screen = "workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions" | "favorites";
+type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "reporting" | "collaborators" | "permissions" | "favorites";
 type PrimarySection = "workspace" | "my-work" | "inbox" | "favorites";
 type WorkspaceTab = "recents" | "content" | "collaborators" | "permissions";
 type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" | "docs";
@@ -155,7 +155,7 @@ const members: Member[] = [
 const statusOrder: TaskStatus[] = ["Working on it", "Review", "Done", "Blocked"];
 
 const screenLabels: Record<Screen, string> = {
-  workspace: "Manage workspace",
+  "manage-workspace": "Manage workspace",
   "my-work": "My work",
   inbox: "Update feed",
   board: "Tanglad",
@@ -185,7 +185,7 @@ function Avatar({ member, size = "normal" }: { member: Pick<Member, "initials" |
 }
 
 export function TangladWorkspace() {
-  const [screen, setScreen] = useState<Screen>("workspace");
+  const [screen, setScreen] = useState<Screen>("manage-workspace");
   const [primarySection, setPrimarySection] = useState<PrimarySection>("workspace");
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("recents");
   const [boardView, setBoardView] = useState<BoardView>("table");
@@ -247,7 +247,7 @@ export function TangladWorkspace() {
     setPrimarySection(parent);
     if (parent === "workspace") {
       setWorkspaceTreeOpen(true);
-      navigate("workspace", "workspace");
+      navigate("manage-workspace", "workspace");
     } else if (parent === "my-work") {
       setMyWorkView("table");
       setMyWorkActiveOnly(false);
@@ -307,7 +307,7 @@ export function TangladWorkspace() {
       <header className="tl-topbar">
         <div className="tl-topbar-brand">
           <button className="tl-mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation" title="Open navigation"><List weight="bold" /></button>
-          <button className="tl-wordmark" onClick={() => navigate("workspace")} aria-label="Open Tanglad workspace">
+          <button className="tl-wordmark" onClick={() => navigate("manage-workspace")} aria-label="Open Tanglad workspace">
             <AppMark small />
             <strong>Tanglad</strong>
           </button>
@@ -374,7 +374,7 @@ export function TangladWorkspace() {
 
           {workspaceTreeOpen && (
             <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
-              <button className={screen === "workspace" ? "is-active" : ""} onClick={() => navigate("workspace", "workspace")}><House /><span>Overview</span></button>
+              <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
               <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
               <button className={screen === "reporting" ? "is-active" : ""} onClick={() => { setReportingFocus("overview"); navigate("reporting", "workspace"); }}><ChartBar /><span>Reporting</span></button>
               {screen === "reporting" && <nav className="tl-workspace-tree tl-reporting-tree" aria-label="Reporting sections">
@@ -414,8 +414,8 @@ export function TangladWorkspace() {
           <button onClick={() => setSidebarOpen(true)}><List /><span>{screenLabels[screen]}</span></button>
         </div>
 
-        {screen === "workspace" && (
-          <WorkspaceOverview
+        {screen === "manage-workspace" && (
+          <ManageWorkspaceScreen
             activeTab={workspaceTab}
             setActiveTab={setWorkspaceTab}
             navigate={navigate}
@@ -551,7 +551,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
       { id: "board-workload", section: "boards", title: "Team workload", detail: "Dashboard · Updated today", keywords: "reporting ownership capacity dashboard", screen: "reporting", dated: true },
       { id: "file-roadmap", section: "files", title: "Launch roadmap", detail: "Project file · Edited by Inez", keywords: "roadmap launch project file", screen: "board", dated: true },
       { id: "doc-notes", section: "docs", title: "Launch notes", detail: "Document · Opened Aug 17", keywords: "notes launch document release", screen: "my-work", dated: true },
-      { id: "doc-handbook", section: "docs", title: "Workspace handbook", detail: "Document · Main workspace", keywords: "handbook workspace onboarding guide", screen: "workspace", dated: true },
+      { id: "doc-handbook", section: "docs", title: "Workspace handbook", detail: "Document · Main workspace", keywords: "handbook workspace onboarding guide", screen: "manage-workspace", dated: true },
     ];
     const taskResults: SearchResult[] = tasks.map((task) => ({
       id: `task-${task.id}`,
@@ -785,7 +785,7 @@ function UtilityButton({ icon, label, active, onClick, controls, expanded }: { i
   return <button className={`tl-utility-button ${active ? "is-active" : ""}`} onClick={onClick} title={label} aria-controls={controls} aria-expanded={expanded}>{icon}<span>{label}</span></button>;
 }
 
-function WorkspaceOverview({ activeTab, setActiveTab, navigate, members, cover, changeCover, setToast }: {
+function ManageWorkspaceScreen({ activeTab, setActiveTab, navigate, members, cover, changeCover, setToast }: {
   activeTab: WorkspaceTab;
   setActiveTab: (tab: WorkspaceTab) => void;
   navigate: (screen: Screen) => void;
