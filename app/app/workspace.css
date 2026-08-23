@@ -995,7 +995,7 @@
 .tl-update-feed-filter > button[aria-expanded="true"] { background: var(--tl-surface-muted); }
 .tl-update-feed-filter > button:focus-visible { outline: 0; }
 .tl-update-feed-toolbar button svg { width: 16px; height: 16px; }
-.tl-update-feed-filter-menu { position: absolute; z-index: 3; top: calc(100% + 9px); left: -8px; width: 236px; display: grid; gap: 2px; padding: 8px; border-radius: 8px; background: var(--tl-surface); box-shadow: 0 12px 28px rgba(28, 35, 52, 0.2); }
+.tl-update-feed-filter-menu { position: absolute; z-index: 3; top: calc(100% - 1px); left: 0; width: 236px; display: grid; gap: 2px; padding: 8px; border-radius: 8px; background: var(--tl-surface); box-shadow: 0 12px 28px rgba(28, 35, 52, 0.2); }
 .tl-update-feed-filter-menu button { width: 100%; min-height: 34px; justify-content: flex-start; padding: 0 10px; border-radius: 5px; color: var(--tl-text); background: transparent; text-align: left; }
 .tl-update-feed-filter-menu button:hover,
 .tl-update-feed-filter-menu button.is-active { background: var(--tl-blue-soft); }
