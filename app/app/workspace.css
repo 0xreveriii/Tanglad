@@ -985,11 +985,21 @@
 .tl-update-feed-tabs > button:not(.tl-update-feed-close) small { min-width: 22px; padding: 3px 5px; border-radius: 4px; color: var(--tl-text-soft); background: #eef0f4; font-size: var(--tl-type-micro-size); }
 .tl-update-feed-tabs > button:not(.tl-update-feed-close) small.is-new { color: var(--tl-blue); border: 1px solid var(--tl-blue); background: var(--tl-surface); font-size: var(--tl-type-meta-size); }
 .tl-update-feed-close { position: sticky; right: 0; z-index: 1; width: 36px; height: 36px; margin-left: auto; flex: 0 0 36px; display: grid; place-items: center; border-radius: 6px; color: var(--tl-text); background: var(--tl-surface); }
+.tl-update-feed-close:focus-visible { outline: 0; }
 .tl-update-feed-close:hover { background: var(--tl-surface-muted); }
 .tl-update-feed-close svg { width: 18px; height: 18px; }
 .tl-update-feed-toolbar { min-height: 66px; display: flex; align-items: center; padding: 0 48px; border-bottom: 1px solid var(--tl-line); }
+.tl-update-feed-filter { position: relative; }
 .tl-update-feed-toolbar button { display: inline-flex; align-items: center; gap: 8px; color: var(--tl-text); background: transparent; font-size: var(--tl-type-control-size); }
+.tl-update-feed-filter > button { min-height: 34px; padding: 0 10px; border-radius: 6px; }
+.tl-update-feed-filter > button[aria-expanded="true"] { background: var(--tl-surface-muted); }
+.tl-update-feed-filter > button:focus-visible { outline: 0; }
 .tl-update-feed-toolbar button svg { width: 16px; height: 16px; }
+.tl-update-feed-filter-menu { position: absolute; z-index: 3; top: calc(100% + 9px); left: -8px; width: 236px; display: grid; gap: 2px; padding: 8px; border-radius: 8px; background: var(--tl-surface); box-shadow: 0 12px 28px rgba(28, 35, 52, 0.2); }
+.tl-update-feed-filter-menu button { width: 100%; min-height: 34px; justify-content: flex-start; padding: 0 10px; border-radius: 5px; color: var(--tl-text); background: transparent; text-align: left; }
+.tl-update-feed-filter-menu button:hover,
+.tl-update-feed-filter-menu button.is-active { background: var(--tl-blue-soft); }
+.tl-update-feed-filter-menu button:focus-visible { outline: 0; background: var(--tl-blue-soft); }
 .tl-update-feed-main { min-width: 0; min-height: 0; overflow-y: auto; padding: 34px 40px 80px; }
 .tl-update-feed-card { width: min(750px, 100%); min-height: 390px; margin: 0; padding: 20px 24px 24px; border: 1px solid var(--tl-line-strong); border-radius: 8px; background: var(--tl-surface); }
 .tl-update-feed-card > header { display: flex; align-items: center; gap: 11px; }
@@ -1329,25 +1339,25 @@
 .tl-modal-layer { position: fixed; z-index: 46; inset: 0; display: grid; place-items: center; padding: 24px; }
 .tl-modal-scrim { position: absolute; inset: 0; border: 0; background: rgba(42, 48, 69, 0.62); }
 .tl-invite-modal { position: relative; width: min(620px, 100%); overflow: hidden; border-radius: 14px; color: var(--tl-text); background: var(--tl-surface); box-shadow: 0 24px 70px rgba(23, 29, 48, 0.28); }
-.tl-invite-modal > header { min-height: 76px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--tl-line); }
-.tl-invite-modal > header h2 { margin: 0; font-size: 24px; font-weight: var(--tl-weight-semibold); letter-spacing: var(--tl-tracking-display); }
+.tl-invite-modal > header { min-height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--tl-line); }
+.tl-invite-modal > header h2 { margin: 0; font-family: var(--tl-font-display); font-size: 22px; font-weight: var(--tl-weight-semibold); letter-spacing: var(--tl-tracking-heading); line-height: var(--tl-leading-heading); }
 .tl-invite-modal > header button { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 6px; color: var(--tl-text); background: transparent; }
 .tl-invite-modal > header button:hover { background: var(--tl-surface-muted); }
 .tl-invite-modal > header svg { width: 20px; }
-.tl-invite-modal form { padding: 22px 24px 24px; }
+.tl-invite-modal form { padding: 20px 24px 22px; }
 .tl-invite-modal-row { min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .tl-invite-modal-row label,
-.tl-invite-message > span { color: var(--tl-text); font-size: var(--tl-type-control-size); }
+.tl-invite-message > span { color: var(--tl-text); font-size: var(--tl-type-control-size); font-weight: var(--tl-weight-medium); line-height: var(--tl-leading-control); }
 .tl-invite-modal-row .tl-outline-button { min-height: 36px; }
 .tl-email-composer { min-height: 82px; gap: 0; margin-top: 10px; display: flex; align-items: flex-start; border: 1px solid var(--tl-line-strong); border-radius: 5px; background: var(--tl-surface); transition: border-color 160ms ease, box-shadow 160ms ease; }
 .tl-email-composer:focus-within { border-color: var(--tl-blue); box-shadow: 0 0 0 1px rgba(0, 103, 217, 0.12); }
-.tl-email-composer textarea { min-width: 0; min-height: 80px; flex: 1; padding: 11px 12px; resize: none; border: 0; outline: 0; color: var(--tl-text); background: transparent; font-size: var(--tl-type-control-size); }
+.tl-email-composer textarea { min-width: 0; min-height: 80px; flex: 1; padding: 11px 12px; resize: none; border: 0; outline: 0; color: var(--tl-text); background: transparent; font-size: var(--tl-type-control-size); line-height: var(--tl-leading-control); }
 .tl-email-composer textarea:focus-visible { outline: 0; }
 .tl-email-composer textarea::placeholder,
 .tl-invite-message textarea::placeholder { color: var(--tl-text-faint); opacity: 1; }
 .tl-email-composer select { width: 126px; height: 36px; align-self: flex-start; margin: 8px 8px 0 0; padding: 0 10px; border: 1px solid var(--tl-line-strong); border-radius: 5px; color: var(--tl-text); background: var(--tl-surface); font-size: var(--tl-type-control-size); }
 .tl-invite-message { display: grid; gap: 8px; margin-top: 24px; }
-.tl-invite-message textarea { width: 100%; padding: 11px 12px; resize: vertical; border: 1px solid var(--tl-line-strong); border-radius: 5px; color: var(--tl-text); background: var(--tl-surface); font-size: var(--tl-type-control-size); }
+.tl-invite-message textarea { width: 100%; padding: 11px 12px; resize: vertical; border: 1px solid var(--tl-line-strong); border-radius: 5px; color: var(--tl-text); background: var(--tl-surface); font-size: var(--tl-type-control-size); line-height: var(--tl-leading-control); }
 .tl-invite-message textarea:focus-visible { outline: 0; border-color: var(--tl-blue); box-shadow: 0 0 0 1px rgba(0, 103, 217, 0.12); }
 .tl-invite-modal form > footer { margin-top: 20px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .tl-invite-modal form > footer .tl-blue-button { min-width: 82px; }

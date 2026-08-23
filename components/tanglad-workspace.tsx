@@ -450,7 +450,7 @@ export function TangladWorkspace() {
           active={primarySection === "workspace"}
           onClick={openWorkspaceNavigation}
         />
-        <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
+        <UtilityButton icon={<Lightning />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
         <span className="tl-rail-divider" />
         <UtilityButton icon={<Star />} label="Favorites" active={primarySection === "favorites"} onClick={() => openParent("favorites")} />
         <div className="tl-rail-spacer" />
@@ -1294,6 +1294,9 @@ function UpdateFeedPanel({ onClose, setToast }: { onClose: () => void; setToast:
 
   useEffect(() => {
     closeRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (showFilterOpen) {
