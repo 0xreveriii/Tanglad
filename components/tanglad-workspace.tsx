@@ -5,6 +5,9 @@ import {
   ArrowLeft,
   At,
   Bell,
+  BookOpen,
+  BookmarkSimple,
+  Briefcase,
   CalendarBlank,
   CaretDown,
   CaretRight,
@@ -19,18 +22,23 @@ import {
   DotsSixVertical,
   DotsThree,
   FileText,
+  Flag,
   FolderSimple,
   FunnelSimple,
   Gear,
+  Gift,
   House,
   Kanban,
   Lightning,
+  Lightbulb,
   List,
   Lock,
   MagnifyingGlass,
   PencilSimple,
+  PaperPlaneTilt,
   Plus,
   Question,
+  RocketLaunch,
   Rows,
   SidebarSimple,
   SlidersHorizontal,
@@ -205,12 +213,17 @@ export function TangladWorkspace() {
   const [cover, setCover] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [updateFeedOpen, setUpdateFeedOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [workspaceQuery, setWorkspaceQuery] = useState("");
   const [workspaceBrowserOpen, setWorkspaceBrowserOpen] = useState(false);
   const [workspaceCreateOpen, setWorkspaceCreateOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
+  const updateFeedTriggerRef = useRef<HTMLButtonElement>(null);
+  const helpTriggerRef = useRef<HTMLButtonElement>(null);
+  const helpMenuRef = useRef<HTMLDivElement>(null);
   const workspaceSwitcherRef = useRef<HTMLButtonElement>(null);
   const workspaceMenuRef = useRef<HTMLDivElement>(null);
   const workspaceSearchRef = useRef<HTMLInputElement>(null);
@@ -221,6 +234,8 @@ export function TangladWorkspace() {
         event.preventDefault();
         setNotificationsOpen(false);
         setInviteModalOpen(false);
+        setUpdateFeedOpen(false);
+        setHelpOpen(false);
         setSearchOpen(true);
       }
     };
@@ -255,6 +270,28 @@ export function TangladWorkspace() {
     };
   }, [workspaceMenuOpen]);
 
+  useEffect(() => {
+    if (!helpOpen) return;
+
+    const closeOnPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!helpMenuRef.current?.contains(target) && !helpTriggerRef.current?.contains(target)) setHelpOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setHelpOpen(false);
+        helpTriggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnPointerDown);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnPointerDown);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [helpOpen]);
+
   const navigate = (next: Screen, parent: PrimarySection = primarySectionForScreen(next)) => {
     setScreen(next);
     setPrimarySection(parent);
@@ -262,6 +299,8 @@ export function TangladWorkspace() {
     setToast(null);
     setNotificationsOpen(false);
     setInviteModalOpen(false);
+    setUpdateFeedOpen(false);
+    setHelpOpen(false);
     setSearchOpen(false);
     setWorkspaceMenuOpen(false);
     setWorkspaceBrowserOpen(false);
@@ -271,10 +310,45 @@ export function TangladWorkspace() {
   const openSearch = () => {
     setNotificationsOpen(false);
     setInviteModalOpen(false);
+    setUpdateFeedOpen(false);
+    setHelpOpen(false);
     setWorkspaceMenuOpen(false);
     setWorkspaceBrowserOpen(false);
     setWorkspaceCreateOpen(false);
     setSearchOpen(true);
+  };
+
+  const openUpdateFeed = () => {
+    setNotificationsOpen(false);
+    setInviteModalOpen(false);
+    setHelpOpen(false);
+    setWorkspaceMenuOpen(false);
+    setWorkspaceBrowserOpen(false);
+    setWorkspaceCreateOpen(false);
+    setSearchOpen(false);
+    setToast(null);
+    setUpdateFeedOpen(true);
+  };
+
+  const openHelp = () => {
+    setNotificationsOpen(false);
+    setInviteModalOpen(false);
+    setUpdateFeedOpen(false);
+    setWorkspaceMenuOpen(false);
+    setWorkspaceBrowserOpen(false);
+    setWorkspaceCreateOpen(false);
+    setSearchOpen(false);
+    setHelpOpen(true);
+  };
+
+  const closeHelp = () => {
+    setHelpOpen(false);
+    window.setTimeout(() => helpTriggerRef.current?.focus(), 190);
+  };
+
+  const closeUpdateFeed = () => {
+    setUpdateFeedOpen(false);
+    window.setTimeout(() => updateFeedTriggerRef.current?.focus(), 190);
   };
 
   const closeSearch = () => {
@@ -359,13 +433,13 @@ export function TangladWorkspace() {
         </button>
 
         <div className="tl-topbar-actions">
-          <button className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" title="Notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
-          <button className={screen === "inbox" ? "is-open" : ""} onClick={() => navigate("inbox")} aria-label="Open update feed" title="Update feed"><TrayIcon /></button>
-          <button onClick={() => { setNotificationsOpen(false); setInviteModalOpen(true); }} aria-label="Invite people" title="Invite people"><UserPlus /></button>
-          <button onClick={() => navigate("permissions")} aria-label="Open settings" title="Settings"><Gear /></button>
-          <button onClick={() => setToast("Help is not connected in this UI preview")} aria-label="Open help" title="Help"><Question /></button>
-          <button onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher" title="App launcher"><DotsNine weight="bold" /></button>
-          <button className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile" title="Mara Cruz profile"><span className="tl-profile-avatar">MC</span></button>
+          <button data-tooltip="Notifications" className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" title="Notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
+          <button ref={updateFeedTriggerRef} data-tooltip="Update feed" className={updateFeedOpen ? "is-open" : ""} onClick={openUpdateFeed} aria-label="Open update feed" title="Update feed" aria-haspopup="dialog" aria-expanded={updateFeedOpen}><TrayIcon /></button>
+          <button data-tooltip="Invite members" onClick={() => { setNotificationsOpen(false); setInviteModalOpen(true); }} aria-label="Invite members" title="Invite members"><UserPlus /></button>
+          <button data-tooltip="Settings" onClick={() => navigate("permissions")} aria-label="Open settings" title="Settings"><Gear /></button>
+          <button ref={helpTriggerRef} data-tooltip="Help" className={helpOpen ? "is-open" : ""} onClick={openHelp} aria-label="Open help" title="Help" aria-haspopup="menu" aria-expanded={helpOpen}><Question /></button>
+          <button data-tooltip="App launcher" onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher" title="App launcher"><DotsNine weight="bold" /></button>
+          <button data-tooltip="Mara Cruz profile" className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile" title="Mara Cruz profile"><span className="tl-profile-avatar">MC</span></button>
         </div>
       </header>
 
@@ -377,7 +451,6 @@ export function TangladWorkspace() {
           onClick={openWorkspaceNavigation}
         />
         <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
-        <UtilityButton icon={<TrayIcon />} label="Update feed" active={primarySection === "inbox"} onClick={() => openParent("inbox")} />
         <span className="tl-rail-divider" />
         <UtilityButton icon={<Star />} label="Favorites" active={primarySection === "favorites"} onClick={() => openParent("favorites")} />
         <div className="tl-rail-spacer" />
@@ -460,12 +533,6 @@ export function TangladWorkspace() {
           <button className={myWorkActiveOnly ? "is-active" : ""} onClick={() => setMyWorkActiveOnly((value) => !value)}><FunnelSimple /><span>Active only</span></button>
         </nav>}
 
-        {primarySection === "inbox" && <nav className="tl-content-nav" aria-label="Update feed sections">
-          <button className={updateFilter === "all" ? "is-active" : ""} onClick={() => setUpdateFilter("all")}><TrayIcon /><span>All updates</span><span className="tl-nav-badge">3</span></button>
-          <button className={updateFilter === "mentions" ? "is-active" : ""} onClick={() => setUpdateFilter("mentions")}><At /><span>Mentions</span></button>
-          <button className={updateFilter === "assigned" ? "is-active" : ""} onClick={() => setUpdateFilter("assigned")}><Check /><span>Assigned</span></button>
-        </nav>}
-
         {primarySection === "favorites" && <nav className="tl-content-nav" aria-label="Favorites sections">
           <button className="is-active" onClick={() => navigate("favorites", "favorites")}><Star /><span>All favorites</span></button>
         </nav>}
@@ -509,7 +576,6 @@ export function TangladWorkspace() {
             />
           )}
           {screen === "my-work" && <MyWorkScreen tasks={tasks} view={myWorkView} activeOnly={myWorkActiveOnly} cycleStatus={cycleStatus} setToast={setToast} />}
-          {screen === "inbox" && <UpdateFeedScreen filter={updateFilter} navigate={navigate} setToast={setToast} />}
           {screen === "insights" && <InsightsScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
           {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
           {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
@@ -519,8 +585,10 @@ export function TangladWorkspace() {
 
       {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
       <AnimatePresence>
+        {updateFeedOpen && <UpdateFeedPanel onClose={closeUpdateFeed} setToast={setToast} />}
         {workspaceBrowserOpen && <WorkspaceBrowser onClose={() => { setWorkspaceBrowserOpen(false); workspaceSwitcherRef.current?.focus(); }} onSelect={(name) => { setWorkspaceBrowserOpen(false); if (name === "Main workspace") navigate("manage-workspace", "workspace"); else setToast(`${name} is ready for product integration`); }} onCreate={() => { setWorkspaceBrowserOpen(false); setWorkspaceCreateOpen(true); }} />}
         {workspaceCreateOpen && <WorkspaceCreateModal onClose={() => { setWorkspaceCreateOpen(false); workspaceSwitcherRef.current?.focus(); }} setToast={setToast} />}
+        {helpOpen && <HelpMenu onClose={closeHelp} setToast={setToast} menuRef={helpMenuRef} />}
         {inviteModalOpen && <InviteMembersModal onClose={() => setInviteModalOpen(false)} setToast={setToast} />}
         {searchOpen && (
           <SearchEverythingModal
@@ -881,7 +949,7 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
             {visibleWorkspaces.length ? <div className="tl-workspace-browser-grid">
               {visibleWorkspaces.map((workspace) => <button className="tl-workspace-browser-card" key={workspace.name} onClick={() => onSelect(workspace.name)}>
                 <span className={`tl-workspace-browser-mark is-${workspace.mark}`}>
-                  {workspace.mark === "main" ? <><AppMark small /><House weight="fill" /></> : <strong>N</strong>}
+                  {workspace.mark === "main" ? <><strong className="tl-workspace-browser-initial">M</strong><House weight="fill" /></> : <strong>N</strong>}
                 </span>
                 <strong>{workspace.name}</strong>
                 <span>{workspace.role}</span>
@@ -1207,6 +1275,127 @@ function MyWorkScreen({ tasks, view, activeOnly, cycleStatus, setToast }: { task
 function MyWorkCalendar({ tasks }: { tasks: Task[] }) {
   const days = ["Mon 18", "Tue 19", "Wed 20", "Thu 21", "Fri 22"];
   return <section className="tl-calendar-view" aria-label="My work calendar"><div className="tl-calendar-grid">{days.map((day, index) => <div className="tl-calendar-day" key={day}><strong>{day}</strong><span>{index < 2 ? `${index + 1} task${index === 0 ? "" : "s"}` : "Open"}</span>{tasks.filter((task) => task.due.includes(String(19 + index))).slice(0, 2).map((task) => <div className="tl-calendar-task" key={task.id}><span className={`tl-calendar-dot status-${task.status.toLowerCase().replaceAll(" ", "-")}`} /><b>{task.name}</b></div>)}</div>)}</div></section>;
+}
+
+type UpdateFeedPanelTab = "all" | "mentioned" | "bookmarked" | "account" | "scheduled";
+
+function UpdateFeedPanel({ onClose, setToast }: { onClose: () => void; setToast: (message: string) => void }) {
+  const [tab, setTab] = useState<UpdateFeedPanelTab>("all");
+  const [boardFilter, setBoardFilter] = useState<"all" | "without">("all");
+  const [unreadOnly, setUnreadOnly] = useState(true);
+  const [showFilterOpen, setShowFilterOpen] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const showFilterRef = useRef<HTMLDivElement>(null);
+  const updates = [
+    { person: members[1], title: "Inez mentioned you in Launch page copy", body: "Can you check the final section before review?", time: "12 min ago", board: "Launch roadmap", unread: true, mentioned: true, bookmarked: false, scheduled: false },
+    { person: members[2], title: "Rafi changed a task to Review", body: "Workspace permissions is ready for a second pass.", time: "1 hour ago", board: "Tanglad", unread: true, mentioned: false, bookmarked: true, scheduled: false },
+    { person: members[3], title: "Sam joined Main workspace", body: "Sam can now view Tanglad and Launch notes.", time: "Yesterday", board: "", unread: false, mentioned: false, bookmarked: false, scheduled: true },
+  ];
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (showFilterOpen) {
+        setShowFilterOpen(false);
+        return;
+      }
+      onClose();
+    };
+    const closeFilterOnPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!showFilterRef.current?.contains(target)) setShowFilterOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeFilterOnPointerDown);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeFilterOnPointerDown);
+    };
+  }, [onClose, showFilterOpen]);
+
+  const filteredUpdates = updates.filter((update) => {
+    if (boardFilter === "without" && update.board) return false;
+    if (tab === "mentioned" && !update.mentioned) return false;
+    if (tab === "bookmarked" && !update.bookmarked) return false;
+    if (tab === "scheduled" && !update.scheduled) return false;
+    return !unreadOnly || update.unread;
+  });
+  const activeUpdate = filteredUpdates[0] ?? updates[0];
+  const tabs: Array<{ id: UpdateFeedPanelTab; label: string; icon: React.ReactNode; badge?: string }> = [
+    { id: "all", label: "All updates", icon: <TrayIcon />, badge: "3" },
+    { id: "mentioned", label: "I was mentioned", icon: <At />, badge: "1" },
+    { id: "bookmarked", label: "Bookmarked", icon: <BookmarkSimple /> },
+    { id: "account", label: "All account", icon: <Briefcase /> },
+    { id: "scheduled", label: "Scheduled", icon: <PaperPlaneTilt />, badge: "New" },
+  ];
+
+  return (
+    <m.div className="tl-update-feed-layer" {...inviteLayerMotion}>
+      <m.button className="tl-update-feed-scrim" onClick={onClose} aria-label="Close update feed" {...inviteLayerMotion} />
+      <m.section className="tl-update-feed-dialog" role="dialog" aria-modal="true" aria-labelledby="update-feed-title" {...inviteDialogMotion}>
+        <aside className="tl-update-feed-sidebar">
+          <header><h2 id="update-feed-title">Update feed</h2><ChatCircle /></header>
+          <p>What goes in my feed? <button onClick={() => setToast("Feed guidance is ready for product integration")}>See more</button></p>
+          <div className="tl-update-feed-board-head"><h3>Filter by Board</h3><button onClick={() => setToast("Feed settings are ready for product integration")} aria-label="Feed settings" title="Feed settings"><Gear /><span>Feed settings</span></button></div>
+          <nav aria-label="Update feed board filters">
+            <button className={boardFilter === "all" ? "is-active" : ""} onClick={() => setBoardFilter("all")}><span>All boards in my feed</span><b>1</b></button>
+            <button className={boardFilter === "without" ? "is-active" : ""} onClick={() => setBoardFilter("without")}><span>Updates without boards</span><b>1</b></button>
+          </nav>
+        </aside>
+
+        <div className="tl-update-feed-content">
+          <header className="tl-update-feed-tabs" role="tablist" aria-label="Update feed categories">
+            {tabs.map((item) => <button key={item.id} role="tab" aria-selected={tab === item.id} className={tab === item.id ? "is-active" : ""} onClick={() => setTab(item.id)}>{item.icon}<span>{item.label}</span>{item.badge && <small className={item.badge === "New" ? "is-new" : ""}>{item.badge}</small>}</button>)}
+            <button ref={closeRef} className="tl-update-feed-close" onClick={onClose} aria-label="Close update feed" title="Close update feed"><X /></button>
+          </header>
+          <div className="tl-update-feed-toolbar">
+            <div ref={showFilterRef} className="tl-update-feed-filter">
+              <button type="button" aria-haspopup="menu" aria-expanded={showFilterOpen} onClick={() => setShowFilterOpen((value) => !value)}><strong>Show</strong> {unreadOnly ? "Unread updates" : "Read and Unread updates"}<CaretDown /></button>
+              {showFilterOpen && <div className="tl-update-feed-filter-menu" role="menu" aria-label="Update visibility">
+                <button type="button" role="menuitemradio" aria-checked={!unreadOnly} className={!unreadOnly ? "is-active" : ""} onClick={() => { setUnreadOnly(false); setShowFilterOpen(false); }}>Read and Unread updates</button>
+                <button type="button" role="menuitemradio" aria-checked={unreadOnly} className={unreadOnly ? "is-active" : ""} onClick={() => { setUnreadOnly(true); setShowFilterOpen(false); }}>Unread updates</button>
+              </div>}
+            </div>
+          </div>
+          <main className="tl-update-feed-main">
+            <article className="tl-update-feed-card">
+              <header><Avatar member={activeUpdate.person} /><div><strong>{activeUpdate.person.name}</strong><small>{activeUpdate.time}</small></div><button className="tl-update-feed-read" onClick={() => setToast("Update marked as read")} aria-label="Mark update as read" title="Mark update as read"><Check /></button></header>
+              <p>Hi <span className="tl-update-feed-mention">@Mara Cruz</span>,<br />We’re glad you’re here.<br />This is the beginning of your team’s journey to <strong>exceptional teamwork.</strong></p>
+              <ol><li><strong>Plan and manage work:</strong> Keep complex projects organized in one place.</li><li><strong>Adjust to your exact needs:</strong> Make the board fit the way your team works.</li><li><strong>Easy onboarding:</strong> Start quickly with a clear, guided workspace.</li></ol>
+              <button className="tl-update-feed-more" onClick={() => setToast("Full update details are ready for product integration")}>… See more</button>
+            </article>
+          </main>
+        </div>
+      </m.section>
+    </m.div>
+  );
+}
+
+function HelpMenu({ onClose, setToast, menuRef }: { onClose: () => void; setToast: (message: string) => void; menuRef: React.RefObject<HTMLDivElement | null> }) {
+  const [showGettingStarted, setShowGettingStarted] = useState(true);
+  const actions = [
+    { label: "Contact support", icon: <ChatCircle /> },
+    { label: "Hire an expert", icon: <UserPlus /> },
+    { label: "Support history", icon: <Flag /> },
+    { label: "Contact our CEO", icon: <Lightbulb /> },
+    { label: "Explore & learn", icon: <BookOpen />, arrow: true },
+    { label: "What’s new", icon: <Gift /> },
+  ];
+  const choose = (label: string) => {
+    setToast(`${label} is ready for product integration`);
+    onClose();
+  };
+
+  return (
+    <m.div ref={menuRef} className="tl-help-menu" role="menu" aria-label="Help menu" {...inviteDialogMotion}>
+      <div className="tl-help-menu-actions">
+        {actions.map((action) => <button key={action.label} role="menuitem" onClick={() => choose(action.label)}>{action.icon}<span>{action.label}</span>{action.arrow && <CaretRight />}</button>)}
+      </div>
+      {showGettingStarted && <section className="tl-help-getting-started"><header><RocketLaunch /><button onClick={() => setShowGettingStarted(false)} aria-label="Dismiss getting started" title="Dismiss getting started"><X /></button></header><strong>Get started</strong><p>Set up Tanglad to work the way your team does.</p><button onClick={() => choose("Getting started")}>Get started</button></section>}
+      <button className="tl-help-privacy" onClick={() => choose("Privacy Policy")}>Privacy Policy</button>
+    </m.div>
+  );
 }
 
 function UpdateFeedScreen({ filter, navigate, setToast }: { filter: UpdateFilter; navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
