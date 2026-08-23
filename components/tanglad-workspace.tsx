@@ -203,9 +203,13 @@ export function TangladWorkspace() {
   const [cover, setCover] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [workspaceQuery, setWorkspaceQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
+  const workspaceSwitcherRef = useRef<HTMLButtonElement>(null);
+  const workspaceMenuRef = useRef<HTMLDivElement>(null);
+  const workspaceSearchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const openFromKeyboard = (event: KeyboardEvent) => {
@@ -220,6 +224,33 @@ export function TangladWorkspace() {
     return () => window.removeEventListener("keydown", openFromKeyboard);
   }, []);
 
+  useEffect(() => {
+    if (!workspaceMenuOpen) return;
+
+    workspaceSearchRef.current?.focus();
+
+    const closeOnPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!workspaceMenuRef.current?.contains(target) && !workspaceSwitcherRef.current?.contains(target)) {
+        setWorkspaceMenuOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setWorkspaceMenuOpen(false);
+        workspaceSwitcherRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnPointerDown);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnPointerDown);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [workspaceMenuOpen]);
+
   const navigate = (next: Screen, parent: PrimarySection = primarySectionForScreen(next)) => {
     setScreen(next);
     setPrimarySection(parent);
@@ -228,6 +259,7 @@ export function TangladWorkspace() {
     setNotificationsOpen(false);
     setInviteModalOpen(false);
     setSearchOpen(false);
+    setWorkspaceMenuOpen(false);
   };
 
   const openSearch = () => {
@@ -245,7 +277,6 @@ export function TangladWorkspace() {
     setNavCollapsed(false);
     setPrimarySection(parent);
     if (parent === "workspace") {
-      setWorkspaceTreeOpen(true);
       navigate("manage-workspace", "workspace");
     } else if (parent === "my-work") {
       setMyWorkView("table");
@@ -261,7 +292,6 @@ export function TangladWorkspace() {
 
   const openWorkspaceNavigation = () => {
     setNavCollapsed(false);
-    setWorkspaceTreeOpen(true);
     openParent("workspace");
   };
 
@@ -336,8 +366,6 @@ export function TangladWorkspace() {
           label="Workspace"
           active={primarySection === "workspace"}
           onClick={openWorkspaceNavigation}
-          controls="workspace-children"
-          expanded={!navCollapsed && workspaceTreeOpen}
         />
         <UtilityButton icon={<Lightning weight="bold" />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
         <UtilityButton icon={<TrayIcon />} label="Update feed" active={primarySection === "inbox"} onClick={() => openParent("inbox")} />
@@ -354,7 +382,7 @@ export function TangladWorkspace() {
           <strong>{primarySection === "workspace" ? "Workspace" : primarySection === "my-work" ? "My work" : primarySection === "inbox" ? "Update feed" : "Favorites"}</strong>
           <div>
             <button onClick={() => setToast("Workspace search uses the global search field above")} aria-label="Search workspace" title="Search workspace"><MagnifyingGlass /></button>
-            <button onClick={() => setNavCollapsed((value) => !value)} aria-label={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"} title={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"}><SidebarSimple /></button>
+            <button onClick={() => { setWorkspaceMenuOpen(false); setNavCollapsed((value) => !value); }} aria-label={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"} title={navCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"}><SidebarSimple /></button>
             <button className="tl-drawer-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" title="Close navigation"><X /></button>
           </div>
         </div>
@@ -362,27 +390,59 @@ export function TangladWorkspace() {
         {primarySection === "workspace" && <>
           <div className="tl-workspace-switcher-row">
             <button
+              ref={workspaceSwitcherRef}
               className="tl-workspace-switcher"
-              onClick={() => setWorkspaceTreeOpen((value) => !value)}
-              aria-expanded={workspaceTreeOpen}
-              aria-controls="workspace-children"
+              onClick={() => {
+                if (navCollapsed) {
+                  setNavCollapsed(false);
+                  return;
+                }
+                setWorkspaceQuery("");
+                setWorkspaceMenuOpen((value) => !value);
+              }}
+              aria-expanded={workspaceMenuOpen}
+              aria-controls="workspace-switcher-menu"
+              aria-haspopup="dialog"
             >
               <span className="tl-workspace-switcher-mark"><AppMark small /></span>
               <span><strong>Main workspace</strong><small>4 members</small></span>
-              <CaretDown className={workspaceTreeOpen ? "is-open" : ""} weight="bold" />
+              <CaretDown className={workspaceMenuOpen ? "is-open" : ""} weight="bold" />
             </button>
             <button className="tl-workspace-add" onClick={() => setToast("New workspace creation is ready for product integration")} aria-label="Add workspace" title="Add workspace"><Plus /></button>
+
+            {workspaceMenuOpen && (
+              <div ref={workspaceMenuRef} className="tl-workspace-menu" id="workspace-switcher-menu" role="dialog" aria-label="Switch workspace">
+                <label className="tl-workspace-menu-search">
+                  <MagnifyingGlass />
+                  <input ref={workspaceSearchRef} value={workspaceQuery} onChange={(event) => setWorkspaceQuery(event.target.value)} placeholder="Search for a workspace" aria-label="Search for a workspace" />
+                </label>
+
+                {"Main workspace".toLowerCase().includes(workspaceQuery.trim().toLowerCase()) ? <>
+                  <section aria-labelledby="recent-workspaces-label">
+                    <span id="recent-workspaces-label">Recent workspaces</span>
+                    <button className="is-active" onClick={() => navigate("manage-workspace", "workspace")}><span className="tl-workspace-menu-mark"><AppMark small /></span><strong>Main workspace</strong></button>
+                  </section>
+                  <section aria-labelledby="my-workspaces-label">
+                    <span id="my-workspaces-label">My workspaces</span>
+                    <button className="is-active" onClick={() => navigate("manage-workspace", "workspace")}><span className="tl-workspace-menu-mark"><AppMark small /></span><strong>Main workspace</strong></button>
+                  </section>
+                </> : <p className="tl-workspace-menu-empty">No workspaces found</p>}
+
+                <footer>
+                  <button onClick={() => { setWorkspaceMenuOpen(false); setToast("Workspace browsing is ready for product integration"); }}><CirclesFour />Browse all</button>
+                  <button onClick={() => { setWorkspaceMenuOpen(false); setToast("New workspace creation is ready for product integration"); }}><Plus />Add workspace</button>
+                </footer>
+              </div>
+            )}
           </div>
 
-          {workspaceTreeOpen && (
-            <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
-              <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
-              <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
-              <button className={screen === "insights" ? "is-active" : ""} onClick={() => navigate("insights", "workspace")}><ChartBar /><span>Insights</span></button>
-              <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
-              <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
-            </nav>
-          )}
+          <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
+            <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
+            <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
+            <button className={screen === "insights" ? "is-active" : ""} onClick={() => navigate("insights", "workspace")}><ChartBar /><span>Insights</span></button>
+            <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
+            <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
+          </nav>
         </>}
 
         {primarySection === "my-work" && <nav className="tl-content-nav" aria-label="My work sections">

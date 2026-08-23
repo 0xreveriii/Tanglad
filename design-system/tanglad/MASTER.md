@@ -33,11 +33,18 @@ Rules:
 
 ## Typography
 
-- Display: Space Grotesk Variable, locally bundled.
-- Body and interface: DM Sans Variable, locally bundled.
-- Technical labels and measured details: JetBrains Mono Variable, locally bundled.
-- Headlines use tight tracking and controlled scale, with a maximum of two lines in the hero.
-- Body text remains 15-19px with comfortable line height.
+- Display: Space Grotesk Variable, locally bundled. Use it only for marketing display headings, workspace page titles, and other genuinely prominent headings.
+- Body and interface: DM Sans Variable, locally bundled. It is the default for body copy, navigation, controls, tables, forms, tabs, task content, helper text, and general interface text.
+- Technical labels and measured details: JetBrains Mono Variable, locally bundled. Reserve it for keyboard shortcuts, tabular or measured values, chart axes, and compact technical labels.
+- Marketing typography is defined by the semantic `--type-*` tokens in `app/globals.css`. Its editorial display headings may use section-specific fluid sizes, but body and interface roles must use the shared scale and families.
+- Workspace typography is defined by `--tl-type-*` tokens scoped beneath `.tl-app` in `app/app/workspace.css`. Do not use marketing typography selectors inside the workspace.
+- Workspace page titles are 30-34px on desktop and 25-28px on mobile; section headings are 18-20px; primary body and row titles are 14-15px; controls and navigation are 13-14px; metadata and helper text never fall below 12px.
+- Use 9-10px only for nonessential chart ticks, keyboard hints, avatar initials, counters, or truly tiny badges. Do not pair these exceptional sizes with faint contrast when the text is functional.
+- Use weight 400 for reading text, 500 for controls and emphasis, and 600 for headings and selected states. Avoid unneeded intermediate variable-font weights.
+- Interface text uses normal or near-normal tracking. Tight tracking is reserved for large headings; positive tracking is limited to compact technical labels.
+- Default workspace line height is 1.55. Body and helper copy use 1.55-1.65, controls use 1.35, and display headings use 1.08-1.2.
+- Headlines use tight tracking and controlled scale, with a maximum of two lines in the hero. Body text remains 15-19px on marketing pages with comfortable line height.
+- Verify the system at 375px, 768px, 1024px, 1440px, and 1920px, and at 200% browser zoom without horizontal overflow.
 
 ## Shape and material
 

@@ -9,7 +9,7 @@ Tanglad is a collaborative project tracker and task balancer that gives tasks a 
 - Tailwind CSS 4 plus semantic CSS tokens
 - Motion for scroll-linked animation and reduced-motion support
 - Phosphor Icons
-- Locally bundled Manrope and JetBrains Mono variable fonts
+- Locally bundled Space Grotesk, DM Sans, and JetBrains Mono variable fonts
 
 ## Run locally
 
