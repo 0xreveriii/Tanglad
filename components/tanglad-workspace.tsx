@@ -9,6 +9,7 @@ import {
   BookmarkSimple,
   Briefcase,
   CalendarBlank,
+  CalendarCheck,
   CaretDown,
   CaretRight,
   ChartBar,
@@ -29,7 +30,6 @@ import {
   Gift,
   House,
   Kanban,
-  Lightning,
   Lightbulb,
   List,
   Lock,
@@ -450,7 +450,7 @@ export function TangladWorkspace() {
           active={primarySection === "workspace"}
           onClick={openWorkspaceNavigation}
         />
-        <UtilityButton icon={<Lightning />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
+        <UtilityButton icon={<CalendarCheck />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
         <span className="tl-rail-divider" />
         <UtilityButton icon={<Star />} label="Favorites" active={primarySection === "favorites"} onClick={() => openParent("favorites")} />
         <div className="tl-rail-spacer" />
