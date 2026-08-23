@@ -406,44 +406,46 @@ export function TangladWorkspace() {
       </aside>
 
       <main className="tl-main" id="tl-main">
-        <div className="tl-mobile-context">
-          <button onClick={() => setSidebarOpen(true)}><List /><span>{screenLabels[screen]}</span></button>
-        </div>
+        <div className="tl-main-canvas">
+          <div className="tl-mobile-context">
+            <button onClick={() => setSidebarOpen(true)}><List /><span>{screenLabels[screen]}</span></button>
+          </div>
 
-        {screen === "manage-workspace" && (
-          <ManageWorkspaceScreen
-            activeTab={workspaceTab}
-            setActiveTab={setWorkspaceTab}
-            navigate={navigate}
-            members={members}
-            cover={cover}
-            changeCover={() => setCover((value) => (value + 1) % 3)}
-            setToast={setToast}
-          />
-        )}
-        {screen === "board" && (
-          <BoardScreen
-            tasks={filteredTasks}
-            view={boardView}
-            setView={setBoardView}
-            mineOnly={mineOnly}
-            setMineOnly={setMineOnly}
-            cycleStatus={cycleStatus}
-            composerOpen={composerOpen}
-            setComposerOpen={setComposerOpen}
-            newTask={newTask}
-            setNewTask={setNewTask}
-            addTask={addTask}
-            navigate={navigate}
-            setToast={setToast}
-          />
-        )}
-        {screen === "my-work" && <MyWorkScreen tasks={tasks} view={myWorkView} activeOnly={myWorkActiveOnly} cycleStatus={cycleStatus} setToast={setToast} />}
-        {screen === "inbox" && <UpdateFeedScreen filter={updateFilter} navigate={navigate} setToast={setToast} />}
-        {screen === "insights" && <InsightsScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
-        {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
-        {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
-        {screen === "favorites" && <FavoritesScreen />}
+          {screen === "manage-workspace" && (
+            <ManageWorkspaceScreen
+              activeTab={workspaceTab}
+              setActiveTab={setWorkspaceTab}
+              navigate={navigate}
+              members={members}
+              cover={cover}
+              changeCover={() => setCover((value) => (value + 1) % 3)}
+              setToast={setToast}
+            />
+          )}
+          {screen === "board" && (
+            <BoardScreen
+              tasks={filteredTasks}
+              view={boardView}
+              setView={setBoardView}
+              mineOnly={mineOnly}
+              setMineOnly={setMineOnly}
+              cycleStatus={cycleStatus}
+              composerOpen={composerOpen}
+              setComposerOpen={setComposerOpen}
+              newTask={newTask}
+              setNewTask={setNewTask}
+              addTask={addTask}
+              navigate={navigate}
+              setToast={setToast}
+            />
+          )}
+          {screen === "my-work" && <MyWorkScreen tasks={tasks} view={myWorkView} activeOnly={myWorkActiveOnly} cycleStatus={cycleStatus} setToast={setToast} />}
+          {screen === "inbox" && <UpdateFeedScreen filter={updateFilter} navigate={navigate} setToast={setToast} />}
+          {screen === "insights" && <InsightsScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
+          {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
+          {screen === "permissions" && <PermissionsScreen setToast={setToast} />}
+          {screen === "favorites" && <FavoritesScreen />}
+        </div>
       </main>
 
       {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
