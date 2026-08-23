@@ -405,7 +405,7 @@ export function TangladWorkspace() {
               aria-haspopup="dialog"
             >
               <span className="tl-workspace-switcher-mark"><AppMark small /></span>
-              <span><strong>Main workspace</strong><small>4 members</small></span>
+              <span><strong>Main workspace</strong></span>
               <CaretDown className={workspaceMenuOpen ? "is-open" : ""} weight="bold" />
             </button>
             <button className="tl-workspace-add" onClick={() => setToast("New workspace creation is ready for product integration")} aria-label="Add workspace" title="Add workspace"><Plus /></button>
