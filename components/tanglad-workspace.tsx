@@ -13,6 +13,7 @@ import {
   Check,
   CirclesFour,
   ClockCounterClockwise,
+  CrownSimple,
   Diamond,
   DotsNine,
   DotsSixVertical,
@@ -36,6 +37,7 @@ import {
   Star,
   Tag,
   TrayIcon,
+  User,
   UserPlus,
   UsersThree,
   UserCircle,
@@ -205,6 +207,8 @@ export function TangladWorkspace() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [workspaceQuery, setWorkspaceQuery] = useState("");
+  const [workspaceBrowserOpen, setWorkspaceBrowserOpen] = useState(false);
+  const [workspaceCreateOpen, setWorkspaceCreateOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
   const workspaceSwitcherRef = useRef<HTMLButtonElement>(null);
@@ -260,11 +264,16 @@ export function TangladWorkspace() {
     setInviteModalOpen(false);
     setSearchOpen(false);
     setWorkspaceMenuOpen(false);
+    setWorkspaceBrowserOpen(false);
+    setWorkspaceCreateOpen(false);
   };
 
   const openSearch = () => {
     setNotificationsOpen(false);
     setInviteModalOpen(false);
+    setWorkspaceMenuOpen(false);
+    setWorkspaceBrowserOpen(false);
+    setWorkspaceCreateOpen(false);
     setSearchOpen(true);
   };
 
@@ -356,7 +365,7 @@ export function TangladWorkspace() {
           <button onClick={() => navigate("permissions")} aria-label="Open settings" title="Settings"><Gear /></button>
           <button onClick={() => setToast("Help is not connected in this UI preview")} aria-label="Open help" title="Help"><Question /></button>
           <button onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher" title="App launcher"><DotsNine weight="bold" /></button>
-          <button className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile" title="Mara Cruz profile">MC</button>
+          <button className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile" title="Mara Cruz profile"><span className="tl-profile-avatar">MC</span></button>
         </div>
       </header>
 
@@ -408,7 +417,7 @@ export function TangladWorkspace() {
               <span><strong>Main workspace</strong></span>
               <CaretDown className={workspaceMenuOpen ? "is-open" : ""} weight="bold" />
             </button>
-            <button className="tl-workspace-add" onClick={() => setToast("New workspace creation is ready for product integration")} aria-label="Add workspace" title="Add workspace"><Plus /></button>
+            <button className="tl-workspace-add" onClick={() => setToast("Workspace shortcuts are not connected in this UI preview")} aria-label="Workspace shortcuts" title="Workspace shortcuts"><Plus /></button>
 
             {workspaceMenuOpen && (
               <div ref={workspaceMenuRef} className="tl-workspace-menu" id="workspace-switcher-menu" role="dialog" aria-label="Switch workspace">
@@ -429,8 +438,8 @@ export function TangladWorkspace() {
                 </> : <p className="tl-workspace-menu-empty">No workspaces found</p>}
 
                 <footer>
-                  <button onClick={() => { setWorkspaceMenuOpen(false); setToast("Workspace browsing is ready for product integration"); }}><CirclesFour />Browse all</button>
-                  <button onClick={() => { setWorkspaceMenuOpen(false); setToast("New workspace creation is ready for product integration"); }}><Plus />Add workspace</button>
+                  <button onClick={() => { setWorkspaceMenuOpen(false); setWorkspaceQuery(""); setWorkspaceBrowserOpen(true); }}><CirclesFour />Browse all</button>
+                  <button onClick={() => { setWorkspaceMenuOpen(false); setWorkspaceCreateOpen(true); }}><Plus />Add workspace</button>
                 </footer>
               </div>
             )}
@@ -510,6 +519,8 @@ export function TangladWorkspace() {
 
       {notificationsOpen && <NotificationPanel onClose={() => setNotificationsOpen(false)} openInvite={() => setInviteModalOpen(true)} setToast={setToast} />}
       <AnimatePresence>
+        {workspaceBrowserOpen && <WorkspaceBrowser onClose={() => { setWorkspaceBrowserOpen(false); workspaceSwitcherRef.current?.focus(); }} onSelect={(name) => { setWorkspaceBrowserOpen(false); if (name === "Main workspace") navigate("manage-workspace", "workspace"); else setToast(`${name} is ready for product integration`); }} onCreate={() => { setWorkspaceBrowserOpen(false); setWorkspaceCreateOpen(true); }} />}
+        {workspaceCreateOpen && <WorkspaceCreateModal onClose={() => { setWorkspaceCreateOpen(false); workspaceSwitcherRef.current?.focus(); }} setToast={setToast} />}
         {inviteModalOpen && <InviteMembersModal onClose={() => setInviteModalOpen(false)} setToast={setToast} />}
         {searchOpen && (
           <SearchEverythingModal
@@ -810,6 +821,116 @@ function TangladSearchLoader() {
       </m.div>
       <m.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.45 }}>Tip: Search tasks, people, statuses, and boards from one place.</m.p>
     </div>
+  );
+}
+
+type WorkspaceBrowserFilter = "all" | "recent" | "owner" | "member" | "collaborator";
+
+function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void; onSelect: (name: string) => void; onCreate: () => void }) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<WorkspaceBrowserFilter>("recent");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const workspaces = [
+    { name: "Main workspace", role: "Owner", recent: true, mark: "main" },
+    { name: "New Workspace", role: "Owner", recent: true, mark: "new" },
+  ] as const;
+
+  useEffect(() => {
+    searchRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleWorkspaces = workspaces.filter((workspace) => {
+    const matchesQuery = !normalizedQuery || `${workspace.name} ${workspace.role}`.toLowerCase().includes(normalizedQuery);
+    const matchesFilter = filter === "all" || (filter === "recent" && workspace.recent) || workspace.role.toLowerCase() === filter;
+    return matchesQuery && matchesFilter;
+  });
+  const heading = filter === "recent" ? "Recent workspaces" : filter === "all" ? "All workspaces" : `${filter[0].toUpperCase()}${filter.slice(1)} workspaces`;
+
+  return (
+    <m.div className="tl-workspace-browser-layer" {...inviteLayerMotion}>
+      <m.button className="tl-workspace-browser-scrim" onClick={onClose} aria-label="Close workspace browser" {...inviteLayerMotion} />
+      <m.section className="tl-workspace-browser" role="dialog" aria-modal="true" aria-labelledby="workspace-browser-title" {...inviteDialogMotion}>
+        <header className="tl-workspace-browser-head">
+          <h2 id="workspace-browser-title">Browse all workspaces</h2>
+          <div className="tl-workspace-browser-tools">
+            <label className="tl-workspace-browser-search"><MagnifyingGlass /><span className="sr-only">Search workspaces</span><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a workspace" /></label>
+            <button className="tl-workspace-browser-filter" type="button" onClick={() => setFilter((value) => value === "all" ? "recent" : "all")} aria-pressed={filter === "all"}><FunnelSimple />Filter</button>
+          </div>
+          <button className="tl-workspace-browser-close" onClick={onClose} aria-label="Close workspace browser" title="Close workspace browser"><X /></button>
+        </header>
+
+        <div className="tl-workspace-browser-body">
+          <nav className="tl-workspace-browser-sidebar" aria-label="Workspace filters">
+            <button className={filter === "all" ? "is-active" : ""} onClick={() => setFilter("all")}><CirclesFour />All workspaces</button>
+            <button className={filter === "recent" ? "is-active" : ""} onClick={() => setFilter("recent")}><ClockCounterClockwise />Recent workspaces</button>
+            <span>My workspaces</span>
+            <button className={filter === "owner" ? "is-active" : ""} onClick={() => setFilter("owner")}><CrownSimple />Owner</button>
+            <button className={filter === "member" ? "is-active" : ""} onClick={() => setFilter("member")}><User />Member</button>
+            <button className={filter === "collaborator" ? "is-active" : ""} onClick={() => setFilter("collaborator")}><UsersThree />Collaborator</button>
+            <button className="tl-workspace-browser-create tl-blue-button" onClick={onCreate}><Plus />Create workspace</button>
+          </nav>
+
+          <main className="tl-workspace-browser-content">
+            <h1>{heading}</h1>
+            {visibleWorkspaces.length ? <div className="tl-workspace-browser-grid">
+              {visibleWorkspaces.map((workspace) => <button className="tl-workspace-browser-card" key={workspace.name} onClick={() => onSelect(workspace.name)}>
+                <span className={`tl-workspace-browser-mark is-${workspace.mark}`}>
+                  {workspace.mark === "main" ? <><AppMark small /><House weight="fill" /></> : <strong>N</strong>}
+                </span>
+                <strong>{workspace.name}</strong>
+                <span>{workspace.role}</span>
+                <CaretRight />
+              </button>)}
+            </div> : <div className="tl-workspace-browser-empty"><CirclesFour /><h2>No workspaces found</h2><p>Try another search or filter.</p></div>}
+          </main>
+        </div>
+      </m.section>
+    </m.div>
+  );
+}
+
+function WorkspaceCreateModal({ onClose, setToast }: { onClose: () => void; setToast: (message: string) => void }) {
+  const [name, setName] = useState("New Workspace");
+  const [privacy, setPrivacy] = useState<"open" | "closed">("open");
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    nameRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  const submit = () => {
+    const workspaceName = name.trim();
+    if (!workspaceName) return;
+    setToast(`${workspaceName} will be created as a ${privacy} workspace`);
+    onClose();
+  };
+  const mark = name.trim().charAt(0).toUpperCase() || "N";
+
+  return (
+    <m.div className="tl-modal-layer" {...inviteLayerMotion}>
+      <m.button className="tl-modal-scrim" onClick={onClose} aria-label="Close add workspace dialog" {...inviteLayerMotion} />
+      <m.section className="tl-workspace-create-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-create-title" {...inviteDialogMotion}>
+        <header><h2 id="workspace-create-title">Add new workspace</h2><button onClick={onClose} aria-label="Close add workspace dialog" title="Close add workspace dialog"><X /></button></header>
+        <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
+          <div className="tl-workspace-create-mark" aria-hidden="true">{mark}</div>
+          <label className="tl-workspace-create-field"><span>Workspace name</span><input ref={nameRef} value={name} onChange={(event) => setName(event.target.value)} required /></label>
+          <fieldset className="tl-workspace-create-privacy"><legend>Privacy</legend><label><input type="radio" name="workspace-privacy" checked={privacy === "open"} onChange={() => setPrivacy("open")} /><span>Open</span></label><label><input type="radio" name="workspace-privacy" checked={privacy === "closed"} onChange={() => setPrivacy("closed")} /><span>Closed</span></label></fieldset>
+          <p>{privacy === "open" ? "Every team member in the account can join" : "Only invited people can join this workspace"}</p>
+          <footer><button type="button" className="tl-workspace-create-cancel" onClick={onClose}>Cancel</button><button type="submit" className="tl-blue-button">Add workspace</button></footer>
+        </form>
+      </m.section>
+    </m.div>
   );
 }
 
