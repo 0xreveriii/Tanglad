@@ -757,7 +757,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
   return (
     <MotionConfig reducedMotion="never">
       <m.div className="tl-search-layer" {...searchLayerMotion}>
-        <m.div className="tl-search-scrim" onClick={onClose} aria-hidden="true" />
+        <m.div className="tl-search-scrim" aria-hidden="true" />
         <m.section ref={dialogRef} className="tl-search-dialog" id="tl-search-dialog" role="dialog" aria-modal="true" aria-labelledby="tl-search-title" aria-describedby="tl-search-description" {...searchDialogMotion}>
           <header className="tl-search-head">
             <MagnifyingGlass weight="bold" />
@@ -922,7 +922,7 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
 
   return (
     <m.div className="tl-workspace-browser-layer" {...inviteLayerMotion}>
-      <m.button className="tl-workspace-browser-scrim" onClick={onClose} aria-label="Close workspace browser" {...inviteLayerMotion} />
+      <m.div className="tl-workspace-browser-scrim" aria-hidden="true" {...inviteLayerMotion} />
       <m.section className="tl-workspace-browser" role="dialog" aria-modal="true" aria-labelledby="workspace-browser-title" {...inviteDialogMotion}>
         <header className="tl-workspace-browser-head">
           <h2 id="workspace-browser-title">Browse all workspaces</h2>
@@ -987,7 +987,7 @@ function WorkspaceCreateModal({ onClose, setToast }: { onClose: () => void; setT
 
   return (
     <m.div className="tl-modal-layer" {...inviteLayerMotion}>
-      <m.button className="tl-modal-scrim" onClick={onClose} aria-label="Close add workspace dialog" {...inviteLayerMotion} />
+      <m.div className="tl-modal-scrim" aria-hidden="true" {...inviteLayerMotion} />
       <m.section className="tl-workspace-create-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-create-title" {...inviteDialogMotion}>
         <header><h2 id="workspace-create-title">Add new workspace</h2><button onClick={onClose} aria-label="Close add workspace dialog" title="Close add workspace dialog"><X /></button></header>
         <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
@@ -1014,7 +1014,7 @@ function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToa
   };
   return (
     <m.div className="tl-modal-layer" {...inviteLayerMotion}>
-      <m.button className="tl-modal-scrim" onClick={onClose} aria-label="Close invite dialog" {...inviteLayerMotion} />
+      <m.div className="tl-modal-scrim" aria-hidden="true" {...inviteLayerMotion} />
       <m.section className="tl-invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title" {...inviteDialogMotion}>
         <header><h2 id="invite-title">Invite to Tanglad</h2><button onClick={onClose} aria-label="Close invite dialog" title="Close invite dialog"><X /></button></header>
         <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
@@ -1335,7 +1335,7 @@ function UpdateFeedPanel({ onClose, setToast }: { onClose: () => void; setToast:
 
   return (
     <m.div className="tl-update-feed-layer" {...inviteLayerMotion}>
-      <m.button className="tl-update-feed-scrim" onClick={onClose} aria-label="Close update feed" {...inviteLayerMotion} />
+      <m.div className="tl-update-feed-scrim" aria-hidden="true" {...inviteLayerMotion} />
       <m.section className="tl-update-feed-dialog" role="dialog" aria-modal="true" aria-labelledby="update-feed-title" {...inviteDialogMotion}>
         <aside className="tl-update-feed-sidebar">
           <header><h2 id="update-feed-title">Update feed</h2><ChatCircle /></header>
