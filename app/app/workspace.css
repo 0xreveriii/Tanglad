@@ -1251,6 +1251,7 @@
 .tl-workspace-browser-search input::placeholder { color: var(--tl-text-faint); opacity: 1; }
 .tl-workspace-browser-filter { min-height: 34px; display: inline-flex; align-items: center; gap: 7px; padding: 0 6px; color: var(--tl-text); background: transparent; font-size: var(--tl-type-control-size); }
 .tl-workspace-browser-filter:hover { color: var(--tl-blue); }
+.tl-workspace-browser-filter.is-active { padding-inline: 9px; border-radius: 5px; color: #004b9f; background: var(--tl-blue-soft); }
 .tl-workspace-browser-filter svg { width: 17px; height: 17px; }
 .tl-workspace-browser-filter-popover { position: absolute; z-index: 4; top: calc(100% + 9px); right: 0; width: min(580px, calc(100vw - 32px)); padding: 28px 24px; border: 1px solid rgba(215, 219, 229, 0.9); border-radius: 9px; color: var(--tl-text); background: var(--tl-surface); box-shadow: 0 14px 28px rgba(28, 35, 52, 0.18); text-align: left; }
 .tl-workspace-browser-filter-popover-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }

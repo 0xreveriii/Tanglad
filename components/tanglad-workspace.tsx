@@ -894,14 +894,16 @@ function TangladSearchLoader() {
 }
 
 type WorkspaceBrowserFilter = "all" | "recent" | "owner" | "member" | "collaborator";
+type WorkspaceMembership = Exclude<WorkspaceBrowserFilter, "all" | "recent">;
+type WorkspacePrivacy = "closed" | "open";
 
-const workspaceMembershipLabels: Record<Exclude<WorkspaceBrowserFilter, "all" | "recent">, string> = {
+const workspaceMembershipLabels: Record<WorkspaceMembership, string> = {
   owner: "Workspaces owned by me",
   member: "Workspaces I'm a member of",
   collaborator: "Workspaces I collaborate in",
 };
 
-const workspaceMembershipShortLabels: Record<Exclude<WorkspaceBrowserFilter, "all" | "recent">, string> = {
+const workspaceMembershipShortLabels: Record<WorkspaceMembership, string> = {
   owner: "Owner",
   member: "Member",
   collaborator: "Collaborator",
@@ -929,6 +931,8 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WorkspaceBrowserFilter>("recent");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedMemberships, setSelectedMemberships] = useState<WorkspaceMembership[]>([]);
+  const [selectedPrivacy, setSelectedPrivacy] = useState<WorkspacePrivacy[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const workspaces = [
@@ -964,6 +968,12 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
     return matchesQuery && matchesFilter;
   });
   const heading = filter === "recent" ? "Recent workspaces" : filter === "all" ? "All workspaces" : workspaceMembershipLabels[filter];
+  const activeFilterCount = selectedMemberships.length + selectedPrivacy.length;
+  const toggleMembership = (membership: WorkspaceMembership) => {
+    setSelectedMemberships((current) => current.includes(membership) ? current.filter((value) => value !== membership) : [...current, membership]);
+    setFilter(membership);
+  };
+  const togglePrivacy = (privacy: WorkspacePrivacy) => setSelectedPrivacy((current) => current.includes(privacy) ? current.filter((value) => value !== privacy) : [...current, privacy]);
 
   return (
     <m.div className="tl-workspace-browser-layer" {...inviteLayerMotion}>
@@ -974,13 +984,13 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
           <div className="tl-workspace-browser-tools">
             <label className="tl-workspace-browser-search"><MagnifyingGlass /><span className="sr-only">Search workspaces</span><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a workspace" /></label>
             <div ref={filterRef} className="tl-workspace-browser-filter-wrap">
-              <button className="tl-workspace-browser-filter" type="button" onClick={() => setFilterOpen((value) => !value)} aria-haspopup="dialog" aria-expanded={filterOpen}><SlidersHorizontal />Filter</button>
+              <button className={`tl-workspace-browser-filter ${activeFilterCount ? "is-active" : ""}`} type="button" onClick={() => setFilterOpen((value) => !value)} aria-haspopup="dialog" aria-expanded={filterOpen} aria-pressed={activeFilterCount > 0}><SlidersHorizontal />Filter{activeFilterCount ? ` / ${activeFilterCount}` : ""}</button>
               {filterOpen && <div className="tl-workspace-browser-filter-popover" role="dialog" aria-label="Workspace filters">
-                <div className="tl-workspace-browser-filter-popover-head"><strong>Filter by</strong><button type="button" onClick={() => setFilter("all")}>Clear all</button></div>
+                <div className="tl-workspace-browser-filter-popover-head"><strong>Filter by</strong><button type="button" onClick={() => { setFilter("all"); setSelectedMemberships([]); setSelectedPrivacy([]); }}>Clear all</button></div>
                 <div className="tl-workspace-browser-filter-columns">
                   <div className="tl-workspace-browser-filter-group"><span>Product</span><button type="button" className="is-selected" aria-pressed="true"><Leaf className="tl-workspace-browser-product-mark" weight="fill" aria-hidden="true" />Tanglad</button></div>
-                  <div className="tl-workspace-browser-filter-group"><span>Membership</span>{(["owner", "member", "collaborator"] as const).map((membership) => <button key={membership} type="button" className={filter === membership ? "is-selected" : ""} aria-pressed={filter === membership} onClick={() => setFilter(membership)}>{workspaceMembershipShortLabels[membership]}</button>)}</div>
-                  <div className="tl-workspace-browser-filter-group"><span>Privacy</span><button type="button">Closed</button><button type="button">Open</button></div>
+                  <div className="tl-workspace-browser-filter-group"><span>Membership{selectedMemberships.length ? ` / ${selectedMemberships.length}` : ""}</span>{(["owner", "member", "collaborator"] as const).map((membership) => <button key={membership} type="button" className={selectedMemberships.includes(membership) ? "is-selected" : ""} aria-pressed={selectedMemberships.includes(membership)} onClick={() => toggleMembership(membership)}>{workspaceMembershipShortLabels[membership]}</button>)}</div>
+                  <div className="tl-workspace-browser-filter-group"><span>Privacy{selectedPrivacy.length ? ` / ${selectedPrivacy.length}` : ""}</span>{(["closed", "open"] as const).map((privacy) => <button key={privacy} type="button" className={selectedPrivacy.includes(privacy) ? "is-selected" : ""} aria-pressed={selectedPrivacy.includes(privacy)} onClick={() => togglePrivacy(privacy)}>{privacy[0].toUpperCase() + privacy.slice(1)}</button>)}</div>
                 </div>
               </div>}
             </div>
@@ -990,12 +1000,12 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
 
         <div className="tl-workspace-browser-body">
           <nav className="tl-workspace-browser-sidebar" aria-label="Workspace filters">
-            <button className={filter === "all" ? "is-active" : ""} onClick={() => setFilter("all")}><CirclesFour />All workspaces</button>
-            <button className={filter === "recent" ? "is-active" : ""} onClick={() => setFilter("recent")}><ClockCounterClockwise />Recent workspaces</button>
+            <button className={filter === "all" ? "is-active" : ""} onClick={() => { setFilter("all"); setSelectedMemberships([]); }}><CirclesFour />All workspaces</button>
+            <button className={filter === "recent" ? "is-active" : ""} onClick={() => { setFilter("recent"); setSelectedMemberships([]); }}><ClockCounterClockwise />Recent workspaces</button>
             <span>My workspaces</span>
-            <button className={filter === "owner" ? "is-active" : ""} onClick={() => setFilter("owner")}><CrownSimple />{workspaceMembershipShortLabels.owner}</button>
-            <button className={filter === "member" ? "is-active" : ""} onClick={() => setFilter("member")}><User />{workspaceMembershipShortLabels.member}</button>
-            <button className={filter === "collaborator" ? "is-active" : ""} onClick={() => setFilter("collaborator")}><UsersThree />{workspaceMembershipShortLabels.collaborator}</button>
+            <button className={filter === "owner" ? "is-active" : ""} onClick={() => { setFilter("owner"); setSelectedMemberships(["owner"]); }}><CrownSimple />{workspaceMembershipShortLabels.owner}</button>
+            <button className={filter === "member" ? "is-active" : ""} onClick={() => { setFilter("member"); setSelectedMemberships(["member"]); }}><User />{workspaceMembershipShortLabels.member}</button>
+            <button className={filter === "collaborator" ? "is-active" : ""} onClick={() => { setFilter("collaborator"); setSelectedMemberships(["collaborator"]); }}><UsersThree />{workspaceMembershipShortLabels.collaborator}</button>
             <button className="tl-workspace-browser-create tl-blue-button" onClick={onCreate}><Plus />Create workspace</button>
           </nav>
 
