@@ -1288,8 +1288,15 @@
 .tl-workspace-browser-mark.is-main { background: #8bcf1e; }
 .tl-workspace-browser-initial { font-family: var(--tl-font-display); font-size: 30px; font-weight: var(--tl-weight-regular); line-height: 1; }
 .tl-workspace-browser-mark > svg { position: absolute; right: -5px; bottom: -5px; width: 19px; height: 19px; padding: 3px; border: 2px solid var(--tl-surface); border-radius: 5px; color: #3f4350; background: var(--tl-surface); box-shadow: 0 1px 2px rgba(37, 47, 68, 0.16); }
-.tl-workspace-browser-empty { min-height: 260px; display: grid; place-items: center; align-content: center; color: var(--tl-text-soft); text-align: center; }
-.tl-workspace-browser-empty > svg { width: 34px; height: 34px; color: var(--tl-blue); }
+.tl-workspace-browser-empty { min-height: 360px; display: grid; place-items: center; align-content: center; color: var(--tl-text-soft); text-align: center; }
+.tl-workspace-browser-empty-illustration { position: relative; width: 156px; height: 108px; margin-bottom: 18px; }
+.tl-workspace-browser-empty-illustration::after { content: ""; position: absolute; right: 8px; bottom: 10px; left: 8px; height: 1px; background: var(--tl-line-strong); }
+.tl-workspace-browser-empty-lens { position: absolute; top: 2px; left: 54px; z-index: 1; width: 46px; height: 46px; display: grid; place-items: center; border: 5px solid var(--tl-blue); border-radius: 50%; color: var(--tl-blue); background: var(--tl-surface); transform: rotate(-18deg); }
+.tl-workspace-browser-empty-lens svg { width: 27px; height: 27px; }
+.tl-workspace-browser-empty-illustration i { position: absolute; display: block; border-radius: 7px; }
+.tl-workspace-browser-empty-illustration .is-block-one { right: 34px; bottom: 13px; width: 42px; height: 23px; background: var(--tl-blue-soft); transform: rotate(-18deg); }
+.tl-workspace-browser-empty-illustration .is-block-two { bottom: 13px; left: 29px; width: 36px; height: 20px; background: var(--tl-text-faint); transform: rotate(34deg); }
+.tl-workspace-browser-empty-illustration .is-leaf { position: absolute; bottom: 11px; left: 72px; z-index: 1; width: 42px; height: 42px; color: var(--tl-blue-hover); transform: rotate(-24deg); }
 .tl-workspace-browser-empty h2 { margin: 14px 0 4px; font-size: var(--tl-type-section-size); }
 .tl-workspace-browser-empty p { margin: 0; font-size: var(--tl-type-control-size); }
 

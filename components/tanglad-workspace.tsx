@@ -907,6 +907,24 @@ const workspaceMembershipShortLabels: Record<Exclude<WorkspaceBrowserFilter, "al
   collaborator: "Collaborator",
 };
 
+function WorkspaceBrowserEmpty({ filter, searching }: { filter: WorkspaceBrowserFilter; searching: boolean }) {
+  const emptyCopy = searching
+    ? { title: "No workspaces found", body: "Try another search or filter." }
+    : filter === "owner"
+      ? { title: "You don't own any workspaces", body: "Create a workspace to get started." }
+      : filter === "member"
+        ? { title: "You aren't a member of any workspace", body: "Join a workspace to start collaborating." }
+        : filter === "collaborator"
+          ? { title: "You aren't a collaborator in any workspace", body: "Start your work by joining or creating a new workspace." }
+          : { title: "No workspaces found", body: "Try another search or filter." };
+
+  return <div className="tl-workspace-browser-empty">
+    <div className="tl-workspace-browser-empty-illustration" aria-hidden="true"><span className="tl-workspace-browser-empty-lens"><MagnifyingGlass /></span><i className="is-block-one" /><i className="is-block-two" /><Leaf className="is-leaf" weight="fill" /></div>
+    <h2>{emptyCopy.title}</h2>
+    <p>{emptyCopy.body}</p>
+  </div>;
+}
+
 function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void; onSelect: (name: string) => void; onCreate: () => void }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WorkspaceBrowserFilter>("recent");
@@ -992,7 +1010,7 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
                 <span>{workspace.role}</span>
                 <CaretRight />
               </button>)}
-            </div> : <div className="tl-workspace-browser-empty"><CirclesFour /><h2>No workspaces found</h2><p>Try another search or filter.</p></div>}
+            </div> : <WorkspaceBrowserEmpty filter={filter} searching={Boolean(normalizedQuery)} />}
           </main>
         </div>
       </m.section>
