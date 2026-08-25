@@ -970,10 +970,13 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
   const heading = filter === "recent" ? "Recent workspaces" : filter === "all" ? "All workspaces" : workspaceMembershipLabels[filter];
   const activeFilterCount = selectedMemberships.length + selectedPrivacy.length;
   const toggleMembership = (membership: WorkspaceMembership) => {
+    setFilter("all");
     setSelectedMemberships((current) => current.includes(membership) ? current.filter((value) => value !== membership) : [...current, membership]);
-    setFilter(membership);
   };
-  const togglePrivacy = (privacy: WorkspacePrivacy) => setSelectedPrivacy((current) => current.includes(privacy) ? current.filter((value) => value !== privacy) : [...current, privacy]);
+  const togglePrivacy = (privacy: WorkspacePrivacy) => {
+    setFilter("all");
+    setSelectedPrivacy((current) => current.includes(privacy) ? current.filter((value) => value !== privacy) : [...current, privacy]);
+  };
 
   return (
     <m.div className="tl-workspace-browser-layer" {...inviteLayerMotion}>
