@@ -1003,12 +1003,12 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
 
         <div className="tl-workspace-browser-body">
           <nav className="tl-workspace-browser-sidebar" aria-label="Workspace filters">
-            <button className={filter === "all" ? "is-active" : ""} onClick={() => { setFilter("all"); setSelectedMemberships([]); }}><CirclesFour />All workspaces</button>
-            <button className={filter === "recent" ? "is-active" : ""} onClick={() => { setFilter("recent"); setSelectedMemberships([]); }}><ClockCounterClockwise />Recent workspaces</button>
+            <button className={filter === "all" && !activeFilterCount ? "is-active" : ""} onClick={() => { setFilter("all"); setSelectedMemberships([]); setSelectedPrivacy([]); }}><CirclesFour />All workspaces</button>
+            <button className={filter === "recent" && !activeFilterCount ? "is-active" : ""} onClick={() => { setFilter("recent"); setSelectedMemberships([]); setSelectedPrivacy([]); }}><ClockCounterClockwise />Recent workspaces</button>
             <span>My workspaces</span>
-            <button className={filter === "owner" ? "is-active" : ""} onClick={() => { setFilter("owner"); setSelectedMemberships(["owner"]); }}><CrownSimple />{workspaceMembershipShortLabels.owner}</button>
-            <button className={filter === "member" ? "is-active" : ""} onClick={() => { setFilter("member"); setSelectedMemberships(["member"]); }}><User />{workspaceMembershipShortLabels.member}</button>
-            <button className={filter === "collaborator" ? "is-active" : ""} onClick={() => { setFilter("collaborator"); setSelectedMemberships(["collaborator"]); }}><UsersThree />{workspaceMembershipShortLabels.collaborator}</button>
+            <button className={filter === "owner" && !activeFilterCount ? "is-active" : ""} onClick={() => { setFilter("owner"); setSelectedMemberships([]); setSelectedPrivacy([]); }}><CrownSimple />{workspaceMembershipShortLabels.owner}</button>
+            <button className={filter === "member" && !activeFilterCount ? "is-active" : ""} onClick={() => { setFilter("member"); setSelectedMemberships([]); setSelectedPrivacy([]); }}><User />{workspaceMembershipShortLabels.member}</button>
+            <button className={filter === "collaborator" && !activeFilterCount ? "is-active" : ""} onClick={() => { setFilter("collaborator"); setSelectedMemberships([]); setSelectedPrivacy([]); }}><UsersThree />{workspaceMembershipShortLabels.collaborator}</button>
             <button className="tl-workspace-browser-create tl-blue-button" onClick={onCreate}><Plus />Create workspace</button>
           </nav>
 
