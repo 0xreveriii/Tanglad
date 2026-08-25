@@ -897,7 +897,9 @@ type WorkspaceBrowserFilter = "all" | "recent" | "owner" | "member" | "collabora
 function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void; onSelect: (name: string) => void; onCreate: () => void }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WorkspaceBrowserFilter>("recent");
+  const [filterOpen, setFilterOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
   const workspaces = [
     { name: "Main workspace", role: "Owner", recent: true, mark: "main" },
     { name: "New Workspace", role: "Owner", recent: true, mark: "new" },
@@ -906,11 +908,23 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
   useEffect(() => {
     searchRef.current?.focus();
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      if (filterOpen) {
+        setFilterOpen(false);
+        return;
+      }
+      onClose();
+    };
+    const closeOnPointerDown = (event: PointerEvent) => {
+      if (!filterRef.current?.contains(event.target as Node)) setFilterOpen(false);
     };
     document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [onClose]);
+    document.addEventListener("pointerdown", closeOnPointerDown);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnPointerDown);
+    };
+  }, [filterOpen, onClose]);
 
   const normalizedQuery = query.trim().toLowerCase();
   const visibleWorkspaces = workspaces.filter((workspace) => {
@@ -928,7 +942,17 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
           <h2 id="workspace-browser-title">Browse all workspaces</h2>
           <div className="tl-workspace-browser-tools">
             <label className="tl-workspace-browser-search"><MagnifyingGlass /><span className="sr-only">Search workspaces</span><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a workspace" /></label>
-            <button className="tl-workspace-browser-filter" type="button" onClick={() => setFilter((value) => value === "all" ? "recent" : "all")} aria-pressed={filter === "all"}><FunnelSimple />Filter</button>
+            <div ref={filterRef} className="tl-workspace-browser-filter-wrap">
+              <button className="tl-workspace-browser-filter" type="button" onClick={() => setFilterOpen((value) => !value)} aria-haspopup="dialog" aria-expanded={filterOpen}><SlidersHorizontal />Filter</button>
+              {filterOpen && <div className="tl-workspace-browser-filter-popover" role="dialog" aria-label="Workspace filters">
+                <div className="tl-workspace-browser-filter-popover-head"><strong>Filter by</strong><button type="button" onClick={() => setFilter("all")}>Clear all</button></div>
+                <div className="tl-workspace-browser-filter-columns">
+                  <div className="tl-workspace-browser-filter-group"><span>Product</span><button type="button" className="is-selected" aria-pressed="true"><span className="tl-workspace-browser-product-mark"><i /><i /><i /></span>Tanglad</button></div>
+                  <div className="tl-workspace-browser-filter-group"><span>Membership</span>{(["owner", "member", "collaborator"] as const).map((membership) => <button key={membership} type="button" className={filter === membership ? "is-selected" : ""} aria-pressed={filter === membership} onClick={() => setFilter(membership)}>{membership[0].toUpperCase() + membership.slice(1)}</button>)}</div>
+                  <div className="tl-workspace-browser-filter-group"><span>Privacy</span><button type="button">Closed</button><button type="button">Open</button></div>
+                </div>
+              </div>}
+            </div>
           </div>
           <button className="tl-workspace-browser-close" onClick={onClose} aria-label="Close workspace browser" title="Close workspace browser"><X /></button>
         </header>

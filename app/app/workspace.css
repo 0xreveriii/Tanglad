@@ -1244,6 +1244,7 @@
 .tl-workspace-browser-head { min-width: 0; display: grid; grid-template-columns: minmax(260px, 1fr) minmax(350px, 1fr) minmax(120px, 1fr); align-items: center; gap: 20px; padding: 0 24px; border-bottom: 1px solid var(--tl-line); }
 .tl-workspace-browser-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
 .tl-workspace-browser-tools { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.tl-workspace-browser-filter-wrap { position: relative; }
 .tl-workspace-browser-search { width: min(300px, 100%); height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--tl-blue); border-radius: 5px; background: var(--tl-surface); }
 .tl-workspace-browser-search svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--tl-text-soft); }
 .tl-workspace-browser-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--tl-text); background: transparent; font-size: var(--tl-type-control-size); }
@@ -1251,6 +1252,22 @@
 .tl-workspace-browser-filter { min-height: 34px; display: inline-flex; align-items: center; gap: 7px; padding: 0 6px; color: var(--tl-text); background: transparent; font-size: var(--tl-type-control-size); }
 .tl-workspace-browser-filter:hover { color: var(--tl-blue); }
 .tl-workspace-browser-filter svg { width: 17px; height: 17px; }
+.tl-workspace-browser-filter-popover { position: absolute; z-index: 4; top: calc(100% + 9px); right: 0; width: min(580px, calc(100vw - 32px)); padding: 28px 24px; border: 1px solid rgba(215, 219, 229, 0.9); border-radius: 9px; color: var(--tl-text); background: var(--tl-surface); box-shadow: 0 14px 28px rgba(28, 35, 52, 0.18); text-align: left; }
+.tl-workspace-browser-filter-popover-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.tl-workspace-browser-filter-popover-head strong { font-size: 16px; font-weight: var(--tl-weight-medium); }
+.tl-workspace-browser-filter-popover-head button { min-height: 24px; padding: 0; color: var(--tl-text-faint); background: transparent; font-size: var(--tl-type-control-size); }
+.tl-workspace-browser-filter-popover-head button:hover { color: var(--tl-text); }
+.tl-workspace-browser-filter-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.tl-workspace-browser-filter-group { display: grid; align-content: start; gap: 7px; }
+.tl-workspace-browser-filter-group > span { margin-bottom: 2px; color: var(--tl-text-soft); font-size: var(--tl-type-control-size); }
+.tl-workspace-browser-filter-group > button { min-height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 9px; border-radius: 5px; color: var(--tl-text); background: var(--tl-surface-muted); font-size: var(--tl-type-control-size); text-align: left; }
+.tl-workspace-browser-filter-group > button:hover,
+.tl-workspace-browser-filter-group > button.is-selected { background: var(--tl-blue-soft); }
+.tl-workspace-browser-product-mark { width: 16px; height: 16px; position: relative; display: inline-block; flex: 0 0 auto; }
+.tl-workspace-browser-product-mark i { position: absolute; width: 4px; height: 13px; border-radius: 3px; transform: rotate(30deg); }
+.tl-workspace-browser-product-mark i:nth-child(1) { left: 0; top: 2px; background: #ef476f; }
+.tl-workspace-browser-product-mark i:nth-child(2) { left: 5px; top: 1px; background: #ffd166; }
+.tl-workspace-browser-product-mark i:nth-child(3) { left: 10px; top: 0; background: #06d6a0; }
 .tl-workspace-browser-close { width: 36px; height: 36px; justify-self: end; display: grid; place-items: center; border-radius: 6px; color: var(--tl-text); background: transparent; }
 .tl-workspace-browser-close:hover { background: var(--tl-surface-muted); }
 .tl-workspace-browser-close svg { width: 18px; height: 18px; }
@@ -1321,6 +1338,7 @@
   .tl-workspace-browser-tools { width: 100%; }
   .tl-workspace-browser-search { flex: 1; width: auto; }
   .tl-workspace-browser-filter { width: 34px; min-width: 34px; justify-content: center; padding: 0; font-size: 0; }
+  .tl-workspace-browser-filter-popover { right: -8px; }
   .tl-workspace-browser-body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
   .tl-workspace-browser-sidebar { min-height: 0; flex-direction: row; align-items: center; overflow-x: auto; scrollbar-width: none; padding: 8px 12px; border-right: 0; border-bottom: 1px solid var(--tl-line); }
   .tl-workspace-browser-sidebar::-webkit-scrollbar { display: none; }
