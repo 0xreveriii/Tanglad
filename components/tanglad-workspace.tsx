@@ -30,6 +30,7 @@ import {
   Gift,
   House,
   Kanban,
+  Leaf,
   Lightbulb,
   List,
   Lock,
@@ -900,6 +901,12 @@ const workspaceMembershipLabels: Record<Exclude<WorkspaceBrowserFilter, "all" | 
   collaborator: "Workspaces I collaborate in",
 };
 
+const workspaceMembershipShortLabels: Record<Exclude<WorkspaceBrowserFilter, "all" | "recent">, string> = {
+  owner: "Owner",
+  member: "Member",
+  collaborator: "Collaborator",
+};
+
 function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void; onSelect: (name: string) => void; onCreate: () => void }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WorkspaceBrowserFilter>("recent");
@@ -953,8 +960,8 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
               {filterOpen && <div className="tl-workspace-browser-filter-popover" role="dialog" aria-label="Workspace filters">
                 <div className="tl-workspace-browser-filter-popover-head"><strong>Filter by</strong><button type="button" onClick={() => setFilter("all")}>Clear all</button></div>
                 <div className="tl-workspace-browser-filter-columns">
-                  <div className="tl-workspace-browser-filter-group"><span>Product</span><button type="button" className="is-selected" aria-pressed="true"><span className="tl-workspace-browser-product-mark"><i /><i /><i /></span>Tanglad</button></div>
-                  <div className="tl-workspace-browser-filter-group"><span>Membership</span>{(["owner", "member", "collaborator"] as const).map((membership) => <button key={membership} type="button" className={filter === membership ? "is-selected" : ""} aria-pressed={filter === membership} onClick={() => setFilter(membership)}>{workspaceMembershipLabels[membership]}</button>)}</div>
+                  <div className="tl-workspace-browser-filter-group"><span>Product</span><button type="button" className="is-selected" aria-pressed="true"><Leaf className="tl-workspace-browser-product-mark" weight="fill" aria-hidden="true" />Tanglad</button></div>
+                  <div className="tl-workspace-browser-filter-group"><span>Membership</span>{(["owner", "member", "collaborator"] as const).map((membership) => <button key={membership} type="button" className={filter === membership ? "is-selected" : ""} aria-pressed={filter === membership} onClick={() => setFilter(membership)}>{workspaceMembershipShortLabels[membership]}</button>)}</div>
                   <div className="tl-workspace-browser-filter-group"><span>Privacy</span><button type="button">Closed</button><button type="button">Open</button></div>
                 </div>
               </div>}
@@ -968,9 +975,9 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
             <button className={filter === "all" ? "is-active" : ""} onClick={() => setFilter("all")}><CirclesFour />All workspaces</button>
             <button className={filter === "recent" ? "is-active" : ""} onClick={() => setFilter("recent")}><ClockCounterClockwise />Recent workspaces</button>
             <span>My workspaces</span>
-            <button className={filter === "owner" ? "is-active" : ""} onClick={() => setFilter("owner")}><CrownSimple />{workspaceMembershipLabels.owner}</button>
-            <button className={filter === "member" ? "is-active" : ""} onClick={() => setFilter("member")}><User />{workspaceMembershipLabels.member}</button>
-            <button className={filter === "collaborator" ? "is-active" : ""} onClick={() => setFilter("collaborator")}><UsersThree />{workspaceMembershipLabels.collaborator}</button>
+            <button className={filter === "owner" ? "is-active" : ""} onClick={() => setFilter("owner")}><CrownSimple />{workspaceMembershipShortLabels.owner}</button>
+            <button className={filter === "member" ? "is-active" : ""} onClick={() => setFilter("member")}><User />{workspaceMembershipShortLabels.member}</button>
+            <button className={filter === "collaborator" ? "is-active" : ""} onClick={() => setFilter("collaborator")}><UsersThree />{workspaceMembershipShortLabels.collaborator}</button>
             <button className="tl-workspace-browser-create tl-blue-button" onClick={onCreate}><Plus />Create workspace</button>
           </nav>
 
