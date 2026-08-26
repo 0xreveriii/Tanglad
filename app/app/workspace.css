@@ -539,7 +539,7 @@
   position: absolute;
   left: calc(100% - 8px);
   width: 256px;
-  padding: 8px;
+  padding: 4px 8px;
   border: 1px solid var(--tl-line);
   border-radius: 9px;
   background: var(--tl-surface);

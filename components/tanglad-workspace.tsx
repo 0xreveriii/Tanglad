@@ -201,15 +201,19 @@ function WorkspaceAddMenuItem({
   hasSubmenu = false,
   active = false,
   onClick,
+  onPointerEnter,
+  onFocus,
 }: {
   icon: ReactNode;
   label: string;
   hasSubmenu?: boolean;
   active?: boolean;
   onClick: () => void;
+  onPointerEnter?: () => void;
+  onFocus?: () => void;
 }) {
   return (
-    <button className={`tl-workspace-add-item ${active ? "is-active" : ""}`} type="button" role="menuitem" onClick={onClick}>
+    <button className={`tl-workspace-add-item ${active ? "is-active" : ""}`} type="button" role="menuitem" onClick={onClick} onPointerEnter={onPointerEnter} onFocus={onFocus}>
       <span className="tl-workspace-add-item-icon">{icon}</span>
       <span>{label}</span>
       {hasSubmenu && <CaretRight aria-hidden="true" />}
@@ -563,13 +567,13 @@ export function TangladWorkspace() {
             {workspaceAddOpen && (
               <div ref={workspaceAddMenuRef} className="tl-workspace-add-menu" id="workspace-add-menu" role="menu" aria-label="Add to workspace">
                 <span className="tl-workspace-add-title">Add to workspace</span>
-                <WorkspaceAddMenuItem icon={<Kanban />} label="Board" hasSubmenu active={workspaceAddSubmenu === "board"} onClick={() => setWorkspaceAddSubmenu((value) => value === "board" ? null : "board")} />
+                <WorkspaceAddMenuItem icon={<Kanban />} label="Board" hasSubmenu active={workspaceAddSubmenu === "board"} onClick={() => setWorkspaceAddSubmenu("board")} onPointerEnter={() => setWorkspaceAddSubmenu("board")} onFocus={() => setWorkspaceAddSubmenu("board")} />
                 {workspaceAddSubmenu === "board" && (
                   <div className="tl-workspace-add-submenu is-board" role="menu" aria-label="Board options">
                     <WorkspaceAddMenuItem icon={<Kanban />} label="New board" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("board", "workspace"); }} />
                   </div>
                 )}
-                <WorkspaceAddMenuItem icon={<FileText />} label="Doc" hasSubmenu active={workspaceAddSubmenu === "doc"} onClick={() => setWorkspaceAddSubmenu((value) => value === "doc" ? null : "doc")} />
+                <WorkspaceAddMenuItem icon={<FileText />} label="Doc" hasSubmenu active={workspaceAddSubmenu === "doc"} onClick={() => setWorkspaceAddSubmenu("doc")} onPointerEnter={() => setWorkspaceAddSubmenu("doc")} onFocus={() => setWorkspaceAddSubmenu("doc")} />
                 {workspaceAddSubmenu === "doc" && (
                   <div className="tl-workspace-add-submenu is-doc" role="menu" aria-label="Doc options">
                     <WorkspaceAddMenuItem icon={<FileText />} label="New doc" onClick={() => setToast("Docs are not part of this preview yet")} />
