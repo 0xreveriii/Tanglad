@@ -493,8 +493,8 @@
 .tl-workspace-add-menu {
   position: absolute;
   z-index: 35;
-  top: calc(100% + 8px);
-  left: calc(100% - 12px);
+  top: 0;
+  left: calc(100% + 8px);
   width: 256px;
   padding: 10px 8px 8px;
   border: 1px solid var(--tl-line);
@@ -552,7 +552,7 @@
 .tl-workspace-add.is-open { color: var(--tl-blue); background: var(--tl-blue-soft); }
 
 @media (max-width: 620px) {
-  .tl-workspace-add-menu { left: 0; top: calc(100% + 8px); width: min(258px, calc(100vw - 32px)); }
+  .tl-workspace-add-menu { left: 0; top: 0; width: min(258px, calc(100vw - 32px)); }
   .tl-workspace-add-submenu { left: 0; top: calc(100% + 6px) !important; width: 100%; }
 }
 
