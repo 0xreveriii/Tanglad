@@ -546,8 +546,8 @@
   box-shadow: 0 14px 32px rgba(37, 39, 51, 0.16);
 }
 
-.tl-workspace-add-submenu.is-board { top: 42px; }
-.tl-workspace-add-submenu.is-doc { top: 78px; }
+.tl-workspace-add-submenu.is-board { top: 36px; }
+.tl-workspace-add-submenu.is-doc { top: 68px; }
 .tl-workspace-add-trigger.is-open,
 .tl-workspace-add.is-open { color: var(--tl-blue); background: var(--tl-blue-soft); }
 

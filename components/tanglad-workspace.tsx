@@ -570,13 +570,13 @@ export function TangladWorkspace() {
                 <WorkspaceAddMenuItem icon={<Kanban />} label="Board" hasSubmenu active={workspaceAddSubmenu === "board"} onClick={() => setWorkspaceAddSubmenu("board")} onPointerEnter={() => setWorkspaceAddSubmenu("board")} onFocus={() => setWorkspaceAddSubmenu("board")} />
                 {workspaceAddSubmenu === "board" && (
                   <div className="tl-workspace-add-submenu is-board" role="menu" aria-label="Board options">
-                    <WorkspaceAddMenuItem icon={<Kanban />} label="New board" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("board", "workspace"); }} />
+                    <WorkspaceAddMenuItem icon={<Kanban />} label="New board" active onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("board", "workspace"); }} />
                   </div>
                 )}
                 <WorkspaceAddMenuItem icon={<FileText />} label="Doc" hasSubmenu active={workspaceAddSubmenu === "doc"} onClick={() => setWorkspaceAddSubmenu("doc")} onPointerEnter={() => setWorkspaceAddSubmenu("doc")} onFocus={() => setWorkspaceAddSubmenu("doc")} />
                 {workspaceAddSubmenu === "doc" && (
                   <div className="tl-workspace-add-submenu is-doc" role="menu" aria-label="Doc options">
-                    <WorkspaceAddMenuItem icon={<FileText />} label="New doc" onClick={() => setToast("Docs are not part of this preview yet")} />
+                    <WorkspaceAddMenuItem icon={<FileText />} label="New doc" active onClick={() => setToast("Docs are not part of this preview yet")} />
                   </div>
                 )}
                 <WorkspaceAddMenuItem icon={<ChartBar />} label="Dashboard" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("insights", "workspace"); }} />
