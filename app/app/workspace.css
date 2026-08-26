@@ -490,6 +490,72 @@
 .tl-workspace-menu footer button:hover { background: var(--tl-surface-muted); }
 .tl-workspace-menu footer svg { width: 16px; height: 16px; }
 
+.tl-workspace-add-menu {
+  position: absolute;
+  z-index: 35;
+  top: calc(100% + 8px);
+  left: calc(100% - 42px);
+  width: 258px;
+  padding: 10px 8px 8px;
+  border: 1px solid var(--tl-line);
+  border-radius: 9px;
+  background: var(--tl-surface);
+  box-shadow: 0 14px 32px rgba(37, 39, 51, 0.16);
+}
+
+/* Nested add menus intentionally extend past the navigation column. */
+.tl-workspace-nav:has(.tl-workspace-add-menu) { overflow: visible; }
+
+.tl-workspace-add-title {
+  display: block;
+  padding: 0 9px 7px;
+  color: var(--tl-text-soft);
+  font-size: var(--tl-type-meta-size);
+}
+
+.tl-workspace-add-item {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  color: var(--tl-text);
+  background: transparent;
+  text-align: left;
+  font-size: var(--tl-type-control-size);
+}
+
+.tl-workspace-add-item:hover,
+.tl-workspace-add-item.is-active { background: var(--tl-surface-muted); }
+.tl-workspace-add-item-icon { width: 17px; height: 17px; display: grid; place-items: center; flex: 0 0 17px; color: var(--tl-text-soft); }
+.tl-workspace-add-item-icon svg { width: 16px; height: 16px; }
+.tl-workspace-add-item > span:nth-child(2) { min-width: 0; flex: 1; }
+.tl-workspace-add-item > svg { width: 14px; height: 14px; color: var(--tl-text-soft); }
+.tl-workspace-add-divider { height: 1px; margin: 8px 1px 10px; background: var(--tl-line); }
+
+.tl-workspace-add-submenu {
+  position: absolute;
+  left: calc(100% - 8px);
+  width: 238px;
+  padding: 8px;
+  border: 1px solid var(--tl-line);
+  border-radius: 9px;
+  background: var(--tl-surface);
+  box-shadow: 0 14px 32px rgba(37, 39, 51, 0.16);
+}
+
+.tl-workspace-add-submenu.is-board { top: 42px; }
+.tl-workspace-add-submenu.is-doc { top: 78px; }
+.tl-workspace-add-trigger.is-open,
+.tl-workspace-add.is-open { color: var(--tl-blue); background: var(--tl-blue-soft); }
+
+@media (max-width: 620px) {
+  .tl-workspace-add-menu { left: 0; top: calc(100% + 8px); width: min(258px, calc(100vw - 32px)); }
+  .tl-workspace-add-submenu { left: 0; top: calc(100% + 6px) !important; width: 100%; }
+}
+
 .tl-nav-row {
   width: 100%;
   height: var(--tl-nav-row-height);

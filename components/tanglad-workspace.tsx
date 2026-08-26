@@ -53,7 +53,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
@@ -195,6 +195,28 @@ function Avatar({ member, size = "normal" }: { member: Pick<Member, "initials" |
   return <span className={`tl-avatar tone-${member.tone} size-${size}`} title={member.name}>{member.initials}</span>;
 }
 
+function WorkspaceAddMenuItem({
+  icon,
+  label,
+  hasSubmenu = false,
+  active = false,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  hasSubmenu?: boolean;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button className={`tl-workspace-add-item ${active ? "is-active" : ""}`} type="button" role="menuitem" onClick={onClick}>
+      <span className="tl-workspace-add-item-icon">{icon}</span>
+      <span>{label}</span>
+      {hasSubmenu && <CaretRight aria-hidden="true" />}
+    </button>
+  );
+}
+
 export function TangladWorkspace() {
   const [screen, setScreen] = useState<Screen>("manage-workspace");
   const [primarySection, setPrimarySection] = useState<PrimarySection>("workspace");
@@ -217,6 +239,8 @@ export function TangladWorkspace() {
   const [updateFeedOpen, setUpdateFeedOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [workspaceAddOpen, setWorkspaceAddOpen] = useState(false);
+  const [workspaceAddSubmenu, setWorkspaceAddSubmenu] = useState<"board" | "doc" | null>(null);
   const [workspaceQuery, setWorkspaceQuery] = useState("");
   const [workspaceBrowserOpen, setWorkspaceBrowserOpen] = useState(false);
   const [workspaceCreateOpen, setWorkspaceCreateOpen] = useState(false);
@@ -227,6 +251,8 @@ export function TangladWorkspace() {
   const helpMenuRef = useRef<HTMLDivElement>(null);
   const workspaceSwitcherRef = useRef<HTMLButtonElement>(null);
   const workspaceMenuRef = useRef<HTMLDivElement>(null);
+  const workspaceAddMenuRef = useRef<HTMLDivElement>(null);
+  const workspaceAddTriggerRef = useRef<HTMLButtonElement>(null);
   const workspaceSearchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -272,6 +298,32 @@ export function TangladWorkspace() {
   }, [workspaceMenuOpen]);
 
   useEffect(() => {
+    if (!workspaceAddOpen) return;
+
+    const closeOnPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!workspaceAddMenuRef.current?.contains(target) && !workspaceAddTriggerRef.current?.contains(target)) {
+        setWorkspaceAddOpen(false);
+        setWorkspaceAddSubmenu(null);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setWorkspaceAddOpen(false);
+        setWorkspaceAddSubmenu(null);
+        workspaceAddTriggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnPointerDown);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnPointerDown);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [workspaceAddOpen]);
+
+  useEffect(() => {
     if (!helpOpen) return;
 
     const closeOnPointerDown = (event: PointerEvent) => {
@@ -304,6 +356,8 @@ export function TangladWorkspace() {
     setHelpOpen(false);
     setSearchOpen(false);
     setWorkspaceMenuOpen(false);
+    setWorkspaceAddOpen(false);
+    setWorkspaceAddSubmenu(null);
     setWorkspaceBrowserOpen(false);
     setWorkspaceCreateOpen(false);
   };
@@ -491,7 +545,42 @@ export function TangladWorkspace() {
               <span><strong>Main workspace</strong></span>
               <CaretDown className={workspaceMenuOpen ? "is-open" : ""} weight="bold" />
             </button>
-            <button className="tl-workspace-add" onClick={() => setToast("Workspace shortcuts are not connected in this UI preview")} aria-label="Workspace shortcuts" title="Workspace shortcuts"><Plus /></button>
+            <button
+              ref={workspaceAddTriggerRef}
+              className={`tl-workspace-add ${workspaceAddOpen ? "is-open" : ""}`}
+              onClick={() => {
+                setWorkspaceMenuOpen(false);
+                setWorkspaceAddSubmenu(null);
+                setWorkspaceAddOpen((value) => !value);
+              }}
+              aria-label="Add to workspace"
+              aria-expanded={workspaceAddOpen}
+              aria-controls="workspace-add-menu"
+              aria-haspopup="menu"
+              title="Add to workspace"
+            ><Plus /></button>
+
+            {workspaceAddOpen && (
+              <div ref={workspaceAddMenuRef} className="tl-workspace-add-menu" id="workspace-add-menu" role="menu" aria-label="Add to workspace">
+                <span className="tl-workspace-add-title">Add to workspace</span>
+                <WorkspaceAddMenuItem icon={<Kanban />} label="Board" hasSubmenu active={workspaceAddSubmenu === "board"} onClick={() => setWorkspaceAddSubmenu((value) => value === "board" ? null : "board")} />
+                {workspaceAddSubmenu === "board" && (
+                  <div className="tl-workspace-add-submenu is-board" role="menu" aria-label="Board options">
+                    <WorkspaceAddMenuItem icon={<Kanban />} label="New board" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("board", "workspace"); }} />
+                  </div>
+                )}
+                <WorkspaceAddMenuItem icon={<FileText />} label="Doc" hasSubmenu active={workspaceAddSubmenu === "doc"} onClick={() => setWorkspaceAddSubmenu((value) => value === "doc" ? null : "doc")} />
+                {workspaceAddSubmenu === "doc" && (
+                  <div className="tl-workspace-add-submenu is-doc" role="menu" aria-label="Doc options">
+                    <WorkspaceAddMenuItem icon={<FileText />} label="New doc" onClick={() => setToast("Docs are not part of this preview yet")} />
+                  </div>
+                )}
+                <WorkspaceAddMenuItem icon={<ChartBar />} label="Dashboard" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("insights", "workspace"); }} />
+                <div className="tl-workspace-add-divider" />
+                <span className="tl-workspace-add-title">Add to account</span>
+                <WorkspaceAddMenuItem icon={<DotsNine />} label="New workspace" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); setWorkspaceCreateOpen(true); }} />
+              </div>
+            )}
 
             {workspaceMenuOpen && (
               <div ref={workspaceMenuRef} className="tl-workspace-menu" id="workspace-switcher-menu" role="dialog" aria-label="Switch workspace">
