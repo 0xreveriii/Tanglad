@@ -494,8 +494,8 @@
   position: absolute;
   z-index: 35;
   top: calc(100% + 8px);
-  left: calc(100% - 42px);
-  width: 258px;
+  left: calc(100% - 12px);
+  width: 256px;
   padding: 10px 8px 8px;
   border: 1px solid var(--tl-line);
   border-radius: 9px;
@@ -515,11 +515,11 @@
 
 .tl-workspace-add-item {
   width: 100%;
-  min-height: 36px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 4px 9px;
+  padding: 3px 9px;
   border-radius: 6px;
   color: var(--tl-text);
   background: transparent;
@@ -538,7 +538,7 @@
 .tl-workspace-add-submenu {
   position: absolute;
   left: calc(100% - 8px);
-  width: 238px;
+  width: 256px;
   padding: 8px;
   border: 1px solid var(--tl-line);
   border-radius: 9px;
