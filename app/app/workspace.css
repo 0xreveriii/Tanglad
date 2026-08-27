@@ -208,8 +208,8 @@
 }
 
 .tl-topbar-brand { width: var(--tl-sidenav-width); min-width: var(--tl-sidenav-width); justify-content: center; gap: 0; }
-.tl-wordmark { width: var(--tl-sidenav-width); min-height: 44px; justify-content: center; gap: 0; padding: 0; color: var(--tl-text); background: transparent; font-family: var(--tl-font-display); font-size: var(--tl-type-brand-size); font-weight: var(--tl-weight-semibold); letter-spacing: var(--tl-tracking-heading); }
-.tl-wordmark strong { display: none; }
+.tl-wordmark { position: relative; width: var(--tl-sidenav-width); min-height: 44px; justify-content: center; gap: 0; overflow: visible; padding: 0; color: var(--tl-text); background: transparent; font-family: var(--tl-font-display); font-size: var(--tl-type-brand-size); font-weight: var(--tl-weight-semibold); letter-spacing: var(--tl-tracking-heading); }
+.tl-wordmark strong { position: absolute; top: 50%; left: calc(50% + 22px); display: block; white-space: nowrap; transform: translateY(-50%); }
 
 .tl-mark {
   width: 48px;
@@ -1655,7 +1655,7 @@
   .tl-email-composer textarea { min-height: 72px; }
   .tl-email-composer select { width: calc(100% - 16px); margin: 0 8px 8px; }
   .tl-invite-modal form > footer { margin-top: 16px; }
-  .tl-wordmark strong { display: none; }
+  .tl-wordmark strong { display: block; }
   .tl-topbar-actions > button:nth-child(3) { display: none; }
   .tl-cover { height: 124px; }
   .tl-cover > button { top: 12px; right: 12px; min-height: 36px; padding-inline: 10px; }
@@ -2150,9 +2150,9 @@
 
 .tl-doc-editor { position: relative; min-height: 100%; background: var(--tl-surface); }
 .tl-doc-editor-toolbar { position: relative; z-index: 30; min-height: 48px; padding: 4px 14px; display: flex; align-items: center; gap: 3px; overflow: visible; border-bottom: 1px solid var(--tl-line); background: var(--tl-surface); }
-.tl-doc-editor-toolbar > button { position: relative; min-width: 32px; height: 32px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; border-radius: 5px; color: var(--tl-text-soft); background: transparent; font-size: var(--tl-type-control-size); font-weight: var(--tl-weight-regular); }
+.tl-doc-editor-toolbar > button { position: relative; min-width: 32px; height: 32px; min-height: 32px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; border-radius: 5px; color: var(--tl-text-soft); background: transparent; font-size: var(--tl-type-control-size); font-weight: var(--tl-weight-regular); }
 .tl-doc-editor-toolbar > button:hover { color: var(--tl-text); background: var(--tl-surface-muted); }
-.tl-doc-editor-toolbar > button.is-active { color: var(--tl-text); background: var(--tl-blue-soft); box-shadow: inset 0 0 0 1px var(--tl-blue); }
+.tl-doc-editor-toolbar > button.is-active { color: var(--tl-blue); background: var(--tl-blue-soft); box-shadow: none; }
 .tl-doc-editor-toolbar > button.tl-blue-button { color: #f8fbff; background: var(--tl-blue); font-weight: var(--tl-weight-semibold); }
 .tl-doc-editor-toolbar > button.has-label { min-width: max-content; }
 .tl-doc-editor-toolbar svg { width: 16px; height: 16px; }
@@ -2236,13 +2236,17 @@
 .tl-doc-comments-panel > header strong { font-size: var(--tl-type-section-size); font-weight: var(--tl-weight-semibold); }
 .tl-doc-comments-panel > header button { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 5px; color: var(--tl-text-soft); background: transparent; }
 .tl-doc-comments-panel > header button:hover { background: var(--tl-surface-muted); }
-.tl-doc-comment-composer { min-height: 232px; padding: 7px 9px 8px; display: grid; grid-template-rows: auto 1fr auto; border: 1px solid var(--tl-blue); border-radius: 8px; background: var(--tl-surface); }
+.tl-doc-comment-composer { padding: 7px 9px 8px; display: grid; border: 1px solid var(--tl-line-strong); border-radius: 8px; background: var(--tl-surface); transition: border-color 160ms ease, min-height 180ms var(--tl-ease); }
+.tl-doc-comment-composer.is-collapsed { min-height: 92px; grid-template-rows: 1fr auto; }
+.tl-doc-comment-composer.is-expanded { min-height: 232px; grid-template-rows: auto 1fr auto; border-color: var(--tl-blue); }
+.tl-doc-comment-composer:focus-within { border-color: var(--tl-blue); }
 .tl-doc-comment-format { display: flex; align-items: center; gap: 1px; overflow-x: auto; }
 .tl-doc-comment-format button { min-width: 28px; height: 28px; padding: 0 5px; display: grid; place-items: center; border-radius: 4px; color: var(--tl-text); background: transparent; font-size: var(--tl-type-meta-size); }
 .tl-doc-comment-format button:hover { background: var(--tl-surface-muted); }
 .tl-doc-comment-format svg { width: 15px; height: 15px; }
 .tl-doc-comment-format .tl-align-icon { transform: scale(.78); }
 .tl-doc-comment-composer textarea { width: 100%; min-height: 106px; padding: 18px 10px; resize: none; border: 0; outline: 0; color: var(--tl-text); background: transparent; font: inherit; font-size: var(--tl-type-control-size); }
+.tl-doc-comment-composer.is-collapsed textarea { min-height: 42px; padding: 9px 4px 5px; overflow: hidden; }
 .tl-doc-comment-composer textarea::placeholder { color: var(--tl-text-soft); opacity: 1; }
 .tl-doc-comment-composer footer { display: flex; align-items: center; justify-content: space-between; }
 .tl-doc-comment-composer footer > div { display: flex; gap: 2px; }

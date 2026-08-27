@@ -1386,6 +1386,7 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
   const [docStyleOpen, setDocStyleOpen] = useState(false);
   const [docOptionsOpen, setDocOptionsOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentComposerOpen, setCommentComposerOpen] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [comments, setComments] = useState<string[]>([]);
   const [docLayout, setDocLayout] = useState("Narrow");
@@ -1518,10 +1519,10 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
       </aside>}
       {commentsOpen && <aside className="tl-doc-comments-panel" aria-label="Document comments">
         <header><strong>Comments</strong><button type="button" aria-label="Close comments" onClick={() => setCommentsOpen(false)}><X /></button></header>
-        <div className="tl-doc-comment-composer tl-composite-field">
-          <div className="tl-doc-comment-format" aria-label="Comment formatting"><button type="button" aria-label="Paragraph">¶</button><button type="button" aria-label="Bold"><strong>B</strong></button><button type="button" aria-label="Italic"><em>I</em></button><button type="button" aria-label="Underline"><u>U</u></button><button type="button" aria-label="Strikethrough"><s>S</s></button><button type="button" aria-label="Text color">A</button><button type="button" aria-label="List"><ListBullets /></button><button type="button" aria-label="Alignment"><span className="tl-align-icon is-left"><i /><i /><i /></span></button></div>
-          <textarea value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} aria-label="Write a comment" placeholder="Comment and mention others with @" />
-          <footer><div><button type="button" aria-label="Mention someone"><At /></button><button type="button" aria-label="Attach a file"><Plus /></button><button type="button" aria-label="Add emoji">☺</button></div><button className="tl-doc-comment-submit" type="button" disabled={!commentDraft.trim()} onClick={() => { const next = commentDraft.trim(); if (!next) return; setComments((current) => [...current, next]); setCommentDraft(""); }}>Update<CaretDown /></button></footer>
+        <div className={`tl-doc-comment-composer tl-composite-field ${commentComposerOpen ? "is-expanded" : "is-collapsed"}`}>
+          {commentComposerOpen && <div className="tl-doc-comment-format" aria-label="Comment formatting"><button type="button" aria-label="Paragraph">¶</button><button type="button" aria-label="Bold"><strong>B</strong></button><button type="button" aria-label="Italic"><em>I</em></button><button type="button" aria-label="Underline"><u>U</u></button><button type="button" aria-label="Strikethrough"><s>S</s></button><button type="button" aria-label="Text color">A</button><button type="button" aria-label="List"><ListBullets /></button><button type="button" aria-label="Alignment"><span className="tl-align-icon is-left"><i /><i /><i /></span></button></div>}
+          <textarea rows={commentComposerOpen ? 4 : 1} value={commentDraft} onFocus={() => setCommentComposerOpen(true)} onChange={(event) => setCommentDraft(event.target.value)} aria-label="Write a comment" aria-expanded={commentComposerOpen} placeholder={commentComposerOpen ? "Comment and mention others with @" : "Write an update and mention others with @"} />
+          <footer><div><button type="button" aria-label="Mention someone" onClick={() => setCommentComposerOpen(true)}><At /></button><button type="button" aria-label="Attach a file" onClick={() => setCommentComposerOpen(true)}><Plus /></button><button type="button" aria-label="Add emoji" onClick={() => setCommentComposerOpen(true)}>☺</button></div>{commentComposerOpen && <button className="tl-doc-comment-submit" type="button" disabled={!commentDraft.trim()} onClick={() => { const next = commentDraft.trim(); if (!next) return; setComments((current) => [...current, next]); setCommentDraft(""); setCommentComposerOpen(false); }}>Update<CaretDown /></button>}</footer>
         </div>
         {comments.length === 0 ? <TangladEmptyState variant="comments" title="No comments yet on this doc" description="Share progress, mention a teammate, or upload a file to get things moving." /> : <div className="tl-doc-comment-list">{comments.map((comment, index) => <article key={`${comment}-${index}`}><span className="tl-profile-avatar">MC</span><div><strong>Mara Cruz</strong><p>{comment}</p></div></article>)}</div>}
       </aside>}
