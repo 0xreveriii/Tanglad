@@ -19,7 +19,6 @@ import {
   CirclesFour,
   ClockCounterClockwise,
   CrownSimple,
-  Diamond,
   DotsNine,
   DotsSixVertical,
   DotsThree,
@@ -508,7 +507,6 @@ export function TangladWorkspace() {
             <AppMark small />
             <strong>Tanglad</strong>
           </button>
-          <button className="tl-plans-button" onClick={() => setToast("Plans are not connected in this UI preview")}><Diamond weight="fill" />Plans</button>
         </div>
 
         <button ref={searchTriggerRef} className="tl-global-search" type="button" onClick={openSearch} aria-haspopup="dialog" aria-expanded={searchOpen} aria-controls="tl-search-dialog">
@@ -518,13 +516,13 @@ export function TangladWorkspace() {
         </button>
 
         <div className="tl-topbar-actions">
-          <button data-tooltip="Notifications" className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" title="Notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
-          <button ref={updateFeedTriggerRef} data-tooltip="Update feed" className={updateFeedOpen ? "is-open" : ""} onClick={openUpdateFeed} aria-label="Open update feed" title="Update feed" aria-haspopup="dialog" aria-expanded={updateFeedOpen}><TrayIcon /></button>
-          <button data-tooltip="Invite members" onClick={() => { setNotificationsOpen(false); setInviteModalOpen(true); }} aria-label="Invite members" title="Invite members"><UserPlus /></button>
-          <button data-tooltip="Settings" onClick={() => navigate("permissions")} aria-label="Open settings" title="Settings"><Gear /></button>
-          <button ref={helpTriggerRef} data-tooltip="Help" className={helpOpen ? "is-open" : ""} onClick={openHelp} aria-label="Open help" title="Help" aria-haspopup="menu" aria-expanded={helpOpen}><Question /></button>
-          <button data-tooltip="App launcher" onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher" title="App launcher"><DotsNine weight="bold" /></button>
-          <button data-tooltip="Mara Cruz profile" className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile" title="Mara Cruz profile"><span className="tl-profile-avatar">MC</span></button>
+          <button data-tooltip="Notifications" className={notificationsOpen ? "is-open" : ""} onClick={() => setNotificationsOpen((value) => !value)} aria-label="Open notifications" aria-expanded={notificationsOpen}><Bell /><span className="tl-unread-count">3</span></button>
+          <button ref={updateFeedTriggerRef} data-tooltip="Update feed" className={updateFeedOpen ? "is-open" : ""} onClick={openUpdateFeed} aria-label="Open update feed" aria-haspopup="dialog" aria-expanded={updateFeedOpen}><TrayIcon /></button>
+          <button data-tooltip="Invite members" onClick={() => { setNotificationsOpen(false); setInviteModalOpen(true); }} aria-label="Invite members"><UserPlus /></button>
+          <button data-tooltip="Settings" onClick={() => navigate("permissions")} aria-label="Open settings"><Gear /></button>
+          <button ref={helpTriggerRef} data-tooltip="Help" className={helpOpen ? "is-open" : ""} onClick={openHelp} aria-label="Open help" aria-haspopup="menu" aria-expanded={helpOpen}><Question /></button>
+          <button data-tooltip="App launcher" onClick={() => setToast("App launcher is not connected in this UI preview")} aria-label="Open app launcher"><DotsNine weight="bold" /></button>
+          <button data-tooltip="Mara Cruz profile" className="tl-profile" onClick={() => setToast("Profile settings are not connected in this UI preview")} aria-label="Open Mara Cruz profile"><span className="tl-profile-avatar">MC</span></button>
         </div>
       </header>
 
@@ -1450,29 +1448,48 @@ function DocsScreen({ navigate, setToast }: { navigate: (screen: Screen) => void
 function DocsEditorScreen({ setToast }: { setToast: (message: string) => void }) {
   const [title, setTitle] = useState("New Doc");
   const [body, setBody] = useState("");
+  const [textStyleOpen, setTextStyleOpen] = useState(false);
+  const [textStyle, setTextStyle] = useState("Normal text");
+  const [alignmentOpen, setAlignmentOpen] = useState(false);
+  const [alignment, setAlignment] = useState<"left" | "center" | "right">("left");
+  const [docStyleOpen, setDocStyleOpen] = useState(false);
+  const [docLayout, setDocLayout] = useState("Narrow");
+  const [fontStyle, setFontStyle] = useState("Default");
+  const [fontSize, setFontSize] = useState("Normal");
+  const [headerSettings, setHeaderSettings] = useState({ cover: false, title: true, contents: true, info: true });
   const toolbarAction = (label: string) => setToast(`${label} is ready for product integration`);
+  const closeToolbarMenus = () => { setTextStyleOpen(false); setAlignmentOpen(false); };
 
   return (
     <section className="tl-doc-editor" aria-labelledby="doc-editor-title">
       <div className="tl-doc-editor-toolbar" role="toolbar" aria-label="Document formatting">
-        <button className="tl-blue-button" type="button" onClick={() => toolbarAction("Add block")}><Plus />Add</button>
+        <button className="tl-blue-button" type="button" data-tooltip="Add block" aria-label="Add block" onClick={() => toolbarAction("Add block")}><Plus />Add</button>
         <span className="tl-doc-toolbar-divider" />
-        <button type="button" aria-label="Undo" title="Undo" onClick={() => toolbarAction("Undo")}><ArrowUUpLeft /></button>
-        <button type="button" aria-label="Redo" title="Redo" onClick={() => toolbarAction("Redo")}><ArrowUUpLeft className="is-redo" /></button>
+        <button type="button" data-tooltip="Undo" aria-label="Undo" onClick={() => toolbarAction("Undo")}><ArrowUUpLeft /></button>
+        <button type="button" data-tooltip="Redo" aria-label="Redo" onClick={() => toolbarAction("Redo")}><ArrowUUpLeft className="is-redo" /></button>
         <span className="tl-doc-toolbar-divider" />
-        <button className="has-label" type="button" onClick={() => toolbarAction("Text style")}><TextT /><span>Normal text</span><CaretDown /></button>
-        <button type="button" aria-label="Bulleted list" title="Bulleted list" onClick={() => toolbarAction("Bulleted list")}><ListBullets /></button>
-        <button type="button" aria-label="Numbered list" title="Numbered list" onClick={() => toolbarAction("Numbered list")}><ListNumbers /></button>
-        <button type="button" aria-label="Checklist" title="Checklist" onClick={() => toolbarAction("Checklist")}><CheckSquare /></button>
+        <button className={`has-label ${textStyleOpen ? "is-active" : ""}`} type="button" data-tooltip="Text style" aria-label="Text style" aria-haspopup="menu" aria-expanded={textStyleOpen} onClick={() => { setTextStyleOpen((value) => !value); setAlignmentOpen(false); }}><TextT /><span>{textStyle}</span><CaretDown /></button>
+        {textStyleOpen && <div className="tl-doc-toolbar-menu tl-doc-text-style-menu" role="menu" aria-label="Text styles">
+          {["Normal text", "Large title", "Medium title", "Small title"].map((option, index) => <button className={textStyle === option ? "is-selected" : ""} type="button" role="menuitemradio" aria-checked={textStyle === option} key={option} onClick={() => { setTextStyle(option); closeToolbarMenus(); }}><strong>{index === 0 ? "T" : `H${index}`}</strong><span>{option}</span></button>)}
+        </div>}
+        <button className={alignmentOpen ? "is-active" : ""} type="button" data-tooltip="Change alignment" aria-label="Change alignment" aria-haspopup="menu" aria-expanded={alignmentOpen} onClick={() => { setAlignmentOpen((value) => !value); setTextStyleOpen(false); }}><span className={`tl-align-icon is-${alignment}`} aria-hidden="true"><i /><i /><i /></span><CaretDown /></button>
+        {alignmentOpen && <div className="tl-doc-toolbar-menu tl-doc-alignment-menu" role="menu" aria-label="Text alignment">
+          {(["left", "center", "right"] as const).map((option) => <button className={alignment === option ? "is-selected" : ""} type="button" role="menuitemradio" aria-label={`Align ${option}`} aria-checked={alignment === option} key={option} onClick={() => { setAlignment(option); closeToolbarMenus(); }}><span className={`tl-align-icon is-${option}`} aria-hidden="true"><i /><i /><i /></span></button>)}
+        </div>}
+        <button type="button" data-tooltip="Bulleted list" aria-label="Bulleted list" onClick={() => toolbarAction("Bulleted list")}><ListBullets /></button>
+        <button type="button" data-tooltip="Numbered list" aria-label="Numbered list" onClick={() => toolbarAction("Numbered list")}><ListNumbers /></button>
+        <button type="button" data-tooltip="Checklist" aria-label="Checklist" onClick={() => toolbarAction("Checklist")}><CheckSquare /></button>
         <span className="tl-doc-toolbar-divider" />
-        <button className="has-label" type="button" onClick={() => toolbarAction("Mention")}><At /><span>Mention</span></button>
+        <button className={`has-label ${docStyleOpen ? "is-active" : ""}`} type="button" data-tooltip="Document style" aria-label="Document style" aria-expanded={docStyleOpen} onClick={() => { setDocStyleOpen((value) => !value); closeToolbarMenus(); }}><span>Style</span></button>
+        <button className="has-label" type="button" data-tooltip="Mention" aria-label="Mention" onClick={() => toolbarAction("Mention")}><At /><span>Mention</span></button>
         <div className="tl-doc-toolbar-spacer" />
-        <button type="button" aria-label="Comments" title="Comments" onClick={() => toolbarAction("Comments")}><ChatCircle /></button>
-        <button className="has-label tl-doc-share" type="button" onClick={() => toolbarAction("Share")}><UserPlus /><span>Share</span></button>
-        <button type="button" aria-label="More document actions" title="More document actions" onClick={() => toolbarAction("Document actions")}><DotsThree /></button>
+        <button type="button" data-tooltip="Comments" aria-label="Comments" onClick={() => toolbarAction("Comments")}><ChatCircle /></button>
+        <button className="has-label tl-doc-share" type="button" data-tooltip="Share document" aria-label="Share document" onClick={() => toolbarAction("Share")}><UserPlus /><span>Share</span></button>
+        <button type="button" data-tooltip="More actions" aria-label="More document actions" onClick={() => toolbarAction("Document actions")}><DotsThree /></button>
       </div>
 
-      <button className="tl-doc-outline-toggle" type="button" aria-label="Toggle document outline" title="Toggle document outline" onClick={() => toolbarAction("Document outline")}><List /></button>
+      <div className={`tl-doc-editor-stage ${docStyleOpen ? "is-style-open" : ""}`}>
+      <button className="tl-doc-outline-toggle" type="button" data-tooltip="Document outline" aria-label="Toggle document outline" onClick={() => toolbarAction("Document outline")}><List /></button>
 
       <div className="tl-doc-editor-canvas">
         <header className="tl-doc-editor-heading">
@@ -1508,9 +1525,25 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
         </button>
       </div>
 
+      {docStyleOpen && <aside className="tl-doc-style-panel" aria-label="Document style settings">
+        <header><strong>Doc style</strong><div><button type="button" onClick={() => { setDocLayout("Narrow"); setFontStyle("Default"); setFontSize("Normal"); setHeaderSettings({ cover: false, title: true, contents: true, info: true }); }}>Reset</button><button type="button" aria-label="Close document style" onClick={() => setDocStyleOpen(false)}><X /></button></div></header>
+        <DocStyleChoice label="Doc Layout" options={["Narrow", "Wide", "Frame"]} value={docLayout} onChange={setDocLayout} visual="layout" />
+        <DocStyleChoice label="Font style" options={["Default", "Serif", "Mono"]} value={fontStyle} onChange={setFontStyle} visual="font" />
+        <DocStyleChoice label="Font size" options={["Small", "Normal", "Large"]} value={fontSize} onChange={setFontSize} />
+        <div className="tl-doc-background-row"><span>Background</span><button type="button" aria-label="Choose document background"><i /><CaretDown /></button></div>
+        <section className="tl-doc-header-settings"><strong>Header</strong>
+          {([['cover', 'Cover image'], ['title', 'Title'], ['contents', 'Table of contents'], ['info', 'Doc info']] as const).map(([key, label]) => <div key={key}><span>{label}</span><button className={headerSettings[key] ? "is-on" : ""} type="button" role="switch" aria-checked={headerSettings[key]} aria-label={label} onClick={() => setHeaderSettings((current) => ({ ...current, [key]: !current[key] }))}><i /></button></div>)}
+        </section>
+      </aside>}
+      </div>
+
       <button className="tl-doc-ai-fab" type="button" aria-label="Open AI document assistant" title="Open AI document assistant" onClick={() => toolbarAction("AI document assistant")}><Leaf weight="fill" /></button>
     </section>
   );
+}
+
+function DocStyleChoice({ label, options, value, onChange, visual }: { label: string; options: string[]; value: string; onChange: (value: string) => void; visual?: "layout" | "font" }) {
+  return <fieldset className={`tl-doc-style-choice ${visual ? `is-${visual}` : ""}`}><legend>{label}</legend><div>{options.map((option) => <button className={value === option ? "is-selected" : ""} type="button" aria-pressed={value === option} key={option} onClick={() => onChange(option)}>{visual === "layout" && <span className={`tl-layout-preview is-${option.toLowerCase()}`}><i /><i /><i /><i /></span>}{visual === "font" && <strong>Aa</strong>}<span>{option}</span></button>)}</div></fieldset>;
 }
 
 function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus, composerOpen, setComposerOpen, newTask, setNewTask, addTask, navigate, setToast }: {
