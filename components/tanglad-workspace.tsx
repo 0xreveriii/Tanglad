@@ -28,10 +28,12 @@ import {
   FunnelSimple,
   Gear,
   Gift,
+  Heart,
   House,
   Kanban,
   Leaf,
   Lightbulb,
+  LinkSimple,
   List,
   ListBullets,
   ListNumbers,
@@ -39,15 +41,18 @@ import {
   MagnifyingGlass,
   PencilSimple,
   PaperPlaneTilt,
+  Paperclip,
   Plus,
   Question,
   RocketLaunch,
   Rows,
   SidebarSimple,
   SlidersHorizontal,
+  Smiley,
   Star,
   Tag,
   TextT,
+  ThumbsUp,
   TrayIcon,
   User,
   UserPlus,
@@ -1438,10 +1443,10 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
         <button type="button" data-tooltip="Numbered list" aria-label="Numbered list" onClick={() => toolbarAction("Numbered list")}><ListNumbers /></button>
         <button type="button" data-tooltip="Checklist" aria-label="Checklist" onClick={() => toolbarAction("Checklist")}><CheckSquare /></button>
         <span className="tl-doc-toolbar-divider" />
-        <button className={`has-label ${docStyleOpen ? "is-active" : ""}`} type="button" data-tooltip="Document style" aria-label="Document style" aria-expanded={docStyleOpen} onClick={() => { setDocStyleOpen((value) => !value); setCommentsOpen(false); closeToolbarMenus(); }}><span>Style</span></button>
+        <button className={`has-label ${docStyleOpen ? "is-active" : ""}`} type="button" data-tooltip="Document style" aria-label="Document style" aria-expanded={docStyleOpen} onClick={() => { setDocStyleOpen((value) => !value); setCommentsOpen(false); setCommentComposerOpen(false); closeToolbarMenus(); }}><span>Style</span></button>
         <button className="has-label" type="button" data-tooltip="Mention" aria-label="Mention" onClick={() => toolbarAction("Mention")}><At /><span>Mention</span></button>
         <div className="tl-doc-toolbar-spacer" />
-        <button className={commentsOpen ? "is-active" : ""} type="button" data-tooltip="Comments" aria-label="Comments" aria-expanded={commentsOpen} onClick={() => { setCommentsOpen((value) => !value); setDocStyleOpen(false); setDocOptionsOpen(false); closeToolbarMenus(); }}><ChatCircle /></button>
+        <button className={commentsOpen ? "is-active" : ""} type="button" data-tooltip="Comments" aria-label="Comments" aria-expanded={commentsOpen} onClick={() => { setCommentsOpen((value) => { const nextOpen = !value; setCommentComposerOpen(nextOpen); return nextOpen; }); setDocStyleOpen(false); setDocOptionsOpen(false); closeToolbarMenus(); }}><ChatCircle /></button>
         <button className="has-label tl-doc-share" type="button" data-tooltip="Share document" aria-label="Share document" onClick={() => toolbarAction("Share")}><UserPlus /><span>Share</span></button>
         <button className={docOptionsOpen ? "is-active" : ""} type="button" data-tooltip="More actions" aria-label="More document actions" aria-haspopup="menu" aria-expanded={docOptionsOpen} aria-controls="tl-doc-options-menu" onClick={() => { setDocOptionsOpen((value) => !value); setDocStyleOpen(false); closeToolbarMenus(); }}><DotsThree /></button>
         {docOptionsOpen && <div className="tl-doc-options-menu" id="tl-doc-options-menu" role="menu" aria-label="Document options">
@@ -1518,13 +1523,13 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
         </section>
       </aside>}
       {commentsOpen && <aside className="tl-doc-comments-panel" aria-label="Document comments">
-        <header><strong>Comments</strong><button type="button" aria-label="Close comments" onClick={() => setCommentsOpen(false)}><X /></button></header>
-        <div className={`tl-doc-comment-composer tl-composite-field ${commentComposerOpen ? "is-expanded" : "is-collapsed"}`}>
+        <header><strong>Comments</strong><button type="button" aria-label="Close comments" onClick={() => { setCommentsOpen(false); setCommentComposerOpen(false); }}><X /></button></header>
+        <div className={`tl-doc-comment-composer tl-composite-field ${commentComposerOpen ? "is-expanded" : "is-collapsed"}`} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null) && !commentDraft.trim()) setCommentComposerOpen(false); }}>
           {commentComposerOpen && <div className="tl-doc-comment-format" aria-label="Comment formatting"><button type="button" aria-label="Paragraph">¶</button><button type="button" aria-label="Bold"><strong>B</strong></button><button type="button" aria-label="Italic"><em>I</em></button><button type="button" aria-label="Underline"><u>U</u></button><button type="button" aria-label="Strikethrough"><s>S</s></button><button type="button" aria-label="Text color">A</button><button type="button" aria-label="List"><ListBullets /></button><button type="button" aria-label="Alignment"><span className="tl-align-icon is-left"><i /><i /><i /></span></button></div>}
-          <textarea rows={commentComposerOpen ? 4 : 1} value={commentDraft} onFocus={() => setCommentComposerOpen(true)} onChange={(event) => setCommentDraft(event.target.value)} aria-label="Write a comment" aria-expanded={commentComposerOpen} placeholder={commentComposerOpen ? "Comment and mention others with @" : "Write an update and mention others with @"} />
-          <footer><div><button type="button" aria-label="Mention someone" onClick={() => setCommentComposerOpen(true)}><At /></button><button type="button" aria-label="Attach a file" onClick={() => setCommentComposerOpen(true)}><Plus /></button><button type="button" aria-label="Add emoji" onClick={() => setCommentComposerOpen(true)}>☺</button></div>{commentComposerOpen && <button className="tl-doc-comment-submit" type="button" disabled={!commentDraft.trim()} onClick={() => { const next = commentDraft.trim(); if (!next) return; setComments((current) => [...current, next]); setCommentDraft(""); setCommentComposerOpen(false); }}>Update<CaretDown /></button>}</footer>
+          <textarea autoFocus={commentComposerOpen} rows={commentComposerOpen ? 4 : 1} value={commentDraft} onFocus={() => setCommentComposerOpen(true)} onChange={(event) => setCommentDraft(event.target.value)} aria-label="Write a comment" aria-expanded={commentComposerOpen} placeholder={commentComposerOpen ? "Comment and mention others with @" : "Write an update and mention others with @"} />
+          <footer><div><button type="button" aria-label="Mention someone" onClick={() => setCommentComposerOpen(true)}><At /></button><button type="button" aria-label="Attach a file" onClick={() => setCommentComposerOpen(true)}><Paperclip /></button><button type="button" aria-label="Add emoji" onClick={() => setCommentComposerOpen(true)}><Smiley /></button><button type="button" aria-label="Writing assistant" onClick={() => setCommentComposerOpen(true)}><PencilSimple /></button></div>{commentComposerOpen && <button className="tl-doc-comment-submit" type="button" disabled={!commentDraft.trim()} onClick={() => { const next = commentDraft.trim(); if (!next) return; setComments((current) => [...current, next]); setCommentDraft(""); setCommentComposerOpen(false); }}>Update<CaretDown /></button>}</footer>
         </div>
-        {comments.length === 0 ? <TangladEmptyState variant="comments" title="No comments yet on this doc" description="Share progress, mention a teammate, or upload a file to get things moving." /> : <div className="tl-doc-comment-list">{comments.map((comment, index) => <article key={`${comment}-${index}`}><span className="tl-profile-avatar">MC</span><div><strong>Mara Cruz</strong><p>{comment}</p></div></article>)}</div>}
+        {comments.length === 0 ? <TangladEmptyState variant="comments" title="No comments yet on this doc" description="Share progress, mention a teammate, or upload a file to get things moving." /> : <div className="tl-doc-comment-list">{comments.map((comment, index) => <DocCommentCard comment={comment} onDelete={() => setComments((current) => current.filter((_, itemIndex) => itemIndex !== index))} key={`${comment}-${index}`} />)}</div>}
       </aside>}
       </div>
 
@@ -1539,6 +1544,69 @@ function DocStyleChoice({ label, options, value, onChange, visual }: { label: st
 
 function DocOption({ icon, label, trailing, onClick }: { icon: ReactNode; label: string; trailing?: ReactNode; onClick: (label: string) => void }) {
   return <button type="button" role="menuitem" onClick={() => onClick(label)}><span className="tl-doc-option-icon">{icon}</span><span>{label}</span>{trailing && <span className="tl-doc-option-trailing">{trailing}</span>}</button>;
+}
+
+function DocCommentCard({ comment, onDelete }: { comment: string; onDelete: () => void }) {
+  const [reaction, setReaction] = useState<"like" | "love" | "celebrate" | "smile" | null>(null);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [resolved, setResolved] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [replies, setReplies] = useState<string[]>([]);
+  const [commentText, setCommentText] = useState(comment);
+  const [editing, setEditing] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [notifyMentionsOnly, setNotifyMentionsOnly] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+  const reactionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!optionsOpen) return;
+    const closeMenu = (event: MouseEvent) => { if (!optionsRef.current?.contains(event.target as Node)) setOptionsOpen(false); };
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [optionsOpen]);
+
+  useEffect(() => {
+    if (!reactionPickerOpen) return;
+    const closePicker = (event: MouseEvent) => { if (!reactionRef.current?.contains(event.target as Node)) setReactionPickerOpen(false); };
+    document.addEventListener("mousedown", closePicker);
+    return () => document.removeEventListener("mousedown", closePicker);
+  }, [reactionPickerOpen]);
+
+  const reactionIcon = reaction === "love" ? <Heart weight="fill" /> : reaction === "celebrate" ? <Star weight="fill" /> : reaction === "smile" ? <Smiley weight="fill" /> : <ThumbsUp weight="fill" />;
+  const reactionLabel = reaction === "love" ? "Loved" : reaction === "celebrate" ? "Celebrated" : reaction === "smile" ? "Smiled" : reaction === "like" ? "Liked" : "Like";
+
+  const submitReply = () => {
+    const nextReply = replyDraft.trim();
+    if (!nextReply) return;
+    setReplies((current) => [...current, nextReply]);
+    setReplyDraft("");
+    setReplyOpen(false);
+  };
+
+  return <article className={`tl-doc-comment-card ${resolved ? "is-resolved" : ""}`}>
+    <header><UserCircle weight="fill" /><div><strong>Rayver Punzalan</strong><span>Just now</span></div><div ref={optionsRef} className="tl-doc-comment-card-menu"><button type="button" aria-label="Add comment to document"><FileText /></button><button type="button" aria-label="Comment notifications"><Bell /></button><button className={optionsOpen ? "is-active" : ""} type="button" aria-label="More comment actions" aria-haspopup="menu" aria-expanded={optionsOpen} onClick={() => setOptionsOpen((value) => !value)}><DotsThree /></button>{optionsOpen && <div className="tl-doc-comment-options" role="menu">
+      <button type="button" role="menuitem" onClick={() => { setEditing(true); setOptionsOpen(false); }}><PencilSimple /><span>Edit comment</span></button>
+      <button type="button" role="menuitemcheckbox" aria-checked={notifyMentionsOnly} onClick={() => setNotifyMentionsOnly((value) => !value)}><Bell /><span>Notify me only when mentioned</span>{notifyMentionsOnly && <Check />}</button>
+      <button type="button" role="menuitem" onClick={() => { setResolved(false); setOptionsOpen(false); }}><Check /><span>Re-open</span></button>
+      <i />
+      <button type="button" role="menuitemcheckbox" aria-checked={bookmarked} onClick={() => setBookmarked((value) => !value)}><BookmarkSimple /><span>{bookmarked ? "Remove bookmark" : "Bookmark this comment"}</span>{bookmarked && <Check />}</button>
+      <i />
+      <button type="button" role="menuitem" onClick={() => setOptionsOpen(false)}><LinkSimple /><span>Copy link to comment</span></button>
+      <i />
+      <button className="is-danger" type="button" role="menuitem" onClick={onDelete}><X /><span>Delete comment</span></button>
+    </div>}</div></header>
+    {editing ? <div className="tl-doc-comment-edit tl-composite-field"><textarea value={commentText} onChange={(event) => setCommentText(event.target.value)} aria-label="Edit comment" autoFocus /><div><button type="button" onClick={() => setEditing(false)}>Cancel</button><button className="tl-blue-button" type="button" onClick={() => setEditing(false)}>Save</button></div></div> : <p className="tl-doc-comment-copy">{commentText}</p>}
+    {reaction && <span className={`tl-doc-comment-reaction is-${reaction}`} aria-label={`One ${reaction}`}>{reactionIcon}1</span>}
+    <div className="tl-doc-comment-actions"><div><div ref={reactionRef} className="tl-doc-reaction-control"><button className={reaction ? "is-active" : ""} type="button" aria-pressed={Boolean(reaction)} onClick={() => setReaction((value) => value ? null : "like")}>{reaction ? reactionIcon : <ThumbsUp />}<span>{reactionLabel}</span></button><button type="button" aria-label="Choose another reaction" aria-expanded={reactionPickerOpen} onClick={() => setReactionPickerOpen((value) => !value)}><CaretDown /></button>{reactionPickerOpen && <div className="tl-doc-reaction-picker" role="menu" aria-label="Choose a reaction"><button type="button" role="menuitem" aria-label="Like" onClick={() => { setReaction("like"); setReactionPickerOpen(false); }}><ThumbsUp weight="fill" /></button><button type="button" role="menuitem" aria-label="Love" onClick={() => { setReaction("love"); setReactionPickerOpen(false); }}><Heart weight="fill" /></button><button type="button" role="menuitem" aria-label="Celebrate" onClick={() => { setReaction("celebrate"); setReactionPickerOpen(false); }}><Star weight="fill" /></button><button type="button" role="menuitem" aria-label="Smile" onClick={() => { setReaction("smile"); setReactionPickerOpen(false); }}><Smiley weight="fill" /></button></div>}</div><button className={replyOpen ? "is-active" : ""} type="button" aria-expanded={replyOpen} onClick={() => setReplyOpen(true)}><ArrowUUpLeft /><span>Reply</span></button></div><button className={resolved ? "is-active" : ""} type="button" aria-pressed={resolved} onClick={() => setResolved((value) => !value)}><Check /><span>{resolved ? "Resolved" : "Resolve"}</span></button></div>
+    {replies.map((reply, index) => <div className="tl-doc-comment-reply" key={`${reply}-${index}`}><UserCircle weight="fill" /><div><strong>Rayver Punzalan</strong><span>Just now</span><p>{reply}</p></div></div>)}
+    <div className={`tl-doc-reply-composer tl-composite-field ${replyOpen ? "is-expanded" : "is-collapsed"}`}>
+      <UserCircle weight="fill" />
+      <div><textarea autoFocus={replyOpen} rows={replyOpen ? 3 : 1} value={replyDraft} onFocus={() => setReplyOpen(true)} onChange={(event) => setReplyDraft(event.target.value)} aria-label="Write a reply" placeholder="Write a reply and mention others with @" />{replyOpen && <footer><div><button type="button" aria-label="Mention someone"><At /></button><button type="button" aria-label="Attach a file"><Paperclip /></button><button type="button" aria-label="Add emoji"><Smiley /></button><button type="button" aria-label="Writing assistant"><PencilSimple /></button></div><button type="button" disabled={!replyDraft.trim()} onClick={submitReply}>Reply<CaretDown /></button></footer>}</div>
+    </div>
+  </article>;
 }
 
 function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus, composerOpen, setComposerOpen, newTask, setNewTask, addTask, navigate, setToast }: {
