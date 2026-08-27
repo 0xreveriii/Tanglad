@@ -1453,16 +1453,42 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
   const [alignmentOpen, setAlignmentOpen] = useState(false);
   const [alignment, setAlignment] = useState<"left" | "center" | "right">("left");
   const [docStyleOpen, setDocStyleOpen] = useState(false);
+  const [docOptionsOpen, setDocOptionsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [comments, setComments] = useState<string[]>([]);
   const [docLayout, setDocLayout] = useState("Narrow");
   const [fontStyle, setFontStyle] = useState("Default");
   const [fontSize, setFontSize] = useState("Normal");
   const [headerSettings, setHeaderSettings] = useState({ cover: false, title: true, contents: true, info: true });
+  const docToolbarRef = useRef<HTMLDivElement>(null);
   const toolbarAction = (label: string) => setToast(`${label} is ready for product integration`);
   const closeToolbarMenus = () => { setTextStyleOpen(false); setAlignmentOpen(false); };
 
+  useEffect(() => {
+    if (!docOptionsOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!docToolbarRef.current?.contains(event.target as Node)) setDocOptionsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDocOptionsOpen(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [docOptionsOpen]);
+
+  const chooseDocOption = (label: string) => {
+    setDocOptionsOpen(false);
+    toolbarAction(label);
+  };
+
   return (
     <section className="tl-doc-editor" aria-labelledby="doc-editor-title">
-      <div className="tl-doc-editor-toolbar" role="toolbar" aria-label="Document formatting">
+      <div ref={docToolbarRef} className="tl-doc-editor-toolbar" role="toolbar" aria-label="Document formatting">
         <button className="tl-blue-button" type="button" data-tooltip="Add block" aria-label="Add block" onClick={() => toolbarAction("Add block")}><Plus />Add</button>
         <span className="tl-doc-toolbar-divider" />
         <button type="button" data-tooltip="Undo" aria-label="Undo" onClick={() => toolbarAction("Undo")}><ArrowUUpLeft /></button>
@@ -1480,15 +1506,39 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
         <button type="button" data-tooltip="Numbered list" aria-label="Numbered list" onClick={() => toolbarAction("Numbered list")}><ListNumbers /></button>
         <button type="button" data-tooltip="Checklist" aria-label="Checklist" onClick={() => toolbarAction("Checklist")}><CheckSquare /></button>
         <span className="tl-doc-toolbar-divider" />
-        <button className={`has-label ${docStyleOpen ? "is-active" : ""}`} type="button" data-tooltip="Document style" aria-label="Document style" aria-expanded={docStyleOpen} onClick={() => { setDocStyleOpen((value) => !value); closeToolbarMenus(); }}><span>Style</span></button>
+        <button className={`has-label ${docStyleOpen ? "is-active" : ""}`} type="button" data-tooltip="Document style" aria-label="Document style" aria-expanded={docStyleOpen} onClick={() => { setDocStyleOpen((value) => !value); setCommentsOpen(false); closeToolbarMenus(); }}><span>Style</span></button>
         <button className="has-label" type="button" data-tooltip="Mention" aria-label="Mention" onClick={() => toolbarAction("Mention")}><At /><span>Mention</span></button>
         <div className="tl-doc-toolbar-spacer" />
-        <button type="button" data-tooltip="Comments" aria-label="Comments" onClick={() => toolbarAction("Comments")}><ChatCircle /></button>
+        <button className={commentsOpen ? "is-active" : ""} type="button" data-tooltip="Comments" aria-label="Comments" aria-expanded={commentsOpen} onClick={() => { setCommentsOpen((value) => !value); setDocStyleOpen(false); setDocOptionsOpen(false); closeToolbarMenus(); }}><ChatCircle /></button>
         <button className="has-label tl-doc-share" type="button" data-tooltip="Share document" aria-label="Share document" onClick={() => toolbarAction("Share")}><UserPlus /><span>Share</span></button>
-        <button type="button" data-tooltip="More actions" aria-label="More document actions" onClick={() => toolbarAction("Document actions")}><DotsThree /></button>
+        <button className={docOptionsOpen ? "is-active" : ""} type="button" data-tooltip="More actions" aria-label="More document actions" aria-haspopup="menu" aria-expanded={docOptionsOpen} aria-controls="tl-doc-options-menu" onClick={() => { setDocOptionsOpen((value) => !value); setDocStyleOpen(false); closeToolbarMenus(); }}><DotsThree /></button>
+        {docOptionsOpen && <div className="tl-doc-options-menu" id="tl-doc-options-menu" role="menu" aria-label="Document options">
+          <span className="tl-doc-options-label">Doc options</span>
+          <DocOption icon={<UsersThree />} label="Manage members" onClick={chooseDocOption} />
+          <div className="tl-doc-options-divider" />
+          <DocOption icon={<PencilSimple />} label="Rename" onClick={chooseDocOption} />
+          <DocOption icon={<Rows />} label="Change type" trailing={<CaretRight />} onClick={chooseDocOption} />
+          <div className="tl-doc-options-divider" />
+          <DocOption icon={<FileText />} label="Duplicate" onClick={chooseDocOption} />
+          <DocOption icon={<SidebarSimple />} label="Full screen" onClick={chooseDocOption} />
+          <div className="tl-doc-options-divider" />
+          <DocOption icon={<BookmarkSimple />} label="Save as a template" onClick={chooseDocOption} />
+          <DocOption icon={<Lightbulb />} label="Create skill from doc" onClick={chooseDocOption} />
+          <DocOption icon={<PaperPlaneTilt />} label="Export" trailing={<CaretRight />} onClick={chooseDocOption} />
+          <DocOption icon={<FileText />} label="Print" onClick={chooseDocOption} />
+          <DocOption icon={<ClockCounterClockwise />} label="Version history" onClick={chooseDocOption} />
+          <DocOption icon={<MagnifyingGlass />} label="Find and replace" trailing={<span className="tl-doc-new-badge">New</span>} onClick={chooseDocOption} />
+          <DocOption icon={<CirclesFour />} label="Activity Log" onClick={chooseDocOption} />
+          <div className="tl-doc-options-divider" />
+          <DocOption icon={<X />} label="Delete / Archive" trailing={<CaretRight />} onClick={chooseDocOption} />
+          <div className="tl-doc-options-divider" />
+          <DocOption icon={<BookOpen />} label="Knowledge base" onClick={chooseDocOption} />
+          <DocOption icon={<ChatCircle />} label="Contact support" onClick={chooseDocOption} />
+          <DocOption icon={<ChatCircle />} label="Give feedback" onClick={chooseDocOption} />
+        </div>}
       </div>
 
-      <div className={`tl-doc-editor-stage ${docStyleOpen ? "is-style-open" : ""}`}>
+      <div className={`tl-doc-editor-stage ${docStyleOpen || commentsOpen ? "is-side-panel-open" : ""}`}>
       <button className="tl-doc-outline-toggle" type="button" data-tooltip="Document outline" aria-label="Toggle document outline" onClick={() => toolbarAction("Document outline")}><List /></button>
 
       <div className="tl-doc-editor-canvas">
@@ -1535,6 +1585,15 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
           {([['cover', 'Cover image'], ['title', 'Title'], ['contents', 'Table of contents'], ['info', 'Doc info']] as const).map(([key, label]) => <div key={key}><span>{label}</span><button className={headerSettings[key] ? "is-on" : ""} type="button" role="switch" aria-checked={headerSettings[key]} aria-label={label} onClick={() => setHeaderSettings((current) => ({ ...current, [key]: !current[key] }))}><i /></button></div>)}
         </section>
       </aside>}
+      {commentsOpen && <aside className="tl-doc-comments-panel" aria-label="Document comments">
+        <header><strong>Comments</strong><button type="button" aria-label="Close comments" onClick={() => setCommentsOpen(false)}><X /></button></header>
+        <div className="tl-doc-comment-composer">
+          <div className="tl-doc-comment-format" aria-label="Comment formatting"><button type="button" aria-label="Paragraph">¶</button><button type="button" aria-label="Bold"><strong>B</strong></button><button type="button" aria-label="Italic"><em>I</em></button><button type="button" aria-label="Underline"><u>U</u></button><button type="button" aria-label="Strikethrough"><s>S</s></button><button type="button" aria-label="Text color">A</button><button type="button" aria-label="List"><ListBullets /></button><button type="button" aria-label="Alignment"><span className="tl-align-icon is-left"><i /><i /><i /></span></button></div>
+          <textarea value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} aria-label="Write a comment" placeholder="Comment and mention others with @" />
+          <footer><div><button type="button" aria-label="Mention someone"><At /></button><button type="button" aria-label="Attach a file"><Plus /></button><button type="button" aria-label="Add emoji">☺</button></div><button className="tl-doc-comment-submit" type="button" disabled={!commentDraft.trim()} onClick={() => { const next = commentDraft.trim(); if (!next) return; setComments((current) => [...current, next]); setCommentDraft(""); }}>Update<CaretDown /></button></footer>
+        </div>
+        {comments.length === 0 ? <div className="tl-doc-comments-empty"><div aria-hidden="true"><span><List /></span><span><FileText /></span></div><strong>No comments yet on this doc</strong><p>Share progress, mention a teammate,<br />or upload a file to get things moving</p></div> : <div className="tl-doc-comment-list">{comments.map((comment, index) => <article key={`${comment}-${index}`}><span className="tl-profile-avatar">MC</span><div><strong>Mara Cruz</strong><p>{comment}</p></div></article>)}</div>}
+      </aside>}
       </div>
 
       <button className="tl-doc-ai-fab" type="button" aria-label="Open AI document assistant" title="Open AI document assistant" onClick={() => toolbarAction("AI document assistant")}><Leaf weight="fill" /></button>
@@ -1544,6 +1603,10 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
 
 function DocStyleChoice({ label, options, value, onChange, visual }: { label: string; options: string[]; value: string; onChange: (value: string) => void; visual?: "layout" | "font" }) {
   return <fieldset className={`tl-doc-style-choice ${visual ? `is-${visual}` : ""}`}><legend>{label}</legend><div>{options.map((option) => <button className={value === option ? "is-selected" : ""} type="button" aria-pressed={value === option} key={option} onClick={() => onChange(option)}>{visual === "layout" && <span className={`tl-layout-preview is-${option.toLowerCase()}`}><i /><i /><i /><i /></span>}{visual === "font" && <strong>Aa</strong>}<span>{option}</span></button>)}</div></fieldset>;
+}
+
+function DocOption({ icon, label, trailing, onClick }: { icon: ReactNode; label: string; trailing?: ReactNode; onClick: (label: string) => void }) {
+  return <button type="button" role="menuitem" onClick={() => onClick(label)}><span className="tl-doc-option-icon">{icon}</span><span>{label}</span>{trailing && <span className="tl-doc-option-trailing">{trailing}</span>}</button>;
 }
 
 function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus, composerOpen, setComposerOpen, newTask, setNewTask, addTask, navigate, setToast }: {
