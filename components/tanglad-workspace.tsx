@@ -132,23 +132,6 @@ const inviteDialogMotion = {
   exit: { opacity: 0, y: 10, scale: 0.99, transition: { duration: 0.18, ease: [0.3, 0, 1, 1] as [number, number, number, number] } },
 };
 
-const searchSignals = [
-  { x: 34, y: 42, width: 112, fill: "#dcecff", accent: "#0067d9", delay: 0 },
-  { x: 300, y: 38, width: 124, fill: "#dff7ef", accent: "#159b78", delay: 0.16 },
-  { x: 48, y: 162, width: 132, fill: "#fff1c9", accent: "#d69212", delay: 0.32 },
-  { x: 286, y: 158, width: 138, fill: "#ebe7ff", accent: "#6c5ce7", delay: 0.48 },
-];
-
-const searchSignalVariants = {
-  initial: { opacity: 0, scale: 0.86, y: 12 },
-  animate: (delay: number) => ({
-    opacity: [0, 1, 1, 0.88, 1],
-    scale: [0.86, 1.03, 1, 0.985, 1],
-    y: [12, 0, -3, 1, 0],
-    transition: { duration: 2.8, delay, repeat: Infinity, repeatDelay: 0.25, ease: "easeInOut" as const },
-  }),
-};
-
 const initialTasks: Task[] = [
   { id: 1, name: "Map the onboarding journey", owner: "MC", ownerName: "Mara Cruz", status: "Done", priority: "Medium", due: "Aug 19", group: "This week" },
   { id: 2, name: "Finalize launch page copy", owner: "IK", ownerName: "Inez Kim", status: "Review", priority: "Low", due: "Aug 20", group: "This week" },
@@ -617,7 +600,7 @@ export function TangladWorkspace() {
 
             {workspaceMenuOpen && (
               <div ref={workspaceMenuRef} className="tl-workspace-menu" id="workspace-switcher-menu" role="dialog" aria-label="Switch workspace">
-                <label className="tl-workspace-menu-search">
+                <label className="tl-workspace-menu-search tl-composite-field">
                   <MagnifyingGlass />
                   <input ref={workspaceSearchRef} value={workspaceQuery} onChange={(event) => setWorkspaceQuery(event.target.value)} placeholder="Search for a workspace" aria-label="Search for a workspace" />
                 </label>
@@ -631,7 +614,7 @@ export function TangladWorkspace() {
                     <span id="my-workspaces-label">My workspaces</span>
                     <button className="is-active" onClick={() => navigate("manage-workspace", "workspace")}><span className="tl-workspace-menu-mark"><AppMark small /></span><strong>Main workspace</strong></button>
                   </section>
-                </> : <p className="tl-workspace-menu-empty">No workspaces found</p>}
+                </> : <TangladEmptyState compact variant="search" title="No workspaces found" description="Try another workspace name or browse all workspaces." />}
 
                 <footer>
                   <button onClick={() => { setWorkspaceMenuOpen(false); setWorkspaceQuery(""); setWorkspaceBrowserOpen(true); }}><CirclesFour />Browse all</button>
@@ -752,16 +735,11 @@ function NotificationPanel({ onClose, openInvite, setToast }: { onClose: () => v
       </header>
       <AnimatedTabs id="notification-tabs" className="tl-notification-tabs" ariaLabel="Notification filters" active={tab} onChange={(value) => setTab(value as typeof tab)} items={[{ id: "all", label: "All" }, { id: "mentioned", label: "Mentioned" }, { id: "assigned", label: "Assigned to me" }]} />
       <div className="tl-notification-controls">
-        <label className="tl-notification-search"><MagnifyingGlass /><span className="sr-only">Search notifications</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search notifications by people, boards, and more..." autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} /></label>
+        <label className="tl-notification-search tl-composite-field"><MagnifyingGlass /><span className="sr-only">Search notifications</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search notifications by people, boards, and more..." autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} /></label>
         <label className="tl-notification-toggle"><input type="checkbox" checked={unreadOnly} onChange={(event) => setUnreadOnly(event.target.checked)} /><span aria-hidden="true" />Unread only</label>
       </div>
       {showTeamsCard && <div className="tl-teams-card"><div className="tl-service-icons"><ChatCircle weight="fill" /><AppMark small /></div><div><strong>Get notifications in MS Teams</strong><p>Connect now to enable real-time updates for all users in your account.</p></div><button className="tl-blue-button" onClick={() => setToast("Teams connection is ready for product integration")}>Connect users</button><button className="tl-teams-dismiss" onClick={() => setShowTeamsCard(false)} aria-label="Dismiss Teams connection" title="Dismiss Teams connection"><X /></button></div>}
-      <div className="tl-notification-empty" aria-live="polite">
-        <div className="tl-notification-empty-art" aria-hidden="true"><span className="tl-notification-count">4</span><div className="tl-notification-mention"><At weight="bold" /><i /></div><UserCircle weight="duotone" /><div className="tl-notification-reply"><ArrowUUpLeft weight="bold" /></div></div>
-        <h3>{query || tab !== "all" || unreadOnly ? "No matching notifications" : "No notifications to show"}</h3>
-        <p>{query || tab !== "all" || unreadOnly ? "Try another filter or clear your search." : "You'll get notified here whenever someone @mentions or replies to you."}</p>
-        <button className="tl-outline-button" onClick={() => { onClose(); openInvite(); }}>Invite new members</button>
-      </div>
+      <TangladEmptyState variant={query || tab !== "all" || unreadOnly ? "search" : "content"} title={query || tab !== "all" || unreadOnly ? "No matching notifications" : "No notifications to show"} description={query || tab !== "all" || unreadOnly ? "Try another filter or clear your search." : "You'll get notified here whenever someone @mentions or replies to you."} action={<button className="tl-outline-button" onClick={() => { onClose(); openInvite(); }}>Invite new members</button>} />
     </aside>
   );
 }
@@ -884,7 +862,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
       <m.div className="tl-search-layer" {...searchLayerMotion}>
         <m.div className="tl-search-scrim" aria-hidden="true" />
         <m.section ref={dialogRef} className="tl-search-dialog" id="tl-search-dialog" role="dialog" aria-modal="true" aria-labelledby="tl-search-title" aria-describedby="tl-search-description" {...searchDialogMotion}>
-          <header className="tl-search-head">
+          <header className="tl-search-head tl-composite-field">
             <MagnifyingGlass weight="bold" />
             <label htmlFor="tl-search-input" className="sr-only">Search everything in Tanglad</label>
             <input id="tl-search-input" type="search" value={query} onChange={(event) => { setPreparing(false); setQuery(event.target.value); }} placeholder="Search everything..." autoFocus autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} />
@@ -935,12 +913,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
                       ))}
                     </div>
                   ) : (
-                    <div className="tl-search-empty">
-                      <span><MagnifyingGlass /></span>
-                      <h2>No results found</h2>
-                      <p>Try a task name, teammate, status, or board.</p>
-                      {query && <button type="button" className="tl-outline-button" onClick={() => setQuery("")}>Clear search</button>}
-                    </div>
+                    <TangladEmptyState variant="search" title="No results found" description="Try a task name, teammate, status, or board." action={query ? <button type="button" className="tl-outline-button" onClick={() => setQuery("")}>Clear search</button> : undefined} />
                   )}
                 </m.div>
               )}
@@ -968,51 +941,13 @@ function SearchResultGlyph({ section }: { section: SearchResult["section"] }) {
 function TangladSearchLoader() {
   return (
     <div className="tl-search-loader" role="status" aria-live="polite">
-      <svg viewBox="0 0 460 220" role="img" aria-label="Tanglad work signals weaving into an organized workspace">
-        <defs>
-          <linearGradient id="tl-loader-mark" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#0b78e3" /><stop offset="1" stopColor="#0055bd" /></linearGradient>
-          <filter id="tl-loader-shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="#1b4f89" floodOpacity="0.16" /></filter>
-        </defs>
-
-        <g className="tl-search-loader-grid" aria-hidden="true">
-          <path d="M82 74H378M82 110H378M82 146H378" />
-          <path d="M170 30V190M230 30V190M290 30V190" />
-        </g>
-
-        <m.path d="M146 54C180 54 184 88 207 99" className="tl-loader-thread" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.75, 0.35] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }} />
-        <m.path d="M300 50C270 50 273 85 253 99" className="tl-loader-thread is-mint" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.7, 0.3] }} transition={{ duration: 2.8, delay: 0.16, repeat: Infinity, ease: "easeInOut" }} />
-        <m.path d="M180 174C192 150 205 141 216 130" className="tl-loader-thread is-amber" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.65, 0.28] }} transition={{ duration: 2.8, delay: 0.32, repeat: Infinity, ease: "easeInOut" }} />
-        <m.path d="M286 170C272 151 257 143 246 130" className="tl-loader-thread is-violet" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, 0.65, 0.28] }} transition={{ duration: 2.8, delay: 0.48, repeat: Infinity, ease: "easeInOut" }} />
-
-        {searchSignals.map((signal) => (
-          <m.g key={`${signal.x}-${signal.y}`} custom={signal.delay} variants={searchSignalVariants} initial="initial" animate="animate" filter="url(#tl-loader-shadow)">
-            <rect x={signal.x} y={signal.y} width={signal.width} height="28" rx="8" fill={signal.fill} />
-            <circle cx={signal.x + 16} cy={signal.y + 14} r="5" fill={signal.accent} />
-            <rect x={signal.x + 29} y={signal.y + 10} width={signal.width - 43} height="8" rx="4" fill={signal.accent} opacity="0.72" />
-          </m.g>
-        ))}
-
-        <m.g animate={{ scale: [0.94, 1.04, 1, 1], rotate: [0, -2, 0, 0] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }} style={{ originX: 0.5, originY: 0.5 }} filter="url(#tl-loader-shadow)">
-          <rect x="204" y="84" width="52" height="52" rx="14" fill="url(#tl-loader-mark)" />
-          <circle cx="221" cy="101" r="6" fill="#fff" /><circle cx="239" cy="101" r="6" fill="#fff" />
-          <circle cx="221" cy="119" r="6" fill="#fff" /><circle cx="239" cy="119" r="6" fill="#fff" />
-        </m.g>
-
-        <m.g animate={{ x: [-112, -112, 0, 0, 0, -112], y: [58, 58, 0, -5, 0, 58], rotate: [-8, -8, 2, -2, 0, -8], opacity: [0, 1, 1, 1, 1, 0] }} transition={{ duration: 2.8, times: [0, 0.12, 0.48, 0.6, 0.78, 1], repeat: Infinity, ease: [0.2, 0, 0, 1] }} style={{ originX: 0.5, originY: 0.5 }} filter="url(#tl-loader-shadow)">
-          <rect x="190" y="148" width="80" height="24" rx="7" fill="#ffffff" />
-          <rect x="200" y="156" width="38" height="8" rx="4" fill="#77b7f7" />
-          <circle cx="254" cy="160" r="6" fill="#40c9a2" />
-        </m.g>
-
-        <m.circle cx="174" cy="112" r="5" fill="#40c9a2" animate={{ scale: [0.7, 1.25, 0.7], opacity: [0.35, 1, 0.35] }} transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut" }} />
-        <m.circle cx="285" cy="105" r="4" fill="#f4b942" animate={{ y: [-4, 5, -4], opacity: [0.45, 1, 0.45] }} transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }} />
-        <m.circle cx="275" cy="132" r="4" fill="#7568f5" animate={{ x: [-5, 4, -5], scale: [0.85, 1.15, 0.85] }} transition={{ duration: 1.9, repeat: Infinity, ease: "easeInOut" }} />
-      </svg>
-      <m.div className="tl-search-loader-status" initial={{ opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.35 }}>
-        <span aria-hidden="true"><i /><i /><i /></span>
-        <strong>Weaving your workspace together</strong>
-      </m.div>
-      <m.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.45 }}>Tip: Search tasks, people, statuses, and boards from one place.</m.p>
+      <div className="tl-visible-loader" aria-hidden="true">
+        <m.span className="tl-visible-loader-ring" animate={{ rotate: 360 }} transition={{ duration: 1.15, repeat: Infinity, ease: "linear" }} />
+        <m.span className="tl-visible-loader-mark" animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 1.15, repeat: Infinity, ease: "easeInOut" }}><AppMark small /></m.span>
+        {[0, 1, 2].map((index) => <m.i key={index} animate={{ opacity: [0.22, 1, 0.22], scaleX: [0.72, 1, 0.72] }} transition={{ duration: 1.1, delay: index * 0.16, repeat: Infinity, ease: "easeInOut" }} />)}
+      </div>
+      <div className="tl-search-loader-status"><strong>Loading search results</strong><span aria-hidden="true"><i /><i /><i /></span></div>
+      <p>Searching tasks, people, statuses, boards, and documents.</p>
     </div>
   );
 }
@@ -1044,11 +979,7 @@ function WorkspaceBrowserEmpty({ filter, searching }: { filter: WorkspaceBrowser
           ? { title: "You aren't a collaborator in any workspace", body: "Start your work by joining or creating a new workspace." }
           : { title: "No workspaces found", body: "Try another search or filter." };
 
-  return <div className="tl-workspace-browser-empty">
-    <div className="tl-workspace-browser-empty-illustration" aria-hidden="true"><span className="tl-workspace-browser-empty-lens"><MagnifyingGlass /></span><i className="is-block-one" /><i className="is-block-two" /><Leaf className="is-leaf" weight="fill" /></div>
-    <h2>{emptyCopy.title}</h2>
-    <p>{emptyCopy.body}</p>
-  </div>;
+  return <TangladEmptyState variant="search" title={emptyCopy.title} description={emptyCopy.body} />;
 }
 
 function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void; onSelect: (name: string) => void; onCreate: () => void }) {
@@ -1109,7 +1040,7 @@ function WorkspaceBrowser({ onClose, onSelect, onCreate }: { onClose: () => void
         <header className="tl-workspace-browser-head">
           <h2 id="workspace-browser-title">Browse all workspaces</h2>
           <div className="tl-workspace-browser-tools">
-            <label className="tl-workspace-browser-search"><MagnifyingGlass /><span className="sr-only">Search workspaces</span><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a workspace" /></label>
+            <label className="tl-workspace-browser-search tl-composite-field"><MagnifyingGlass /><span className="sr-only">Search workspaces</span><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a workspace" /></label>
             <div ref={filterRef} className="tl-workspace-browser-filter-wrap">
               <button className={`tl-workspace-browser-filter ${activeFilterCount ? "is-active" : ""}`} type="button" onClick={() => setFilterOpen((value) => !value)} aria-haspopup="dialog" aria-expanded={filterOpen} aria-pressed={activeFilterCount > 0}><SlidersHorizontal />Filter{activeFilterCount ? ` / ${activeFilterCount}` : ""}</button>
               {filterOpen && <div className="tl-workspace-browser-filter-popover" role="dialog" aria-label="Workspace filters">
@@ -1211,7 +1142,7 @@ function InviteMembersModal({ onClose, setToast }: { onClose: () => void; setToa
         <header><h2 id="invite-title">Invite to Tanglad</h2><button onClick={onClose} aria-label="Close invite dialog" title="Close invite dialog"><X /></button></header>
         <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
           <div className="tl-invite-modal-row"><label>Invite with email</label><button type="button" className="tl-outline-button" onClick={() => setToast("Workspace directory is ready for product integration")}><UsersThree />Workspace directory</button></div>
-          <div className="tl-email-composer"><textarea value={emails} onChange={(event) => setEmails(event.target.value)} placeholder="Name@example.com, Name@example.com ..." rows={2} aria-label="Email addresses" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} data-gramm="false" data-enable-grammarly="false" data-1p-ignore="true" required /><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Invite role"><option>Member</option><option>Viewer</option></select></div>
+          <div className="tl-email-composer tl-composite-field"><textarea value={emails} onChange={(event) => setEmails(event.target.value)} placeholder="Name@example.com, Name@example.com ..." rows={2} aria-label="Email addresses" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} data-gramm="false" data-enable-grammarly="false" data-1p-ignore="true" required /><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Invite role"><option>Member</option><option>Viewer</option></select></div>
           <label className="tl-invite-message"><span>Write a message (optional)</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Add context for new members" rows={3} /></label>
           <footer><button type="button" className="tl-outline-button" onClick={onClose}>Cancel</button><button type="submit" className="tl-blue-button">Invite</button></footer>
         </form>
@@ -1436,7 +1367,7 @@ function DocsScreen({ navigate, setToast }: { navigate: (screen: Screen) => void
                 <td>3 days ago</td>
                 <td><span className="tl-doc-workspace"><AppMark small />Main workspace</span></td>
                 <td><em>Workspace level</em></td>
-              </tr> : <tr className="tl-doc-empty-row"><td colSpan={5}>No documents match this view.</td></tr>}
+              </tr> : <tr className="tl-doc-empty-row"><td colSpan={5}><TangladEmptyState compact variant="search" title="No documents found" description="Try another search or creator filter." /></td></tr>}
             </tbody>
           </table>
         </div>
@@ -1587,12 +1518,12 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
       </aside>}
       {commentsOpen && <aside className="tl-doc-comments-panel" aria-label="Document comments">
         <header><strong>Comments</strong><button type="button" aria-label="Close comments" onClick={() => setCommentsOpen(false)}><X /></button></header>
-        <div className="tl-doc-comment-composer">
+        <div className="tl-doc-comment-composer tl-composite-field">
           <div className="tl-doc-comment-format" aria-label="Comment formatting"><button type="button" aria-label="Paragraph">¶</button><button type="button" aria-label="Bold"><strong>B</strong></button><button type="button" aria-label="Italic"><em>I</em></button><button type="button" aria-label="Underline"><u>U</u></button><button type="button" aria-label="Strikethrough"><s>S</s></button><button type="button" aria-label="Text color">A</button><button type="button" aria-label="List"><ListBullets /></button><button type="button" aria-label="Alignment"><span className="tl-align-icon is-left"><i /><i /><i /></span></button></div>
           <textarea value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} aria-label="Write a comment" placeholder="Comment and mention others with @" />
           <footer><div><button type="button" aria-label="Mention someone"><At /></button><button type="button" aria-label="Attach a file"><Plus /></button><button type="button" aria-label="Add emoji">☺</button></div><button className="tl-doc-comment-submit" type="button" disabled={!commentDraft.trim()} onClick={() => { const next = commentDraft.trim(); if (!next) return; setComments((current) => [...current, next]); setCommentDraft(""); }}>Update<CaretDown /></button></footer>
         </div>
-        {comments.length === 0 ? <div className="tl-doc-comments-empty"><div aria-hidden="true"><span><List /></span><span><FileText /></span></div><strong>No comments yet on this doc</strong><p>Share progress, mention a teammate,<br />or upload a file to get things moving</p></div> : <div className="tl-doc-comment-list">{comments.map((comment, index) => <article key={`${comment}-${index}`}><span className="tl-profile-avatar">MC</span><div><strong>Mara Cruz</strong><p>{comment}</p></div></article>)}</div>}
+        {comments.length === 0 ? <TangladEmptyState variant="comments" title="No comments yet on this doc" description="Share progress, mention a teammate, or upload a file to get things moving." /> : <div className="tl-doc-comment-list">{comments.map((comment, index) => <article key={`${comment}-${index}`}><span className="tl-profile-avatar">MC</span><div><strong>Mara Cruz</strong><p>{comment}</p></div></article>)}</div>}
       </aside>}
       </div>
 
@@ -1636,7 +1567,7 @@ function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus,
       </div>
 
       {composerOpen && (
-        <form className="tl-inline-form" onSubmit={(event) => { event.preventDefault(); addTask(); }}>
+        <form className="tl-inline-form tl-composite-field" onSubmit={(event) => { event.preventDefault(); addTask(); }}>
           <label htmlFor="tl-new-task">Task name</label>
           <input id="tl-new-task" autoFocus value={newTask} onChange={(event) => setNewTask(event.target.value)} placeholder="Add a task" />
           <button className="tl-blue-button" type="submit">Add</button>
@@ -1918,7 +1849,7 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
       <div className="tl-insights-toolbar">
         <button className="tl-blue-button" onClick={() => showToast("Widget picker is ready for product integration")}><Plus />Add widget</button>
         <button className="tl-insights-source" onClick={() => navigate("board")}><Rows /><span><strong>1 connected board</strong><small>Tanglad</small></span><CaretRight /></button>
-        <label className="tl-insights-search"><MagnifyingGlass /><span className="sr-only">Filter insights</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Type to filter" /></label>
+        <label className="tl-insights-search tl-composite-field"><MagnifyingGlass /><span className="sr-only">Filter insights</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Type to filter" /></label>
         <button className="tl-insights-save" onClick={() => showToast("Insights view saved")} aria-label="Save insights view" title="Save insights view"><Check /></button>
         <button className="tl-insights-control" onClick={() => showToast("People filter is ready for product integration")}><UsersThree />People</button>
         <button className="tl-insights-control" onClick={() => showToast("Global insight filters are ready for product integration")}><FunnelSimple />Filter</button>
@@ -1976,11 +1907,7 @@ function FavoritesScreen() {
   return (
     <div className="tl-standard-page tl-favorites-page">
       <PageHeader title="Favorites" description="Saved boards, updates, and workspace items in one place." />
-      <section className="tl-favorites-empty" aria-label="No favorites saved">
-        <Star weight="duotone" />
-        <h2>No favorites yet</h2>
-        <p>Items you save will appear here for quick access.</p>
-      </section>
+      <TangladEmptyState variant="favorites" title="No favorites yet" description="Items you save will appear here for quick access." />
     </div>
   );
 }
@@ -2019,5 +1946,18 @@ function PageHeader({ title, description, actions }: { title: string; descriptio
 }
 
 function EmptySearch() {
-  return <div className="tl-empty-state"><MagnifyingGlass /><h2>No matching items</h2><p>Clear the search or change the current filter.</p></div>;
+  return <TangladEmptyState variant="search" title="No matching items" description="Clear the search or change the current filter." />;
+}
+
+function TangladEmptyState({ title, description, variant = "content", compact = false, action }: { title: string; description: string; variant?: "search" | "comments" | "favorites" | "content"; compact?: boolean; action?: ReactNode }) {
+  return <div className={`tl-shared-empty is-${variant} ${compact ? "is-compact" : ""}`} role="status">
+    <div className="tl-shared-empty-art" aria-hidden="true">
+      <span className="is-back">{variant === "search" ? <MagnifyingGlass /> : <FileText />}</span>
+      <span className="is-front">{variant === "favorites" ? <Star weight="fill" /> : variant === "comments" ? <ChatCircle weight="fill" /> : <Leaf weight="fill" />}</span>
+      <i />
+    </div>
+    <h2>{title}</h2>
+    <p>{description}</p>
+    {action && <div className="tl-shared-empty-action">{action}</div>}
+  </div>;
 }
