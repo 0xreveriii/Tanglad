@@ -15,6 +15,7 @@ import {
   ChartBar,
   ChatCircle,
   Check,
+  CheckSquare,
   CirclesFour,
   ClockCounterClockwise,
   CrownSimple,
@@ -33,6 +34,8 @@ import {
   Leaf,
   Lightbulb,
   List,
+  ListBullets,
+  ListNumbers,
   Lock,
   MagnifyingGlass,
   PencilSimple,
@@ -45,6 +48,7 @@ import {
   SlidersHorizontal,
   Star,
   Tag,
+  TextT,
   TrayIcon,
   User,
   UserPlus,
@@ -57,7 +61,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
 import "@/app/app/workspace.css";
 
-type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "insights" | "collaborators" | "permissions" | "favorites";
+type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "docs" | "docs-editor" | "insights" | "collaborators" | "permissions" | "favorites";
 type PrimarySection = "workspace" | "my-work" | "inbox" | "favorites";
 type WorkspaceTab = "recents" | "content" | "collaborators" | "permissions";
 type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" | "docs";
@@ -163,6 +167,14 @@ const members: Member[] = [
   { initials: "SO", name: "Sam Ortega", email: "sam@tanglad.team", role: "Viewer", lastActive: "Yesterday", items: 5, tone: "violet" },
 ];
 
+const docTemplates = [
+  { title: "Meeting notes", tone: "hunter" },
+  { title: "Project brief", tone: "olive" },
+  { title: "Project kickoff", tone: "moss" },
+  { title: "Weekly update", tone: "sage" },
+  { title: "Retrospective", tone: "forest" },
+] as const;
+
 const statusOrder: TaskStatus[] = ["Working on it", "Review", "Done", "Blocked"];
 
 const screenLabels: Record<Screen, string> = {
@@ -170,6 +182,8 @@ const screenLabels: Record<Screen, string> = {
   "my-work": "My work",
   inbox: "Update feed",
   board: "Tanglad",
+  docs: "Docs",
+  "docs-editor": "New Doc",
   insights: "Insights",
   collaborators: "Collaborators",
   permissions: "Permissions",
@@ -200,6 +214,7 @@ function WorkspaceAddMenuItem({
   label,
   hasSubmenu = false,
   active = false,
+  controls,
   onClick,
   onPointerEnter,
   onFocus,
@@ -208,12 +223,23 @@ function WorkspaceAddMenuItem({
   label: string;
   hasSubmenu?: boolean;
   active?: boolean;
+  controls?: string;
   onClick: () => void;
   onPointerEnter?: () => void;
   onFocus?: () => void;
 }) {
   return (
-    <button className={`tl-workspace-add-item ${active ? "is-active" : ""}`} type="button" role="menuitem" onClick={onClick} onPointerEnter={onPointerEnter} onFocus={onFocus}>
+    <button
+      className={`tl-workspace-add-item ${active ? "is-active" : ""}`}
+      type="button"
+      role="menuitem"
+      aria-haspopup={hasSubmenu ? "menu" : undefined}
+      aria-expanded={hasSubmenu ? active : undefined}
+      aria-controls={controls}
+      onClick={onClick}
+      onPointerEnter={onPointerEnter}
+      onFocus={onFocus}
+    >
       <span className="tl-workspace-add-item-icon">{icon}</span>
       <span>{label}</span>
       {hasSubmenu && <CaretRight aria-hidden="true" />}
@@ -567,18 +593,22 @@ export function TangladWorkspace() {
             {workspaceAddOpen && (
               <div ref={workspaceAddMenuRef} className="tl-workspace-add-menu" id="workspace-add-menu" role="menu" aria-label="Add to workspace">
                 <span className="tl-workspace-add-title">Add to workspace</span>
-                <WorkspaceAddMenuItem icon={<Kanban />} label="Board" hasSubmenu active={workspaceAddSubmenu === "board"} onClick={() => setWorkspaceAddSubmenu("board")} onPointerEnter={() => setWorkspaceAddSubmenu("board")} onFocus={() => setWorkspaceAddSubmenu("board")} />
-                {workspaceAddSubmenu === "board" && (
-                  <div className="tl-workspace-add-submenu is-board" role="menu" aria-label="Board options">
-                    <WorkspaceAddMenuItem icon={<Kanban />} label="New board" active onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("board", "workspace"); }} />
-                  </div>
-                )}
-                <WorkspaceAddMenuItem icon={<FileText />} label="Doc" hasSubmenu active={workspaceAddSubmenu === "doc"} onClick={() => setWorkspaceAddSubmenu("doc")} onPointerEnter={() => setWorkspaceAddSubmenu("doc")} onFocus={() => setWorkspaceAddSubmenu("doc")} />
-                {workspaceAddSubmenu === "doc" && (
-                  <div className="tl-workspace-add-submenu is-doc" role="menu" aria-label="Doc options">
-                    <WorkspaceAddMenuItem icon={<FileText />} label="New doc" active onClick={() => setToast("Docs are not part of this preview yet")} />
-                  </div>
-                )}
+                <div className="tl-workspace-add-entry">
+                  <WorkspaceAddMenuItem icon={<Kanban />} label="Board" hasSubmenu controls="workspace-add-board-menu" active={workspaceAddSubmenu === "board"} onClick={() => setWorkspaceAddSubmenu("board")} onPointerEnter={() => setWorkspaceAddSubmenu("board")} onFocus={() => setWorkspaceAddSubmenu("board")} />
+                  {workspaceAddSubmenu === "board" && (
+                    <div className="tl-workspace-add-submenu" id="workspace-add-board-menu" role="menu" aria-label="Board options">
+                      <WorkspaceAddMenuItem icon={<Kanban />} label="New board" active onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("board", "workspace"); }} />
+                    </div>
+                  )}
+                </div>
+                <div className="tl-workspace-add-entry">
+                  <WorkspaceAddMenuItem icon={<FileText />} label="Doc" hasSubmenu controls="workspace-add-doc-menu" active={workspaceAddSubmenu === "doc"} onClick={() => setWorkspaceAddSubmenu("doc")} onPointerEnter={() => setWorkspaceAddSubmenu("doc")} onFocus={() => setWorkspaceAddSubmenu("doc")} />
+                  {workspaceAddSubmenu === "doc" && (
+                    <div className="tl-workspace-add-submenu" id="workspace-add-doc-menu" role="menu" aria-label="Doc options">
+                      <WorkspaceAddMenuItem icon={<FileText />} label="New doc" active onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("docs", "workspace"); }} />
+                    </div>
+                  )}
+                </div>
                 <WorkspaceAddMenuItem icon={<ChartBar />} label="Dashboard" onClick={() => { setWorkspaceAddOpen(false); setWorkspaceAddSubmenu(null); navigate("insights", "workspace"); }} />
                 <div className="tl-workspace-add-divider" />
                 <span className="tl-workspace-add-title">Add to account</span>
@@ -615,6 +645,7 @@ export function TangladWorkspace() {
           <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
             <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
             <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
+            <button className={screen === "docs" || screen === "docs-editor" ? "is-active" : ""} onClick={() => navigate("docs", "workspace")}><FileText /><span>Docs</span></button>
             <button className={screen === "insights" ? "is-active" : ""} onClick={() => navigate("insights", "workspace")}><ChartBar /><span>Insights</span></button>
             <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
             <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
@@ -669,6 +700,8 @@ export function TangladWorkspace() {
               setToast={setToast}
             />
           )}
+          {screen === "docs" && <DocsScreen navigate={navigate} setToast={setToast} />}
+          {screen === "docs-editor" && <DocsEditorScreen setToast={setToast} />}
           {screen === "my-work" && <MyWorkScreen tasks={tasks} view={myWorkView} activeOnly={myWorkActiveOnly} cycleStatus={cycleStatus} setToast={setToast} />}
           {screen === "insights" && <InsightsScreen tasks={tasks} members={members} navigate={navigate} setToast={setToast} />}
           {screen === "collaborators" && <CollaboratorsScreen members={members} setToast={setToast} openInvite={() => setInviteModalOpen(true)} />}
@@ -781,8 +814,8 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
       { id: "board-tanglad", section: "boards", title: "Tanglad", detail: "Board · Main workspace", keywords: "tasks product launch table kanban", screen: "board", dated: true },
       { id: "board-workload", section: "boards", title: "Team workload", detail: "Dashboard · Updated today", keywords: "insights reporting ownership capacity dashboard", screen: "insights", dated: true },
       { id: "file-roadmap", section: "files", title: "Launch roadmap", detail: "Project file · Edited by Inez", keywords: "roadmap launch project file", screen: "board", dated: true },
-      { id: "doc-notes", section: "docs", title: "Launch notes", detail: "Document · Opened Aug 17", keywords: "notes launch document release", screen: "my-work", dated: true },
-      { id: "doc-handbook", section: "docs", title: "Workspace handbook", detail: "Document · Main workspace", keywords: "handbook workspace onboarding guide", screen: "manage-workspace", dated: true },
+      { id: "doc-notes", section: "docs", title: "Launch notes", detail: "Document · Opened Aug 17", keywords: "notes launch document release", screen: "docs", dated: true },
+      { id: "doc-handbook", section: "docs", title: "Workspace handbook", detail: "Document · Main workspace", keywords: "handbook workspace onboarding guide", screen: "docs", dated: true },
     ];
     const taskResults: SearchResult[] = tasks.map((task) => ({
       id: `task-${task.id}`,
@@ -1314,6 +1347,164 @@ function CompactPermissions({ navigate }: { navigate: (screen: Screen) => void }
       <div className="tl-section-heading"><div><h2>Workspace permissions</h2><p>Set who can create, invite, and manage workspace content.</p></div><button className="tl-outline-button" onClick={() => navigate("permissions")}>Open settings</button></div>
       <div className="tl-setting-preview"><Lock /><span><strong>Workspace access</strong><small>Only invited members can open this workspace.</small></span><span>Private</span></div>
       <div className="tl-setting-preview"><UserPlus /><span><strong>Member invitations</strong><small>Owners and members can invite collaborators.</small></span><span>Members</span></div>
+    </section>
+  );
+}
+
+function DocsScreen({ navigate, setToast }: { navigate: (screen: Screen) => void; setToast: (message: string) => void }) {
+  const [docSearchOpen, setDocSearchOpen] = useState(false);
+  const [docQuery, setDocQuery] = useState("");
+  const [creatorFilter, setCreatorFilter] = useState<"anyone" | "me" | "others">("anyone");
+  const creatorFilterRef = useRef<HTMLDetailsElement>(null);
+  const hasRecentDoc = "Launch notes".toLowerCase().includes(docQuery.trim().toLowerCase()) && creatorFilter !== "others";
+  const creatorFilterLabel = creatorFilter === "anyone" ? "Created by anyone" : creatorFilter === "me" ? "Created by me" : "Created by others";
+
+  useEffect(() => {
+    const closeCreatorFilter = (event: PointerEvent) => {
+      if (!creatorFilterRef.current?.contains(event.target as Node)) creatorFilterRef.current?.removeAttribute("open");
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") creatorFilterRef.current?.removeAttribute("open");
+    };
+    document.addEventListener("pointerdown", closeCreatorFilter);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeCreatorFilter);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
+  const selectCreatorFilter = (filter: "anyone" | "me" | "others") => {
+    setCreatorFilter(filter);
+    creatorFilterRef.current?.removeAttribute("open");
+  };
+
+  return (
+    <section className="tl-standard-page tl-docs-page" aria-labelledby="docs-title">
+      <header className="tl-docs-header">
+        <h1 id="docs-title">Docs</h1>
+        <button className="tl-blue-button" type="button" onClick={() => navigate("docs-editor")}><Plus />Create new doc</button>
+      </header>
+
+      <section className="tl-doc-templates" aria-labelledby="doc-templates-title">
+        <header>
+          <h2 id="doc-templates-title">Start with a template</h2>
+          <button type="button" onClick={() => setToast("All document templates are shown in this preview")}>See all templates</button>
+        </header>
+        <div className="tl-doc-template-grid">
+          {docTemplates.map((template) => (
+            <button className={`tl-doc-template tone-${template.tone}`} type="button" key={template.title} onClick={() => setToast(`${template.title} is ready for product integration`)}>
+              <span className="tl-doc-template-preview" aria-hidden="true">
+                <span className="tl-doc-template-paper">
+                  <i /><i /><i /><i /><i />
+                </span>
+              </span>
+              <span className="tl-doc-template-copy"><strong>{template.title}</strong><small>by Tanglad</small></span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="tl-recent-docs" aria-labelledby="recent-docs-title">
+        <header>
+          <h2 id="recent-docs-title">Recent documents</h2>
+          <div className="tl-recent-doc-controls">
+            {docSearchOpen ? (
+              <label className="tl-doc-search-field">
+                <MagnifyingGlass />
+                <span className="tl-visually-hidden">Search documents</span>
+                <input autoFocus value={docQuery} onChange={(event) => setDocQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setDocSearchOpen(false); }} placeholder="Search docs" />
+              </label>
+            ) : (
+              <button type="button" onClick={() => setDocSearchOpen(true)}><MagnifyingGlass /><span>Search</span></button>
+            )}
+            <details className="tl-doc-creator-filter" ref={creatorFilterRef}>
+              <summary><UserCircle /><span>{creatorFilterLabel}</span><CaretDown /></summary>
+              <div role="menu" aria-label="Filter documents by creator">
+                <button className={creatorFilter === "anyone" ? "is-active" : ""} type="button" role="menuitem" onClick={() => selectCreatorFilter("anyone")}><UserCircle />Created by anyone</button>
+                <button className={creatorFilter === "me" ? "is-active" : ""} type="button" role="menuitem" onClick={() => selectCreatorFilter("me")}><UserCircle />Created by me</button>
+                <button className={creatorFilter === "others" ? "is-active" : ""} type="button" role="menuitem" onClick={() => selectCreatorFilter("others")}><UserCircle />Created by others</button>
+              </div>
+            </details>
+          </div>
+        </header>
+        <div className="tl-doc-table-wrap">
+          <table className="tl-doc-table">
+            <thead><tr><th>Name</th><th>Owner</th><th>Last viewed</th><th>Workspace</th><th>Location</th></tr></thead>
+            <tbody>
+              {hasRecentDoc ? <tr>
+                <td><button type="button" onClick={() => navigate("docs-editor")}><FileText /><span>Launch notes</span></button></td>
+                <td><span className="tl-doc-owner"><Avatar member={members[0]} size="small" />Mara Cruz</span></td>
+                <td>3 days ago</td>
+                <td><span className="tl-doc-workspace"><AppMark small />Main workspace</span></td>
+                <td><em>Workspace level</em></td>
+              </tr> : <tr className="tl-doc-empty-row"><td colSpan={5}>No documents match this view.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function DocsEditorScreen({ setToast }: { setToast: (message: string) => void }) {
+  const [title, setTitle] = useState("New Doc");
+  const [body, setBody] = useState("");
+  const toolbarAction = (label: string) => setToast(`${label} is ready for product integration`);
+
+  return (
+    <section className="tl-doc-editor" aria-labelledby="doc-editor-title">
+      <div className="tl-doc-editor-toolbar" role="toolbar" aria-label="Document formatting">
+        <button className="tl-blue-button" type="button" onClick={() => toolbarAction("Add block")}><Plus />Add</button>
+        <span className="tl-doc-toolbar-divider" />
+        <button type="button" aria-label="Undo" title="Undo" onClick={() => toolbarAction("Undo")}><ArrowUUpLeft /></button>
+        <button type="button" aria-label="Redo" title="Redo" onClick={() => toolbarAction("Redo")}><ArrowUUpLeft className="is-redo" /></button>
+        <span className="tl-doc-toolbar-divider" />
+        <button className="has-label" type="button" onClick={() => toolbarAction("Text style")}><TextT /><span>Normal text</span><CaretDown /></button>
+        <button type="button" aria-label="Bulleted list" title="Bulleted list" onClick={() => toolbarAction("Bulleted list")}><ListBullets /></button>
+        <button type="button" aria-label="Numbered list" title="Numbered list" onClick={() => toolbarAction("Numbered list")}><ListNumbers /></button>
+        <button type="button" aria-label="Checklist" title="Checklist" onClick={() => toolbarAction("Checklist")}><CheckSquare /></button>
+        <span className="tl-doc-toolbar-divider" />
+        <button className="has-label" type="button" onClick={() => toolbarAction("Mention")}><At /><span>Mention</span></button>
+        <div className="tl-doc-toolbar-spacer" />
+        <button type="button" aria-label="Comments" title="Comments" onClick={() => toolbarAction("Comments")}><ChatCircle /></button>
+        <button className="has-label tl-doc-share" type="button" onClick={() => toolbarAction("Share")}><UserPlus /><span>Share</span></button>
+        <button type="button" aria-label="More document actions" title="More document actions" onClick={() => toolbarAction("Document actions")}><DotsThree /></button>
+      </div>
+
+      <div className="tl-doc-editor-canvas">
+        <header className="tl-doc-editor-heading">
+          <div className="tl-doc-title-row">
+            <input id="doc-editor-title" value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
+            <button type="button" aria-label="Add document to favorites" title="Add document to favorites" onClick={() => setToast("Document added to favorites")}><Star /></button>
+          </div>
+          <div className="tl-doc-meta" aria-label="Document details">
+            <span><UserCircle />Creator Mara Cruz</span>
+            <span><CirclesFour />Created today</span>
+            <span><ClockCounterClockwise />Last updated just now</span>
+          </div>
+        </header>
+
+        <label className="tl-doc-writing-line">
+          <span className="tl-doc-writing-add"><Plus /></span>
+          <span className="tl-visually-hidden">Document content</span>
+          <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="Type ‘/’ to start with a block, or simply start writing" />
+        </label>
+
+        <div className="tl-doc-block-choices" aria-label="Document starting blocks">
+          <button type="button" onClick={() => toolbarAction("Start with AI")}><Leaf /><span>Start with AI</span></button>
+          <button type="button" onClick={() => toolbarAction("Templates")}><FileText /><span>Templates</span></button>
+          <button type="button" onClick={() => toolbarAction("Table")}><Rows /><span>Table</span></button>
+          <button type="button" onClick={() => toolbarAction("Chart")}><ChartBar /><span>Chart</span></button>
+          <button type="button" onClick={() => toolbarAction("Board values")}><SlidersHorizontal /><span>Board values</span></button>
+          <button type="button" onClick={() => toolbarAction("Board")}><Kanban /><span>Board</span></button>
+        </div>
+
+        <button className="tl-doc-prompt-card" type="button" onClick={() => toolbarAction("AI document prompt")}>
+          <span><Leaf /><strong>Start with AI</strong></span>
+          <small>Describe the doc you want to create</small>
+        </button>
+      </div>
     </section>
   );
 }
