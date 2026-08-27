@@ -498,7 +498,7 @@ export function TangladWorkspace() {
 
   return (
     <LazyMotion features={domMax}>
-    <div className={`tl-app ${navCollapsed ? "is-nav-collapsed" : ""}`}>
+    <div className={`tl-app ${navCollapsed ? "is-nav-collapsed" : ""} ${screen === "docs" || screen === "docs-editor" ? "is-docs-context" : ""}`}>
       <a className="tl-skip-link" href="#tl-main">Skip to content</a>
 
       <header className="tl-topbar">
@@ -532,12 +532,13 @@ export function TangladWorkspace() {
         <UtilityButton
           icon={<CirclesFour />}
           label="Workspace"
-          active={primarySection === "workspace"}
+          active={primarySection === "workspace" && screen !== "docs" && screen !== "docs-editor"}
           onClick={openWorkspaceNavigation}
         />
         <UtilityButton icon={<CalendarCheck />} label="My work" active={primarySection === "my-work"} onClick={() => openParent("my-work")} />
         <span className="tl-rail-divider" />
         <UtilityButton icon={<Star />} label="Favorites" active={primarySection === "favorites"} onClick={() => openParent("favorites")} />
+        <UtilityButton icon={<FileText />} label="Docs" active={screen === "docs" || screen === "docs-editor"} onClick={() => navigate("docs", "workspace")} />
         <div className="tl-rail-spacer" />
         <Link className="tl-utility-link" href="/"><ArrowLeft /><span>Website</span></Link>
       </aside>
@@ -645,7 +646,6 @@ export function TangladWorkspace() {
           <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
             <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
             <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
-            <button className={screen === "docs" || screen === "docs-editor" ? "is-active" : ""} onClick={() => navigate("docs", "workspace")}><FileText /><span>Docs</span></button>
             <button className={screen === "insights" ? "is-active" : ""} onClick={() => navigate("insights", "workspace")}><ChartBar /><span>Insights</span></button>
             <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
             <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
@@ -1410,7 +1410,7 @@ function DocsScreen({ navigate, setToast }: { navigate: (screen: Screen) => void
           <h2 id="recent-docs-title">Recent documents</h2>
           <div className="tl-recent-doc-controls">
             {docSearchOpen ? (
-              <label className="tl-doc-search-field">
+              <label className="tl-doc-search-field tl-composite-field">
                 <MagnifyingGlass />
                 <span className="tl-visually-hidden">Search documents</span>
                 <input autoFocus value={docQuery} onChange={(event) => setDocQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setDocSearchOpen(false); }} placeholder="Search docs" />
@@ -1472,10 +1472,12 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
         <button type="button" aria-label="More document actions" title="More document actions" onClick={() => toolbarAction("Document actions")}><DotsThree /></button>
       </div>
 
+      <button className="tl-doc-outline-toggle" type="button" aria-label="Toggle document outline" title="Toggle document outline" onClick={() => toolbarAction("Document outline")}><List /></button>
+
       <div className="tl-doc-editor-canvas">
         <header className="tl-doc-editor-heading">
           <div className="tl-doc-title-row">
-            <input id="doc-editor-title" value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
+            <input id="doc-editor-title" size={Math.max(7, title.length)} value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
             <button type="button" aria-label="Add document to favorites" title="Add document to favorites" onClick={() => setToast("Document added to favorites")}><Star /></button>
           </div>
           <div className="tl-doc-meta" aria-label="Document details">
@@ -1488,7 +1490,7 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
         <label className="tl-doc-writing-line">
           <span className="tl-doc-writing-add"><Plus /></span>
           <span className="tl-visually-hidden">Document content</span>
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="Type ‘/’ to start with a block, or simply start writing" />
+          <input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Type ‘/’ to start with a block, ‘{’ to surface board data, or simply start writing" />
         </label>
 
         <div className="tl-doc-block-choices" aria-label="Document starting blocks">
@@ -1505,6 +1507,8 @@ function DocsEditorScreen({ setToast }: { setToast: (message: string) => void })
           <small>Describe the doc you want to create</small>
         </button>
       </div>
+
+      <button className="tl-doc-ai-fab" type="button" aria-label="Open AI document assistant" title="Open AI document assistant" onClick={() => toolbarAction("AI document assistant")}><Leaf weight="fill" /></button>
     </section>
   );
 }
