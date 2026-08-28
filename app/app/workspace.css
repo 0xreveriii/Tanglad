@@ -425,7 +425,7 @@
 
 .tl-workspace-switcher {
   width: 100%;
-  min-height: var(--tl-control-height);
+  min-height: 40px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -439,7 +439,7 @@
 
 .tl-workspace-switcher-row { position: relative; min-width: 0; gap: 6px; display: flex; align-items: center; margin-bottom: 12px; }
 .tl-workspace-switcher-row .tl-workspace-switcher { min-width: 0; flex: 1; margin-bottom: 0; }
-.tl-workspace-add { width: var(--tl-control-height); height: var(--tl-control-height); display: grid; place-items: center; flex: 0 0 auto; border: 1px solid var(--tl-line-strong) !important; border-radius: 6px; color: var(--tl-text-soft); background: var(--tl-surface); }
+.tl-workspace-add { width: 40px; height: 40px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid var(--tl-line-strong) !important; border-radius: 6px; color: var(--tl-text-soft); background: var(--tl-surface); }
 .tl-workspace-add:hover { color: var(--tl-text); background: var(--tl-surface-muted); }
 .tl-workspace-add svg { width: 17px; height: 17px; }
 
@@ -1833,8 +1833,8 @@
 /* Keep the workspace controls compact and give the collapsed navigation its
    own single-icon treatment so the switcher and add action cannot collide. */
 .tl-workspace-switcher {
-  min-height: var(--tl-control-height);
-  height: var(--tl-control-height);
+  min-height: 40px;
+  height: 40px;
 }
 
 .tl-workspace-nav-head {
@@ -1852,8 +1852,8 @@
 }
 
 .tl-workspace-add {
-  width: var(--tl-control-height);
-  height: var(--tl-control-height);
+  width: 40px;
+  height: 40px;
 }
 
 .tl-app.is-nav-collapsed .tl-workspace-switcher-row {
@@ -1863,9 +1863,9 @@
 }
 
 .tl-app.is-nav-collapsed .tl-workspace-switcher-row .tl-workspace-switcher {
-  width: var(--tl-control-height);
-  min-width: var(--tl-control-height);
-  flex: 0 0 var(--tl-control-height);
+  width: 40px;
+  min-width: 40px;
+  flex: 0 0 40px;
   padding: 5px;
 }
 
