@@ -921,7 +921,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
   };
 
   return (
-    <MotionConfig reducedMotion="never">
+    <MotionConfig reducedMotion="user">
       <m.div className="tl-search-layer" {...searchLayerMotion}>
         <m.div className="tl-search-scrim" aria-hidden="true" />
         <m.section ref={dialogRef} className="tl-search-dialog" id="tl-search-dialog" role="dialog" aria-modal="true" aria-labelledby="tl-search-title" aria-describedby="tl-search-description" {...searchDialogMotion}>
@@ -1289,7 +1289,7 @@ function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-
   };
 
   return (
-    <MotionConfig reducedMotion="never">
+    <MotionConfig reducedMotion="user">
       <div className={className} role="tablist" aria-label={ariaLabel}>
         {items.map((item, index) => {
           const isActive = active === item.id;
