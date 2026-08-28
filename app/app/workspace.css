@@ -809,7 +809,7 @@
 .tl-task-row.is-header { min-height: 38px; color: var(--tl-text-soft); background: #f7f8fa; font-size: var(--tl-type-meta-size); font-weight: var(--tl-weight-semibold); }
 .tl-task-row:not(.is-header):hover { background: #fafbfc; }
 .tl-task-name { gap: 10px; }
-.tl-task-name > button { width: 20px; height: 20px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border: 1px solid #aeb4c1; border-radius: 4px; color: #f8fbff; background: var(--tl-surface); line-height: 0; }
+.tl-task-name > button { width: 20px; height: 20px; padding: 0; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border: 1px solid #aeb4c1; border-radius: 4px; color: #f8fbff; background: var(--tl-surface); line-height: 0; }
 .tl-task-name > button.is-done { border-color: var(--tl-blue); background: var(--tl-blue); }
 .tl-task-name > button svg { width: 12px; height: 12px; }
 .tl-task-name strong { overflow: hidden; font-size: var(--tl-type-body-size); font-weight: var(--tl-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
