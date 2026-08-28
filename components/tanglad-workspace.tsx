@@ -1289,7 +1289,7 @@ function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-
   };
 
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="never">
       <div className={className} role="tablist" aria-label={ariaLabel}>
         {items.map((item, index) => {
           const isActive = active === item.id;
