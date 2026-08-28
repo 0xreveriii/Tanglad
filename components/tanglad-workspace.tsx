@@ -11,6 +11,7 @@ import {
   CalendarBlank,
   CalendarCheck,
   CaretDown,
+  CaretLeft,
   CaretRight,
   ChartBar,
   ChatCircle,
@@ -22,6 +23,7 @@ import {
   DotsNine,
   DotsSixVertical,
   DotsThree,
+  EyeSlash,
   FileText,
   Flag,
   FolderSimple,
@@ -69,7 +71,7 @@ type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "docs" | "doc
 type PrimarySection = "workspace" | "my-work" | "inbox" | "favorites";
 type WorkspaceTab = "recents" | "content" | "collaborators" | "permissions";
 type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" | "docs";
-type BoardView = "table" | "kanban";
+type BoardView = "table" | "calendar" | "kanban";
 type MyWorkView = "table" | "calendar";
 type UpdateFilter = "all" | "mentions" | "assigned";
 type TaskStatus = "Working on it" | "Review" | "Done" | "Blocked";
@@ -163,12 +165,68 @@ const docTemplates = [
 ] as const;
 
 const statusOrder: TaskStatus[] = ["Working on it", "Review", "Done", "Blocked"];
+const boardName = "Board";
+const newBoardTitle = "New Board";
+
+const monthIndexes: Record<string, number> = {
+  Jan: 0,
+  Feb: 1,
+  Mar: 2,
+  Apr: 3,
+  May: 4,
+  Jun: 5,
+  Jul: 6,
+  Aug: 7,
+  Sep: 8,
+  Oct: 9,
+  Nov: 10,
+  Dec: 11,
+};
+
+function taskDueParts(due: string) {
+  const match = due.match(/^([A-Z][a-z]{2}) (\d{1,2})$/);
+  if (!match) return null;
+  const month = monthIndexes[match[1]];
+  if (month === undefined) return null;
+  return { year: 2026, month, day: Number(match[2]) };
+}
+
+function calendarDateKey(year: number, month: number, day: number) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function taskDateKey(due: string) {
+  const parts = taskDueParts(due);
+  return parts ? calendarDateKey(parts.year, parts.month, parts.day) : null;
+}
+
+function taskDueValue(due: string) {
+  const parts = taskDueParts(due);
+  return parts ? Date.UTC(parts.year, parts.month, parts.day) : Number.POSITIVE_INFINITY;
+}
+
+function calendarDaysForMonth(month: Date) {
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const firstDayOffset = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const totalCells = Math.ceil((firstDayOffset + daysInMonth) / 7) * 7;
+
+  return Array.from({ length: Math.max(35, totalCells) }, (_, index) => {
+    const date = new Date(year, monthIndex, index - firstDayOffset + 1);
+    return {
+      date,
+      key: calendarDateKey(date.getFullYear(), date.getMonth(), date.getDate()),
+      inMonth: date.getMonth() === monthIndex,
+    };
+  });
+}
 
 const screenLabels: Record<Screen, string> = {
   "manage-workspace": "Manage workspace",
   "my-work": "My work",
   inbox: "Update feed",
-  board: "Tanglad",
+  board: boardName,
   docs: "Docs",
   "docs-editor": "New Doc",
   insights: "Insights",
@@ -472,7 +530,7 @@ export function TangladWorkspace() {
     }]);
     setNewTask("");
     setComposerOpen(false);
-    setToast("Task added to Tanglad");
+    setToast(`Task added to ${boardName}`);
   };
 
   const cycleStatus = (id: number) => {
@@ -631,7 +689,7 @@ export function TangladWorkspace() {
 
           <nav className="tl-workspace-tree" id="workspace-children" aria-label="Main workspace sections">
             <button className={screen === "manage-workspace" ? "is-active" : ""} onClick={() => navigate("manage-workspace", "workspace")}><House /><span>Manage workspace</span></button>
-            <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>Tanglad</span></button>
+            <button className={screen === "board" ? "is-active" : ""} onClick={() => navigate("board", "workspace")}><Rows /><span>{boardName}</span></button>
             <button className={screen === "insights" ? "is-active" : ""} onClick={() => navigate("insights", "workspace")}><ChartBar /><span>Insights</span></button>
             <button className={screen === "collaborators" ? "is-active" : ""} onClick={() => navigate("collaborators", "workspace")}><UsersThree /><span>Collaborators</span></button>
             <button className={screen === "permissions" ? "is-active" : ""} onClick={() => navigate("permissions", "workspace")}><Lock /><span>Permissions</span></button>
@@ -792,7 +850,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
 
   const allResults = useMemo<SearchResult[]>(() => {
     const fixed: SearchResult[] = [
-      { id: "board-tanglad", section: "boards", title: "Tanglad", detail: "Board · Main workspace", keywords: "tasks product launch table kanban", screen: "board", dated: true },
+      { id: "board-main", section: "boards", title: boardName, detail: "Board · Main workspace", keywords: "tasks product launch table kanban", screen: "board", dated: true },
       { id: "board-workload", section: "boards", title: "Team workload", detail: "Dashboard · Updated today", keywords: "insights reporting ownership capacity dashboard", screen: "insights", dated: true },
       { id: "file-roadmap", section: "files", title: "Launch roadmap", detail: "Project file · Edited by Inez", keywords: "roadmap launch project file", screen: "board", dated: true },
       { id: "doc-notes", section: "docs", title: "Launch notes", detail: "Document · Opened Aug 17", keywords: "notes launch document release", screen: "docs", dated: true },
@@ -819,7 +877,7 @@ function SearchEverythingModal({ query, setQuery, tasks, onClose, navigate }: {
       id: `tag-${tag.toLowerCase().replaceAll(" ", "-")}`,
       section: "tags",
       title: tag,
-      detail: "Tag · Used in Tanglad",
+      detail: `Tag · Used in ${boardName}`,
       keywords: `${tag} task status priority tag`,
       screen: "board",
     }));
@@ -1211,7 +1269,7 @@ function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-
   useEffect(() => setAnimationsReady(true), []);
 
   return (
-    <MotionConfig reducedMotion="never">
+    <MotionConfig reducedMotion="user">
       <div className={className} role="tablist" aria-label={ariaLabel}>
         {items.map((item) => {
           const isActive = active === item.id;
@@ -1243,7 +1301,7 @@ function WorkspaceRecents({ navigate }: { navigate: (screen: Screen) => void }) 
     <section className="tl-list-section" aria-labelledby="recent-heading">
       <div className="tl-section-heading"><h2 id="recent-heading">Recently opened</h2><button onClick={() => navigate("board")}>View all content</button></div>
       <div className="tl-content-list">
-        <button onClick={() => navigate("board")}><span className="tl-file-icon is-board"><Rows /></span><span><strong>Tanglad</strong><small>Board</small></span><span>Opened today</span><Star /></button>
+        <button onClick={() => navigate("board")}><span className="tl-file-icon is-board"><Rows /></span><span><strong>{boardName}</strong><small>Board</small></span><span>Opened today</span><Star /></button>
         <button onClick={() => navigate("insights")}><span className="tl-file-icon is-report"><ChartBar /></span><span><strong>Team workload</strong><small>Insights</small></span><span>Opened yesterday</span><Star /></button>
         <button onClick={() => navigate("my-work")}><span className="tl-file-icon is-doc"><FileText /></span><span><strong>Launch notes</strong><small>Document</small></span><span>Opened Aug 17</span><Star /></button>
       </div>
@@ -1256,7 +1314,7 @@ function WorkspaceContent({ navigate }: { navigate: (screen: Screen) => void }) 
     <section className="tl-list-section" aria-labelledby="content-heading">
       <div className="tl-section-heading"><div><h2 id="content-heading">Workspace content</h2><p>Boards, dashboards, and documents available to this workspace.</p></div><button className="tl-blue-button" onClick={() => navigate("board")}><Plus />New board</button></div>
       <div className="tl-content-list is-detailed">
-        <button onClick={() => navigate("board")}><span className="tl-file-icon is-board"><Rows /></span><span><strong>Tanglad</strong><small>Owned by Mara Cruz</small></span><span>Board</span><span>Today</span><DotsThree /></button>
+        <button onClick={() => navigate("board")}><span className="tl-file-icon is-board"><Rows /></span><span><strong>{boardName}</strong><small>Owned by Mara Cruz</small></span><span>Board</span><span>Today</span><DotsThree /></button>
         <button onClick={() => navigate("insights")}><span className="tl-file-icon is-report"><ChartBar /></span><span><strong>Team insights</strong><small>Owned by Inez Kim</small></span><span>Dashboard</span><span>Yesterday</span><DotsThree /></button>
         <button onClick={() => navigate("my-work")}><span className="tl-file-icon is-doc"><FileText /></span><span><strong>Launch notes</strong><small>Owned by Mara Cruz</small></span><span>Document</span><span>Aug 17</span><DotsThree /></button>
       </div>
@@ -1575,7 +1633,7 @@ function DocCommentCard({ comment, onDelete }: { comment: string; onDelete: () =
     return () => document.removeEventListener("mousedown", closePicker);
   }, [reactionPickerOpen]);
 
-  const reactionIcon = reaction === "love" ? <Heart weight="fill" /> : reaction === "celebrate" ? <Star weight="fill" /> : reaction === "smile" ? <Smiley weight="fill" /> : <ThumbsUp weight="fill" />;
+  const reactionIcon = reaction === "love" ? <Heart className="tl-reaction-icon is-love" weight="fill" /> : reaction === "celebrate" ? <Star className="tl-reaction-icon is-celebrate" weight="fill" /> : reaction === "smile" ? <Smiley className="tl-reaction-icon is-smile" weight="fill" /> : <ThumbsUp className="tl-reaction-icon is-like" weight="fill" />;
   const reactionLabel = reaction === "love" ? "Loved" : reaction === "celebrate" ? "Celebrated" : reaction === "smile" ? "Smiled" : reaction === "like" ? "Liked" : "Like";
 
   const submitReply = () => {
@@ -1600,7 +1658,7 @@ function DocCommentCard({ comment, onDelete }: { comment: string; onDelete: () =
     </div>}</div></header>
     {editing ? <div className="tl-doc-comment-edit tl-composite-field"><textarea value={commentText} onChange={(event) => setCommentText(event.target.value)} aria-label="Edit comment" autoFocus /><div><button type="button" onClick={() => setEditing(false)}>Cancel</button><button className="tl-blue-button" type="button" onClick={() => setEditing(false)}>Save</button></div></div> : <p className="tl-doc-comment-copy">{commentText}</p>}
     {reaction && <span className={`tl-doc-comment-reaction is-${reaction}`} aria-label={`One ${reaction}`}>{reactionIcon}1</span>}
-    <div className="tl-doc-comment-actions"><div><div ref={reactionRef} className="tl-doc-reaction-control"><button className={reaction ? "is-active" : ""} type="button" aria-pressed={Boolean(reaction)} onClick={() => setReaction((value) => value ? null : "like")}>{reaction ? reactionIcon : <ThumbsUp />}<span>{reactionLabel}</span></button><button type="button" aria-label="Choose another reaction" aria-expanded={reactionPickerOpen} onClick={() => setReactionPickerOpen((value) => !value)}><CaretDown /></button>{reactionPickerOpen && <div className="tl-doc-reaction-picker" role="menu" aria-label="Choose a reaction"><button type="button" role="menuitem" aria-label="Like" onClick={() => { setReaction("like"); setReactionPickerOpen(false); }}><ThumbsUp weight="fill" /></button><button type="button" role="menuitem" aria-label="Love" onClick={() => { setReaction("love"); setReactionPickerOpen(false); }}><Heart weight="fill" /></button><button type="button" role="menuitem" aria-label="Celebrate" onClick={() => { setReaction("celebrate"); setReactionPickerOpen(false); }}><Star weight="fill" /></button><button type="button" role="menuitem" aria-label="Smile" onClick={() => { setReaction("smile"); setReactionPickerOpen(false); }}><Smiley weight="fill" /></button></div>}</div><button className={replyOpen ? "is-active" : ""} type="button" aria-expanded={replyOpen} onClick={() => setReplyOpen(true)}><ArrowUUpLeft /><span>Reply</span></button></div><button className={resolved ? "is-active" : ""} type="button" aria-pressed={resolved} onClick={() => setResolved((value) => !value)}><Check /><span>{resolved ? "Resolved" : "Resolve"}</span></button></div>
+     <div className="tl-doc-comment-actions"><div><div ref={reactionRef} className="tl-doc-reaction-control" onMouseEnter={() => setReactionPickerOpen(true)} onMouseLeave={() => setReactionPickerOpen(false)} onFocusCapture={() => setReactionPickerOpen(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setReactionPickerOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setReactionPickerOpen(false); } }}><button className={reaction ? "is-active" : ""} type="button" aria-pressed={Boolean(reaction)} onClick={() => setReaction((value) => value ? null : "like")}>{reaction ? reactionIcon : <ThumbsUp />}<span>{reactionLabel}</span></button><button type="button" aria-label="Choose another reaction" aria-haspopup="menu" aria-expanded={reactionPickerOpen} onClick={() => setReactionPickerOpen((value) => !value)}><CaretDown /></button>{reactionPickerOpen && <div className="tl-doc-reaction-picker" role="menu" aria-label="Choose a reaction"><button className="is-like" type="button" role="menuitem" aria-label="Like" onClick={() => { setReaction("like"); setReactionPickerOpen(false); }}><ThumbsUp weight="fill" /></button><button className="is-love" type="button" role="menuitem" aria-label="Love" onClick={() => { setReaction("love"); setReactionPickerOpen(false); }}><Heart weight="fill" /></button><button className="is-celebrate" type="button" role="menuitem" aria-label="Celebrate" onClick={() => { setReaction("celebrate"); setReactionPickerOpen(false); }}><Star weight="fill" /></button><button className="is-smile" type="button" role="menuitem" aria-label="Smile" onClick={() => { setReaction("smile"); setReactionPickerOpen(false); }}><Smiley weight="fill" /></button></div>}</div><button className={replyOpen ? "is-active" : ""} type="button" aria-expanded={replyOpen} onClick={() => setReplyOpen(true)}><ArrowUUpLeft /><span>Reply</span></button></div><button className={resolved ? "is-active" : ""} type="button" aria-pressed={resolved} onClick={() => setResolved((value) => !value)}><Check /><span>{resolved ? "Resolved" : "Resolve"}</span></button></div>
     {replies.map((reply, index) => <div className="tl-doc-comment-reply" key={`${reply}-${index}`}><UserCircle weight="fill" /><div><strong>Rayver Punzalan</strong><span>Just now</span><p>{reply}</p></div></div>)}
     <div className={`tl-doc-reply-composer tl-composite-field ${replyOpen ? "is-expanded" : "is-collapsed"}`}>
       <UserCircle weight="fill" />
@@ -1624,32 +1682,54 @@ function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus,
   navigate: (screen: Screen) => void;
   setToast: (message: string) => void;
 }) {
+  const [query, setQuery] = useState("");
+  const [sortAscending, setSortAscending] = useState(true);
+  const visibleTasks = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return [...tasks]
+      .filter((task) => !normalizedQuery || `${task.name} ${task.ownerName} ${task.status} ${task.priority}`.toLowerCase().includes(normalizedQuery))
+      .sort((first, second) => {
+        const difference = taskDueValue(first.due) - taskDueValue(second.due);
+        return sortAscending ? difference : -difference;
+      });
+  }, [query, sortAscending, tasks]);
+
   return (
-    <div className="tl-standard-page">
-      <PageHeader title="Tanglad" description="Project work for the product launch." actions={<><button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button><button onClick={() => setToast("Board options are ready for product integration")} aria-label="Board options" title="Board options"><DotsThree /></button></>} />
+    <div className="tl-standard-page tl-board-page">
+      <header className="tl-board-header">
+        <div className="tl-board-title"><h1>{newBoardTitle}</h1><button type="button" onClick={() => setToast("Board name options are ready for this UI preview")} aria-label="Board name options" title="Board name options"><CaretDown /></button></div>
+        <div className="tl-board-header-actions"><button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button><button type="button" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button></div>
+      </header>
+
       <div className="tl-board-tabs">
-        <AnimatedTabs id="board-tabs" ariaLabel="Board views" active={view} onChange={(value) => setView(value as BoardView)} items={[{ id: "table", label: "Main table", icon: <Rows /> }, { id: "kanban", label: "Board", icon: <Kanban /> }]} />
-        <div className="tl-board-tools">
-          <button className={mineOnly ? "is-selected" : ""} onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}><FunnelSimple />{mineOnly ? "Mine only" : "Filter"}</button>
-          <button className="tl-blue-button" onClick={() => setComposerOpen(true)}><Plus />New task</button>
-        </div>
+        <AnimatedTabs id="board-tabs" ariaLabel="Board views" active={view} onChange={(value) => setView(value as BoardView)} items={[{ id: "table", label: "Main table", icon: <Rows /> }, { id: "calendar", label: "Calendar", icon: <CalendarBlank /> }, { id: "kanban", label: "Kanban", icon: <Kanban /> }]} />
+      </div>
+
+      <div className="tl-board-toolbar" aria-label="Board tools">
+        <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => setComposerOpen(true)}><Plus />New item<CaretDown /></button>
+        <label className="tl-board-search tl-composite-field"><MagnifyingGlass /><span className="sr-only">Search board items</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" /></label>
+        <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}><User />Person</button>
+        <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}><FunnelSimple />Filter<CaretDown /></button>
+        <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}><ListNumbers />Sort</button>
+        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}><EyeSlash />Hide</button>
+        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}><Rows />Group by</button>
       </div>
 
       {composerOpen && (
         <form className="tl-inline-form tl-composite-field" onSubmit={(event) => { event.preventDefault(); addTask(); }}>
           <label htmlFor="tl-new-task">Task name</label>
-          <input id="tl-new-task" autoFocus value={newTask} onChange={(event) => setNewTask(event.target.value)} placeholder="Add a task" />
+          <input id="tl-new-task" autoFocus value={newTask} onChange={(event) => setNewTask(event.target.value)} placeholder="Add an item" />
           <button className="tl-blue-button" type="submit">Add</button>
           <button type="button" onClick={() => setComposerOpen(false)} aria-label="Cancel"><X /></button>
         </form>
       )}
 
-      {tasks.length === 0 ? <EmptySearch /> : view === "table" ? <TaskTable tasks={tasks} cycleStatus={cycleStatus} onAdd={() => setComposerOpen(true)} setToast={setToast} /> : <KanbanView tasks={tasks} cycleStatus={cycleStatus} setToast={setToast} />}
+      {visibleTasks.length === 0 ? <EmptySearch /> : view === "table" ? <TaskTable tasks={visibleTasks} cycleStatus={cycleStatus} onAdd={() => setComposerOpen(true)} setToast={setToast} itemLabel="Item" addLabel="Add item" /> : view === "calendar" ? <BoardCalendarView tasks={visibleTasks} cycleStatus={cycleStatus} setToast={setToast} /> : <KanbanView tasks={visibleTasks} cycleStatus={cycleStatus} setToast={setToast} />}
     </div>
   );
 }
 
-function TaskTable({ tasks, cycleStatus, onAdd, setToast }: { tasks: Task[]; cycleStatus: (id: number) => void; onAdd?: () => void; setToast: (message: string) => void }) {
+function TaskTable({ tasks, cycleStatus, onAdd, setToast, itemLabel = "Task", addLabel = "Add task" }: { tasks: Task[]; cycleStatus: (id: number) => void; onAdd?: () => void; setToast: (message: string) => void; itemLabel?: string; addLabel?: string }) {
   return (
     <div className="tl-groups">
       {(["This week", "Next week"] as const).map((group) => {
@@ -1659,9 +1739,9 @@ function TaskTable({ tasks, cycleStatus, onAdd, setToast }: { tasks: Task[]; cyc
           <section className="tl-task-group" key={group}>
             <div className="tl-task-group-head"><CaretDown /><h2>{group}</h2><span>{groupTasks.length} tasks</span><button onClick={() => setToast(`${group} options are ready for product integration`)} aria-label={`${group} options`} title={`${group} options`}><DotsThree /></button></div>
             <div className="tl-task-table" role="table" aria-label={`${group} tasks`}>
-              <div className="tl-task-row is-header" role="row"><span>Task</span><span>Owner</span><span>Status</span><span>Priority</span><span>Due</span><span /></div>
+              <div className="tl-task-row is-header" role="row"><span>{itemLabel}</span><span>Owner</span><span>Status</span><span>Priority</span><span>Due</span><span /></div>
               {groupTasks.map((task) => <TaskRow task={task} cycleStatus={cycleStatus} setToast={setToast} key={task.id} />)}
-              {onAdd && <button className="tl-add-row" onClick={onAdd}><Plus />Add task</button>}
+              {onAdd && <button className="tl-add-row" onClick={onAdd}><Plus />{addLabel}</button>}
             </div>
           </section>
         );
@@ -1674,7 +1754,7 @@ function TaskRow({ task, cycleStatus, setToast }: { task: Task; cycleStatus: (id
   const member = members.find((item) => item.initials === task.owner) ?? members[0];
   return (
     <div className="tl-task-row" role="row">
-      <div className="tl-task-name"><button className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} title={`Change status for ${task.name}`}>{task.status === "Done" && <Check />}</button><strong>{task.name}</strong></div>
+      <div className="tl-task-name"><button className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} title={`Change status for ${task.name}`}>{task.status === "Done" && <Check />}</button><strong title={task.name}>{task.name}</strong></div>
       <div className="tl-task-owner"><Avatar member={member} size="small" /><span>{task.ownerName}</span></div>
       <button className="tl-status-cell" onClick={() => cycleStatus(task.id)}><StatusLabel status={task.status} /></button>
       <div><PriorityLabel priority={task.priority} /></div>
@@ -1698,12 +1778,12 @@ function KanbanView({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStat
       {statusOrder.map((status) => {
         const statusTasks = tasks.filter((task) => task.status === status);
         return (
-          <section className="tl-kanban-column" key={status}>
+          <section className={`tl-kanban-column status-${status.toLowerCase().replaceAll(" ", "-")}`} key={status}>
             <header><StatusLabel status={status} /><span>{statusTasks.length}</span><button onClick={() => setToast(`${status} column options are ready for product integration`)} aria-label={`${status} options`} title={`${status} options`}><DotsThree /></button></header>
             <div>
               {statusTasks.map((task) => {
                 const member = members.find((item) => item.initials === task.owner) ?? members[0];
-                return <button className="tl-kanban-card" onClick={() => cycleStatus(task.id)} key={task.id}><strong>{task.name}</strong><span><Avatar member={member} size="small" /><PriorityLabel priority={task.priority} /><small>{task.due}</small></span></button>;
+                return <button type="button" className="tl-kanban-card" onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} title={`Change status for ${task.name}`} key={task.id}><strong>{task.name}</strong><span><Avatar member={member} size="small" /><PriorityLabel priority={task.priority} /><small>{task.due}</small></span></button>;
               })}
               {!statusTasks.length && <div className="tl-column-empty">No tasks</div>}
             </div>
@@ -1740,8 +1820,8 @@ function UpdateFeedPanel({ onClose, setToast }: { onClose: () => void; setToast:
   const showFilterRef = useRef<HTMLDivElement>(null);
   const updates = [
     { person: members[1], title: "Inez mentioned you in Launch page copy", body: "Can you check the final section before review?", time: "12 min ago", board: "Launch roadmap", unread: true, mentioned: true, bookmarked: false, scheduled: false },
-    { person: members[2], title: "Rafi changed a task to Review", body: "Workspace permissions is ready for a second pass.", time: "1 hour ago", board: "Tanglad", unread: true, mentioned: false, bookmarked: true, scheduled: false },
-    { person: members[3], title: "Sam joined Main workspace", body: "Sam can now view Tanglad and Launch notes.", time: "Yesterday", board: "", unread: false, mentioned: false, bookmarked: false, scheduled: true },
+    { person: members[2], title: "Rafi changed a task to Review", body: "Workspace permissions is ready for a second pass.", time: "1 hour ago", board: boardName, unread: true, mentioned: false, bookmarked: true, scheduled: false },
+    { person: members[3], title: "Sam joined Main workspace", body: `Sam can now view ${boardName} and Launch notes.`, time: "Yesterday", board: "", unread: false, mentioned: false, bookmarked: false, scheduled: true },
   ];
 
   useEffect(() => {
@@ -1800,8 +1880,8 @@ function UpdateFeedPanel({ onClose, setToast }: { onClose: () => void; setToast:
         </aside>
 
         <div className="tl-update-feed-content">
-          <header className="tl-update-feed-tabs" role="tablist" aria-label="Update feed categories">
-            {tabs.map((item) => <button key={item.id} role="tab" aria-selected={tab === item.id} className={tab === item.id ? "is-active" : ""} onClick={() => setTab(item.id)}>{item.icon}<span>{item.label}</span>{item.badge && <small className={item.badge === "New" ? "is-new" : ""}>{item.badge}</small>}</button>)}
+          <header className="tl-update-feed-tabs">
+            <AnimatedTabs id="update-feed-tabs" className="tl-update-feed-tabs-list" ariaLabel="Update feed categories" active={tab} onChange={(value) => setTab(value as UpdateFeedPanelTab)} items={tabs} />
             <button ref={closeRef} className="tl-update-feed-close" onClick={onClose} aria-label="Close update feed" title="Close update feed"><X /></button>
           </header>
           <div className="tl-update-feed-toolbar">
@@ -1824,6 +1904,40 @@ function UpdateFeedPanel({ onClose, setToast }: { onClose: () => void; setToast:
         </div>
       </m.section>
     </m.div>
+  );
+}
+
+function BoardCalendarView({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStatus: (id: number) => void; setToast: (message: string) => void }) {
+  const [month, setMonth] = useState(() => new Date(2026, 7, 1));
+  const days = useMemo(() => calendarDaysForMonth(month), [month]);
+  const monthLabel = useMemo(() => new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(month), [month]);
+  const today = new Date();
+  const todayKey = calendarDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const moveMonth = (offset: number) => setMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+
+  return (
+    <section className="tl-board-calendar" aria-label="Board calendar">
+      <header className="tl-board-calendar-head">
+        <div className="tl-board-calendar-month"><button type="button" className="tl-calendar-nav-button" onClick={() => moveMonth(-1)} aria-label="Previous month" title="Previous month"><CaretLeft /></button><button type="button" className="tl-calendar-nav-button" onClick={() => moveMonth(1)} aria-label="Next month" title="Next month"><CaretRight /></button><h2>{monthLabel}</h2></div>
+        <div className="tl-board-calendar-actions"><button type="button" className="tl-outline-button" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); }}>Today</button><button type="button" className="tl-outline-button" onClick={() => setToast("Month view is the only calendar view in this UI preview")} aria-label="Calendar display mode" title="Calendar display mode">Month <CaretDown /></button></div>
+      </header>
+      <div className="tl-board-calendar-weekdays" aria-hidden="true">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="tl-board-calendar-grid">
+        {days.map(({ date, key, inMonth }) => {
+          const dayTasks = tasks.filter((task) => taskDateKey(task.due) === key);
+          const dateLabel = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+          return (
+            <div className={`tl-board-calendar-day ${inMonth ? "" : "is-outside-month"} ${key === todayKey ? "is-today" : ""}`} key={key}>
+              <time dateTime={key}>{date.getDate()}</time>
+              <div className="tl-board-calendar-items">
+                {dayTasks.slice(0, 3).map((task) => <button type="button" className={`tl-board-calendar-task status-${task.status.toLowerCase().replaceAll(" ", "-")}`} key={task.id} onClick={() => cycleStatus(task.id)} aria-label={`${task.name}, ${task.status}, due ${dateLabel}`} title={`${task.name} · ${task.status}`}><span aria-hidden="true" /><strong>{task.name}</strong></button>)}
+                {dayTasks.length > 3 && <span className="tl-board-calendar-more">+{dayTasks.length - 3} more</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -1860,7 +1974,7 @@ function UpdateFeedScreen({ filter, navigate, setToast }: { filter: UpdateFilter
   const updates = [
     { person: members[1], title: "Inez mentioned you in Launch page copy", body: "Can you check the final section before review?", time: "12 min" },
     { person: members[2], title: "Rafi changed a task to Review", body: "Workspace permissions is ready for a second pass.", time: "1 hour" },
-    { person: members[3], title: "Sam joined Main workspace", body: "Sam can now view Tanglad and Launch notes.", time: "Yesterday" },
+    { person: members[3], title: "Sam joined Main workspace", body: `Sam can now view ${boardName} and Launch notes.`, time: "Yesterday" },
   ];
   return (
     <div className="tl-standard-page tl-inbox-page">
@@ -1873,7 +1987,7 @@ function UpdateFeedScreen({ filter, navigate, setToast }: { filter: UpdateFilter
           <div className="tl-inbox-detail-head"><Avatar member={updates[selected].person} size="large" /><div><strong>{updates[selected].person.name}</strong><small>{updates[selected].time} ago</small></div><button onClick={() => setToast("Update options are ready for product integration")} aria-label="Update options" title="Update options"><DotsThree /></button></div>
           <h2>{updates[selected].title}</h2>
           <p>{updates[selected].body}</p>
-          <button className="tl-update-context" onClick={() => navigate("board")}><Rows /><span><strong>Tanglad</strong><small>Product launch board</small></span><CaretRight /></button>
+          <button className="tl-update-context" onClick={() => navigate("board")}><Rows /><span><strong>{boardName}</strong><small>Product launch board</small></span><CaretRight /></button>
           <form className="tl-reply-field" onSubmit={(event) => { event.preventDefault(); if (!reply.trim()) return; setToast("Reply added to this update"); setReply(""); }}><label htmlFor="tl-reply">Reply</label><textarea id="tl-reply" value={reply} onChange={(event) => setReply(event.target.value)} placeholder="Write a reply" rows={4} /><button className="tl-blue-button" type="submit">Send</button></form>
         </article>
       </div>
@@ -1917,7 +2031,7 @@ function InsightsScreen({ tasks, members: team, navigate, setToast }: { tasks: T
 
       <div className="tl-insights-toolbar">
         <button className="tl-blue-button" onClick={() => showToast("Widget picker is ready for product integration")}><Plus />Add widget</button>
-        <button className="tl-insights-source" onClick={() => navigate("board")}><Rows /><span><strong>1 connected board</strong><small>Tanglad</small></span><CaretRight /></button>
+        <button className="tl-insights-source" onClick={() => navigate("board")}><Rows /><span><strong>1 connected board</strong><small>{boardName}</small></span><CaretRight /></button>
         <label className="tl-insights-search tl-composite-field"><MagnifyingGlass /><span className="sr-only">Filter insights</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Type to filter" /></label>
         <button className="tl-insights-save" onClick={() => showToast("Insights view saved")} aria-label="Save insights view" title="Save insights view"><Check /></button>
         <button className="tl-insights-control" onClick={() => showToast("People filter is ready for product integration")}><UsersThree />People</button>
