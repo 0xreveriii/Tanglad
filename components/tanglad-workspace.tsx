@@ -1888,14 +1888,14 @@ function BoardScreen({
       {visibleTasks.length === 0 && !groups.length ? (
         <EmptySearch />
       ) : view === "table" ? (
-        <div className="tl-monday-board-container">
-          <div className="tl-monday-groups">
+        <div className="tl-board-container">
+          <div className="tl-group-list">
             {groups.map((group) => {
               const groupTasks = visibleTasks.filter((t) => (t.group ? t.group.toLowerCase() === group.name.toLowerCase() || t.group === group.id : group.id === "To-Do"));
               const isCollapsed = Boolean(collapsedGroups[group.id]);
 
               return (
-                <MondayTableGroup
+                <TaskGroupTable
                   key={group.id}
                   group={group}
                   tasks={groupTasks}
@@ -1940,7 +1940,7 @@ function BoardScreen({
   );
 }
 
-function MondayTableGroup({
+function TaskGroupTable({
   group,
   tasks,
   isCollapsed,
@@ -1968,6 +1968,7 @@ function MondayTableGroup({
   setToast: (message: string) => void;
 }) {
   const [inlineTaskInput, setInlineTaskInput] = useState("");
+  const [dropIndicatorId, setDropIndicatorId] = useState<number | null>(null);
   const isDragOver = dragOverGroup === group.id;
 
   const total = tasks.length;
@@ -1995,12 +1996,14 @@ function MondayTableGroup({
   const handleDragLeave = (e: React.DragEvent) => {
     if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
       setDragOverGroup(null);
+      setDropIndicatorId(null);
     }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOverGroup(null);
+    setDropIndicatorId(null);
     const taskIdStr = e.dataTransfer.getData("text/plain");
     if (taskIdStr) {
       const taskId = Number(taskIdStr);
@@ -2018,15 +2021,15 @@ function MondayTableGroup({
 
   return (
     <section
-      className={`tl-monday-group ${isDragOver ? "is-drag-target" : ""}`}
+      className={`tl-task-group ${isDragOver ? "is-drag-target" : ""}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="tl-monday-group-head">
+      <div className="tl-group-head">
         <button
           type="button"
-          className="tl-monday-collapse-btn"
+          className="tl-group-collapse-btn"
           onClick={onToggleCollapse}
           aria-label={isCollapsed ? `Expand ${group.name}` : `Collapse ${group.name}`}
           title={isCollapsed ? "Expand group" : "Collapse group"}
@@ -2035,10 +2038,10 @@ function MondayTableGroup({
           {isCollapsed ? <CaretRight weight="bold" /> : <CaretDown weight="bold" />}
           <h2 style={{ color: group.color }}>{group.name}</h2>
         </button>
-        <span className="tl-monday-task-count">{tasks.length} tasks</span>
+        <span className="tl-group-task-count">{tasks.length} tasks</span>
         <button
           type="button"
-          className="tl-monday-group-options"
+          className="tl-group-options"
           onClick={() => setToast(`${group.name} options are ready for product integration`)}
           aria-label={`${group.name} options`}
           title={`${group.name} options`}
@@ -2048,19 +2051,19 @@ function MondayTableGroup({
       </div>
 
       {isCollapsed ? (
-        <div className="tl-monday-collapsed-bar" onClick={onToggleCollapse} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onToggleCollapse()}>
-          <div className="tl-monday-collapsed-badge" style={{ borderLeftColor: group.color }}>
-            <span className="tl-monday-collapsed-title" style={{ color: group.color }}>
+        <div className="tl-group-collapsed-bar" onClick={onToggleCollapse} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onToggleCollapse()}>
+          <div className="tl-group-collapsed-badge" style={{ borderLeftColor: group.color }}>
+            <span className="tl-group-collapsed-title" style={{ color: group.color }}>
               <CaretRight weight="bold" />
               <strong>{group.name}</strong>
             </span>
             <small>{tasks.length} Tasks</small>
           </div>
 
-          <div className="tl-monday-collapsed-metrics">
-            <div className="tl-monday-collapsed-status-cell">
+          <div className="tl-group-collapsed-metrics">
+            <div className="tl-group-collapsed-status-cell">
               <span className="tl-col-sublabel">Status</span>
-              <div className="tl-monday-progress-bar">
+              <div className="tl-group-progress-bar">
                 {donePercent > 0 && <span className="tl-prog-done" style={{ width: `${donePercent}%` }} title={`Done: ${doneCount}`} />}
                 {workingPercent > 0 && <span className="tl-prog-working" style={{ width: `${workingPercent}%` }} title={`Working on it: ${workingCount}`} />}
                 {stuckPercent > 0 && <span className="tl-prog-stuck" style={{ width: `${stuckPercent}%` }} title={`Stuck: ${stuckCount}`} />}
@@ -2069,9 +2072,9 @@ function MondayTableGroup({
               </div>
             </div>
 
-            <div className="tl-monday-collapsed-due-cell">
+            <div className="tl-group-collapsed-due-cell">
               <span className="tl-col-sublabel">Due date</span>
-              <div className="tl-monday-due-badge">
+              <div className="tl-group-due-badge">
                 <span>{dueDateSummary !== "-" ? dueDateSummary : "-"}</span>
                 <small>latest</small>
                 <Info size={13} className="tl-info-icon" />
@@ -2080,9 +2083,9 @@ function MondayTableGroup({
           </div>
         </div>
       ) : (
-        <div className="tl-monday-table-wrapper" style={{ borderLeftColor: group.color }}>
-          <div className="tl-monday-table" role="table" aria-label={`${group.name} tasks`}>
-            <div className="tl-monday-row is-header" role="row">
+        <div className="tl-group-table-wrapper" style={{ borderLeftColor: group.color }}>
+          <div className="tl-group-table" role="table" aria-label={`${group.name} tasks`}>
+            <div className="tl-group-row is-header" role="row">
               <div className="tl-col-select" role="columnheader">
                 <input type="checkbox" aria-label="Select all tasks in group" />
               </div>
@@ -2108,21 +2111,23 @@ function MondayTableGroup({
             </div>
 
             {tasks.map((task) => (
-              <MondayTaskRow
+              <TaskGroupRow
                 key={task.id}
                 task={task}
                 onOpenStatusMenu={(rect) => onOpenStatusMenu(task.id, rect)}
                 isDragging={draggingTaskId === task.id}
+                isDropTarget={dropIndicatorId === task.id}
                 onDragStart={(e) => {
                   e.dataTransfer.setData("text/plain", String(task.id));
                   setDraggingTaskId(task.id);
                 }}
-                onDragEnd={() => setDraggingTaskId(null)}
+                onDragEnd={() => { setDraggingTaskId(null); setDropIndicatorId(null); }}
+                onDragEnter={() => { if (draggingTaskId !== task.id) setDropIndicatorId(task.id); }}
                 setToast={setToast}
               />
             ))}
 
-            <form className="tl-monday-add-row" onSubmit={handleInlineSubmit}>
+            <form className="tl-group-add-row" onSubmit={handleInlineSubmit}>
               <div className="tl-col-select">
                 <Square className="tl-add-checkbox" weight="thin" />
               </div>
@@ -2142,12 +2147,12 @@ function MondayTableGroup({
             </form>
           </div>
 
-          <div className="tl-monday-footer-row">
+          <div className="tl-group-footer-row">
             <div className="tl-col-select" />
             <div className="tl-col-task" />
             <div className="tl-col-owner" />
             <div className="tl-col-status tl-footer-status">
-              <div className="tl-monday-progress-bar">
+              <div className="tl-group-progress-bar">
                 {donePercent > 0 && <span className="tl-prog-done" style={{ width: `${donePercent}%` }} title={`Done: ${doneCount} (${Math.round(donePercent)}%)`} />}
                 {workingPercent > 0 && <span className="tl-prog-working" style={{ width: `${workingPercent}%` }} title={`Working on it: ${workingCount} (${Math.round(workingPercent)}%)`} />}
                 {stuckPercent > 0 && <span className="tl-prog-stuck" style={{ width: `${stuckPercent}%` }} title={`Stuck: ${stuckCount} (${Math.round(stuckPercent)}%)`} />}
@@ -2170,19 +2175,23 @@ function MondayTableGroup({
   );
 }
 
-function MondayTaskRow({
+function TaskGroupRow({
   task,
   onOpenStatusMenu,
   isDragging,
+  isDropTarget,
   onDragStart,
   onDragEnd,
+  onDragEnter,
   setToast,
 }: {
   task: Task;
   onOpenStatusMenu: (rect: DOMRect) => void;
   isDragging: boolean;
+  isDropTarget: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: (e: React.DragEvent) => void;
+  onDragEnter: () => void;
   setToast: (message: string) => void;
 }) {
   const member = members.find((item) => item.initials === task.owner);
@@ -2212,11 +2221,12 @@ function MondayTaskRow({
 
   return (
     <div
-      className={`tl-monday-row ${isDragging ? "is-dragging" : ""}`}
+      className={`tl-group-row ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`}
       role="row"
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onDragEnter={onDragEnter}
     >
       <div className="tl-col-select" role="cell">
         <span className="tl-drag-handle" title="Drag to reorder or move to Completed">
@@ -2235,7 +2245,6 @@ function MondayTaskRow({
           title="Start conversation / update"
         >
           <ChatCircle weight="regular" />
-          <Plus size={10} className="tl-chat-plus" />
         </button>
       </div>
 
@@ -2255,7 +2264,7 @@ function MondayTaskRow({
         <button
           ref={statusButtonRef}
           type="button"
-          className={`tl-monday-status-pill ${getStatusClass(task.status)}`}
+          className={`tl-status-pill ${getStatusClass(task.status)}`}
           onClick={handleStatusClick}
           aria-haspopup="menu"
           aria-label={`Status: ${task.status}. Click to change`}
@@ -2425,7 +2434,7 @@ function MyWorkScreen({ tasks, view, activeOnly, cycleStatus, setToast }: { task
             <span><strong>{mine.filter((task) => task.status === "Blocked" || task.status === "Stuck").length}</strong> blocked</span>
           </div>
           {mine.length ? (
-            <MondayTableGroup
+            <TaskGroupTable
               group={myWorkGroup}
               tasks={mine}
               isCollapsed={false}
