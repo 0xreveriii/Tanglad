@@ -16,6 +16,7 @@ import {
   ChartBar,
   ChatCircle,
   Check,
+  CheckCircle,
   CheckSquare,
   CirclesFour,
   ClockCounterClockwise,
@@ -32,6 +33,7 @@ import {
   Gift,
   Heart,
   House,
+  Info,
   Kanban,
   Leaf,
   Lightbulb,
@@ -51,6 +53,8 @@ import {
   SidebarSimple,
   SlidersHorizontal,
   Smiley,
+  Sparkle,
+  Square,
   Star,
   Tag,
   TextT,
@@ -60,6 +64,7 @@ import {
   UserPlus,
   UsersThree,
   UserCircle,
+  WarningCircle,
   X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -74,8 +79,14 @@ type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" 
 type BoardView = "table" | "calendar" | "kanban";
 type MyWorkView = "table" | "calendar";
 type UpdateFilter = "all" | "mentions" | "assigned";
-type TaskStatus = "Working on it" | "Review" | "Done" | "Blocked";
+type TaskStatus = "Not Started" | "Working on it" | "Done" | "Stuck" | "Review" | "Blocked";
 type TaskPriority = "Low" | "Medium" | "High";
+
+type GroupDef = {
+  id: string;
+  name: string;
+  color: string;
+};
 
 type Task = {
   id: number;
@@ -85,7 +96,7 @@ type Task = {
   status: TaskStatus;
   priority: TaskPriority;
   due: string;
-  group: "This week" | "Next week";
+  group: string;
 };
 
 type Member = {
@@ -139,14 +150,18 @@ const inviteDialogMotion = {
   exit: { opacity: 0, y: 10, scale: 0.99, transition: { duration: 0.18, ease: [0.3, 0, 1, 1] as [number, number, number, number] } },
 };
 
+const defaultGroups: GroupDef[] = [
+  { id: "To-Do", name: "To-Do", color: "#0073ea" },
+  { id: "Completed", name: "Completed", color: "#00c875" },
+];
+
 const initialTasks: Task[] = [
-  { id: 1, name: "Map the onboarding journey", owner: "MC", ownerName: "Mara Cruz", status: "Done", priority: "Medium", due: "Aug 19", group: "This week" },
-  { id: 2, name: "Finalize launch page copy", owner: "IK", ownerName: "Inez Kim", status: "Review", priority: "Low", due: "Aug 20", group: "This week" },
-  { id: 3, name: "Build workspace permissions", owner: "RA", ownerName: "Rafi Ahmed", status: "Working on it", priority: "High", due: "Aug 21", group: "This week" },
-  { id: 4, name: "Run accessibility QA", owner: "MC", ownerName: "Mara Cruz", status: "Blocked", priority: "Medium", due: "Aug 22", group: "This week" },
-  { id: 5, name: "Prepare release notes", owner: "IK", ownerName: "Inez Kim", status: "Working on it", priority: "Low", due: "Aug 25", group: "Next week" },
-  { id: 6, name: "Review usage event schema", owner: "RA", ownerName: "Rafi Ahmed", status: "Review", priority: "High", due: "Aug 26", group: "Next week" },
-  { id: 7, name: "Schedule launch retrospective", owner: "MC", ownerName: "Mara Cruz", status: "Working on it", priority: "Medium", due: "Aug 28", group: "Next week" },
+  { id: 1, name: "New task", owner: "", ownerName: "Unassigned", status: "Not Started", priority: "Medium", due: "", group: "To-Do" },
+  { id: 2, name: "New task", owner: "", ownerName: "Unassigned", status: "Not Started", priority: "Medium", due: "", group: "To-Do" },
+  { id: 3, name: "New task", owner: "", ownerName: "Unassigned", status: "Not Started", priority: "Medium", due: "", group: "To-Do" },
+  { id: 4, name: "Task 1", owner: "MC", ownerName: "Mara Cruz", status: "Working on it", priority: "High", due: "Aug 18", group: "To-Do" },
+  { id: 5, name: "Task 2", owner: "", ownerName: "Unassigned", status: "Done", priority: "Low", due: "Aug 19", group: "To-Do" },
+  { id: 6, name: "Task 3", owner: "", ownerName: "Unassigned", status: "Stuck", priority: "High", due: "Aug 20", group: "To-Do" },
 ];
 
 const members: Member[] = [
@@ -164,7 +179,7 @@ const docTemplates = [
   { title: "Retrospective", tone: "forest" },
 ] as const;
 
-const statusOrder: TaskStatus[] = ["Working on it", "Review", "Done", "Blocked"];
+const statusOrder: TaskStatus[] = ["Done", "Working on it", "Stuck", "Not Started"];
 const boardName = "Board";
 const newBoardTitle = "New Board";
 
@@ -508,6 +523,8 @@ export function TangladWorkspace() {
     openParent("workspace");
   };
 
+  const [groups, setGroups] = useState<GroupDef[]>(defaultGroups);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       const matchesMine = !mineOnly || task.owner === "MC";
@@ -515,7 +532,7 @@ export function TangladWorkspace() {
     });
   }, [mineOnly, tasks]);
 
-  const addTask = () => {
+  const addTask = (groupName: string = "To-Do") => {
     const name = newTask.trim();
     if (!name) return;
     setTasks((current) => [...current, {
@@ -525,12 +542,54 @@ export function TangladWorkspace() {
       ownerName: "Mara Cruz",
       status: "Working on it",
       priority: "Medium",
-      due: "No date",
-      group: "This week",
+      due: "Aug 21",
+      group: groupName,
     }]);
     setNewTask("");
     setComposerOpen(false);
     setToast(`Task added to ${boardName}`);
+  };
+
+  const addTaskToGroup = (groupName: string, name: string = "New task") => {
+    const trimmed = name.trim() || "New task";
+    setTasks((current) => [...current, {
+      id: Date.now(),
+      name: trimmed,
+      owner: "",
+      ownerName: "Unassigned",
+      status: "Not Started",
+      priority: "Medium",
+      due: "",
+      group: groupName,
+    }]);
+    setToast(`Task added to ${groupName}`);
+  };
+
+  const updateTaskStatus = (id: number, status: TaskStatus) => {
+    setTasks((current) => current.map((task) => {
+      if (task.id !== id) return task;
+      return { ...task, status };
+    }));
+  };
+
+  const moveTask = (id: number, targetGroup: string) => {
+    setTasks((current) => current.map((task) => {
+      if (task.id !== id) return task;
+      return { ...task, group: targetGroup };
+    }));
+    setToast(`Task moved to ${targetGroup}`);
+  };
+
+  const addGroup = () => {
+    const colors = ["#0073ea", "#00c875", "#a25ddc", "#e2445c", "#fdab3d", "#579bfc"];
+    const nextIndex = groups.length + 1;
+    const newGroup: GroupDef = {
+      id: `Group ${nextIndex}`,
+      name: `Group ${nextIndex}`,
+      color: colors[(nextIndex - 1) % colors.length],
+    };
+    setGroups((current) => [...current, newGroup]);
+    setToast(`Added ${newGroup.name}`);
   };
 
   const cycleStatus = (id: number) => {
@@ -730,11 +789,17 @@ export function TangladWorkspace() {
           {screen === "board" && (
             <BoardScreen
               tasks={filteredTasks}
+              groups={groups}
+              setGroups={setGroups}
               view={boardView}
               setView={setBoardView}
               mineOnly={mineOnly}
               setMineOnly={setMineOnly}
               cycleStatus={cycleStatus}
+              updateTaskStatus={updateTaskStatus}
+              moveTask={moveTask}
+              addTaskToGroup={addTaskToGroup}
+              addGroup={addGroup}
               composerOpen={composerOpen}
               setComposerOpen={setComposerOpen}
               newTask={newTask}
@@ -1678,8 +1743,7 @@ function DocCommentCard({ comment, onDelete }: { comment: string; onDelete: () =
     </div>}</div></header>
     {editing ? <div className="tl-doc-comment-edit tl-composite-field"><textarea value={commentText} onChange={(event) => setCommentText(event.target.value)} aria-label="Edit comment" autoFocus /><div><button type="button" onClick={() => setEditing(false)}>Cancel</button><button className="tl-blue-button" type="button" onClick={() => setEditing(false)}>Save</button></div></div> : <p className="tl-doc-comment-copy">{commentText}</p>}
     {reaction && <span className={`tl-doc-comment-reaction is-${reaction}`} aria-label={`One ${reaction}`}>{reactionIcon}1</span>}
-     <div className="tl-doc-comment-actions"><div><div ref={reactionRef} className="tl-doc-reaction-control" onMouseEnter={() => setReactionPickerOpen(true)} onMouseLeave={() => setReactionPickerOpen(false)} onFocusCapture={() => setReactionPickerOpen(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setReactionPickerOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setReactionPickerOpen(false); } }}><button className={reaction ? "is-active" : ""} type="button" aria-pressed={Boolean(reaction)} onClick={() => setReaction((value) => value ? null : "like")}>{reaction ? reactionIcon : <ThumbsUp />}<span>{reactionLabel}</span></button><button type="button" aria-label="Choose another reaction" aria-haspopup="menu" aria-expanded={reactionPickerOpen} onClick={() => setReactionPickerOpen((value) => !value)}><CaretDown /></button>{reactionPickerOpen && <div className="tl-doc-reaction-picker" role="menu" aria-label="Choose a reaction"><button className="is-like" type="button" role="menuitem" aria-label="Like" onClick={() => { setReaction("like"); setReactionPickerOpen(false); }}><ThumbsUp weight="fill" /></button><button className="is-love" type="button" role="menuitem" aria-label="Love" onClick={() => { setReaction("love"); setReactionPickerOpen(false); }}><Heart weight="fill" /></button><button className="is-celebrate" type="button" role="menuitem" aria-label="Celebrate" onClick={() => { setReaction("celebrate"); setReactionPickerOpen(false); }}><Star weight="fill" /></button><button className="is-smile" type="button" role="menuitem" aria-label="Smile" onClick={() => { setReaction("smile"); setReactionPickerOpen(false); }}><Smiley weight="fill" /></button></div>}</div><button className={replyOpen ? "is-active" : ""} type="button" aria-expanded={replyOpen} onClick={() => setReplyOpen(true)}><ArrowUUpLeft /><span>Reply</span></button></div><button className={resolved ? "is-active" : ""} type="button" aria-pressed={resolved} onClick={() => setResolved((value) => !value)}><Check /><span>{resolved ? "Resolved" : "Resolve"}</span></button></div>
-    {replies.map((reply, index) => <div className="tl-doc-comment-reply" key={`${reply}-${index}`}><UserCircle weight="fill" /><div><strong>Rayver Punzalan</strong><span>Just now</span><p>{reply}</p></div></div>)}
+      {replies.map((reply, index) => <div className="tl-doc-comment-reply" key={`${reply}-${index}`}><UserCircle weight="fill" /><div><strong>Rayver Punzalan</strong><span>Just now</span><p>{reply}</p></div></div>)}
     <div className={`tl-doc-reply-composer tl-composite-field ${replyOpen ? "is-expanded" : "is-collapsed"}`}>
       <UserCircle weight="fill" />
       <div><textarea autoFocus={replyOpen} rows={replyOpen ? 3 : 1} value={replyDraft} onFocus={() => setReplyOpen(true)} onChange={(event) => setReplyDraft(event.target.value)} aria-label="Write a reply" placeholder="Write a reply and mention others with @" />{replyOpen && <footer><div><button type="button" aria-label="Mention someone"><At /></button><button type="button" aria-label="Attach a file"><Paperclip /></button><button type="button" aria-label="Add emoji"><Smiley /></button><button type="button" aria-label="Writing assistant"><PencilSimple /></button></div><button type="button" disabled={!replyDraft.trim()} onClick={submitReply}>Reply<CaretDown /></button></footer>}</div>
@@ -1687,23 +1751,58 @@ function DocCommentCard({ comment, onDelete }: { comment: string; onDelete: () =
   </article>;
 }
 
-function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus, composerOpen, setComposerOpen, newTask, setNewTask, addTask, navigate, setToast }: {
+function BoardScreen({
+  tasks,
+  groups = defaultGroups,
+  setGroups,
+  view,
+  setView,
+  mineOnly,
+  setMineOnly,
+  cycleStatus,
+  updateTaskStatus,
+  moveTask,
+  addTaskToGroup,
+  addGroup,
+  composerOpen,
+  setComposerOpen,
+  newTask,
+  setNewTask,
+  addTask,
+  navigate,
+  setToast,
+}: {
   tasks: Task[];
+  groups?: GroupDef[];
+  setGroups?: React.Dispatch<React.SetStateAction<GroupDef[]>>;
   view: BoardView;
   setView: (view: BoardView) => void;
   mineOnly: boolean;
   setMineOnly: (value: boolean) => void;
   cycleStatus: (id: number) => void;
+  updateTaskStatus?: (id: number, status: TaskStatus) => void;
+  moveTask?: (id: number, targetGroup: string) => void;
+  addTaskToGroup?: (groupName: string, name?: string) => void;
+  addGroup?: () => void;
   composerOpen: boolean;
   setComposerOpen: (value: boolean) => void;
   newTask: string;
   setNewTask: (value: string) => void;
-  addTask: () => void;
+  addTask: (group?: string) => void;
   navigate: (screen: Screen) => void;
   setToast: (message: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [sortAscending, setSortAscending] = useState(true);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [activeStatusMenu, setActiveStatusMenu] = useState<{ taskId: number; rect: DOMRect } | null>(null);
+  const [draggingTaskId, setDraggingTaskId] = useState<number | null>(null);
+  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
+
+  const toggleGroupCollapse = (groupId: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
   const visibleTasks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return [...tasks]
@@ -1714,25 +1813,67 @@ function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus,
       });
   }, [query, sortAscending, tasks]);
 
+  const handleSelectStatus = (taskId: number, newStatus: TaskStatus) => {
+    if (updateTaskStatus) {
+      updateTaskStatus(taskId, newStatus);
+    } else {
+      cycleStatus(taskId);
+    }
+    setActiveStatusMenu(null);
+    setToast(`Status updated to "${newStatus}"`);
+  };
+
   return (
     <div className="tl-standard-page tl-board-page">
       <header className="tl-board-header">
-        <div className="tl-board-title"><h1>{newBoardTitle}</h1><button type="button" onClick={() => setToast("Board name options are ready for this UI preview")} aria-label="Board name options" title="Board name options"><CaretDown /></button></div>
-        <div className="tl-board-header-actions"><button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button><button type="button" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button></div>
+        <div className="tl-board-title">
+          <h1>{newBoardTitle}</h1>
+          <button type="button" onClick={() => setToast("Board name options are ready for this UI preview")} aria-label="Board name options" title="Board name options"><CaretDown /></button>
+        </div>
+        <div className="tl-board-header-actions">
+          <button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button>
+          <button type="button" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button>
+        </div>
       </header>
 
       <div className="tl-board-tabs">
-        <AnimatedTabs id="board-tabs" ariaLabel="Board views" active={view} onChange={(value) => setView(value as BoardView)} items={[{ id: "table", label: "Main table", icon: <Rows /> }, { id: "calendar", label: "Calendar", icon: <CalendarBlank /> }, { id: "kanban", label: "Kanban", icon: <Kanban /> }]} />
+        <AnimatedTabs
+          id="board-tabs"
+          ariaLabel="Board views"
+          active={view}
+          onChange={(value) => setView(value as BoardView)}
+          items={[
+            { id: "table", label: "Main table", icon: <Rows /> },
+            { id: "calendar", label: "Calendar", icon: <CalendarBlank /> },
+            { id: "kanban", label: "Kanban", icon: <Kanban /> },
+          ]}
+        />
       </div>
 
       <div className="tl-board-toolbar" aria-label="Board tools">
-        <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => setComposerOpen(true)}><Plus />New item<CaretDown /></button>
-        <label className="tl-board-search tl-composite-field"><MagnifyingGlass /><span className="sr-only">Search board items</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" /></label>
-        <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}><User />Person</button>
-        <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}><FunnelSimple />Filter<CaretDown /></button>
-        <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}><ListNumbers />Sort</button>
-        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}><EyeSlash />Hide</button>
-        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}><Rows />Group by</button>
+        <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => (addTaskToGroup ? addTaskToGroup("To-Do", "New task") : setComposerOpen(true))}>
+          <Plus />New task<CaretDown />
+        </button>
+        <label className="tl-board-search tl-composite-field">
+          <MagnifyingGlass />
+          <span className="sr-only">Search board items</span>
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
+        </label>
+        <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}>
+          <User />Person
+        </button>
+        <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}>
+          <FunnelSimple />Filter<CaretDown />
+        </button>
+        <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}>
+          <ListNumbers />Sort
+        </button>
+        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}>
+          <EyeSlash />Hide
+        </button>
+        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}>
+          <Rows />Group by
+        </button>
       </div>
 
       {composerOpen && (
@@ -1744,42 +1885,496 @@ function BoardScreen({ tasks, view, setView, mineOnly, setMineOnly, cycleStatus,
         </form>
       )}
 
-      {visibleTasks.length === 0 ? <EmptySearch /> : view === "table" ? <TaskTable tasks={visibleTasks} cycleStatus={cycleStatus} onAdd={() => setComposerOpen(true)} setToast={setToast} itemLabel="Item" addLabel="Add item" /> : view === "calendar" ? <BoardCalendarView tasks={visibleTasks} cycleStatus={cycleStatus} setToast={setToast} /> : <KanbanView tasks={visibleTasks} cycleStatus={cycleStatus} setToast={setToast} />}
+      {visibleTasks.length === 0 && !groups.length ? (
+        <EmptySearch />
+      ) : view === "table" ? (
+        <div className="tl-monday-board-container">
+          <div className="tl-monday-groups">
+            {groups.map((group) => {
+              const groupTasks = visibleTasks.filter((t) => (t.group ? t.group.toLowerCase() === group.name.toLowerCase() || t.group === group.id : group.id === "To-Do"));
+              const isCollapsed = Boolean(collapsedGroups[group.id]);
+
+              return (
+                <MondayTableGroup
+                  key={group.id}
+                  group={group}
+                  tasks={groupTasks}
+                  isCollapsed={isCollapsed}
+                  onToggleCollapse={() => toggleGroupCollapse(group.id)}
+                  onOpenStatusMenu={(taskId, rect) => setActiveStatusMenu({ taskId, rect })}
+                  onAddTask={(name) => addTaskToGroup ? addTaskToGroup(group.name, name) : addTask(group.name)}
+                  draggingTaskId={draggingTaskId}
+                  setDraggingTaskId={setDraggingTaskId}
+                  dragOverGroup={dragOverGroup}
+                  setDragOverGroup={setDragOverGroup}
+                  onDropTask={(taskId) => moveTask ? moveTask(taskId, group.name) : setToast(`Moved to ${group.name}`)}
+                  setToast={setToast}
+                />
+              );
+            })}
+          </div>
+
+          <div className="tl-add-group-section">
+            <button type="button" className="tl-add-group-button" onClick={() => addGroup ? addGroup() : setToast("Added new group")}>
+              <Plus weight="bold" />
+              <span>Add new group</span>
+            </button>
+          </div>
+        </div>
+      ) : view === "calendar" ? (
+        <BoardCalendarView tasks={visibleTasks} cycleStatus={cycleStatus} setToast={setToast} />
+      ) : (
+        <KanbanView tasks={visibleTasks} cycleStatus={cycleStatus} setToast={setToast} />
+      )}
+
+      {activeStatusMenu && (
+        <StatusDropdownPopover
+          menuState={activeStatusMenu}
+          onClose={() => setActiveStatusMenu(null)}
+          onSelectStatus={(status) => handleSelectStatus(activeStatusMenu.taskId, status)}
+          onEditLabels={() => { setActiveStatusMenu(null); setToast("Edit status labels modal opened"); }}
+          onAutoAssign={() => { setActiveStatusMenu(null); setToast("AI auto-assigned status labels"); }}
+        />
+      )}
     </div>
   );
 }
 
-function TaskTable({ tasks, cycleStatus, onAdd, setToast, itemLabel = "Task", addLabel = "Add task" }: { tasks: Task[]; cycleStatus: (id: number) => void; onAdd?: () => void; setToast: (message: string) => void; itemLabel?: string; addLabel?: string }) {
+function MondayTableGroup({
+  group,
+  tasks,
+  isCollapsed,
+  onToggleCollapse,
+  onOpenStatusMenu,
+  onAddTask,
+  draggingTaskId,
+  setDraggingTaskId,
+  dragOverGroup,
+  setDragOverGroup,
+  onDropTask,
+  setToast,
+}: {
+  group: GroupDef;
+  tasks: Task[];
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  onOpenStatusMenu: (taskId: number, rect: DOMRect) => void;
+  onAddTask: (name: string) => void;
+  draggingTaskId: number | null;
+  setDraggingTaskId: (id: number | null) => void;
+  dragOverGroup: string | null;
+  setDragOverGroup: (id: string | null) => void;
+  onDropTask: (taskId: number) => void;
+  setToast: (message: string) => void;
+}) {
+  const [inlineTaskInput, setInlineTaskInput] = useState("");
+  const isDragOver = dragOverGroup === group.id;
+
+  const total = tasks.length;
+  const doneCount = tasks.filter((t) => t.status === "Done").length;
+  const workingCount = tasks.filter((t) => t.status === "Working on it").length;
+  const stuckCount = tasks.filter((t) => t.status === "Stuck" || t.status === "Blocked").length;
+  const notStartedCount = tasks.filter((t) => t.status === "Not Started" || (!["Done", "Working on it", "Stuck", "Blocked"].includes(t.status))).length;
+
+  const donePercent = total > 0 ? (doneCount / total) * 100 : 0;
+  const workingPercent = total > 0 ? (workingCount / total) * 100 : 0;
+  const stuckPercent = total > 0 ? (stuckCount / total) * 100 : 0;
+  const notStartedPercent = total > 0 ? (notStartedCount / total) * 100 : 0;
+
+  const dates = tasks.map((t) => t.due).filter(Boolean);
+  const dueDateSummary = dates.length > 1 ? `${dates[0]} - ${dates[dates.length - 1].replace(/^[A-Za-z]+\s*/, "")}` : dates[0] || "-";
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverGroup !== group.id) {
+      setDragOverGroup(group.id);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setDragOverGroup(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverGroup(null);
+    const taskIdStr = e.dataTransfer.getData("text/plain");
+    if (taskIdStr) {
+      const taskId = Number(taskIdStr);
+      onDropTask(taskId);
+    }
+  };
+
+  const handleInlineSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inlineTaskInput.trim()) {
+      onAddTask(inlineTaskInput.trim());
+      setInlineTaskInput("");
+    }
+  };
+
   return (
-    <div className="tl-groups">
-      {(["This week", "Next week"] as const).map((group) => {
-        const groupTasks = tasks.filter((task) => task.group === group);
-        if (!groupTasks.length) return null;
-        return (
-          <section className="tl-task-group" key={group}>
-            <div className="tl-task-group-head"><CaretDown /><h2>{group}</h2><span>{groupTasks.length} tasks</span><button onClick={() => setToast(`${group} options are ready for product integration`)} aria-label={`${group} options`} title={`${group} options`}><DotsThree /></button></div>
-            <div className="tl-task-table" role="table" aria-label={`${group} tasks`}>
-              <div className="tl-task-row is-header" role="row"><span>{itemLabel}</span><span>Owner</span><span>Status</span><span>Priority</span><span>Due</span><span /></div>
-              {groupTasks.map((task) => <TaskRow task={task} cycleStatus={cycleStatus} setToast={setToast} key={task.id} />)}
-              {onAdd && <button className="tl-add-row" onClick={onAdd}><Plus />{addLabel}</button>}
+    <section
+      className={`tl-monday-group ${isDragOver ? "is-drag-target" : ""}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className="tl-monday-group-head">
+        <button
+          type="button"
+          className="tl-monday-collapse-btn"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? `Expand ${group.name}` : `Collapse ${group.name}`}
+          title={isCollapsed ? "Expand group" : "Collapse group"}
+          style={{ color: group.color }}
+        >
+          {isCollapsed ? <CaretRight weight="bold" /> : <CaretDown weight="bold" />}
+          <h2 style={{ color: group.color }}>{group.name}</h2>
+        </button>
+        <span className="tl-monday-task-count">{tasks.length} tasks</span>
+        <button
+          type="button"
+          className="tl-monday-group-options"
+          onClick={() => setToast(`${group.name} options are ready for product integration`)}
+          aria-label={`${group.name} options`}
+          title={`${group.name} options`}
+        >
+          <DotsThree />
+        </button>
+      </div>
+
+      {isCollapsed ? (
+        <div className="tl-monday-collapsed-bar" onClick={onToggleCollapse} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onToggleCollapse()}>
+          <div className="tl-monday-collapsed-badge" style={{ borderLeftColor: group.color }}>
+            <span className="tl-monday-collapsed-title" style={{ color: group.color }}>
+              <CaretRight weight="bold" />
+              <strong>{group.name}</strong>
+            </span>
+            <small>{tasks.length} Tasks</small>
+          </div>
+
+          <div className="tl-monday-collapsed-metrics">
+            <div className="tl-monday-collapsed-status-cell">
+              <span className="tl-col-sublabel">Status</span>
+              <div className="tl-monday-progress-bar">
+                {donePercent > 0 && <span className="tl-prog-done" style={{ width: `${donePercent}%` }} title={`Done: ${doneCount}`} />}
+                {workingPercent > 0 && <span className="tl-prog-working" style={{ width: `${workingPercent}%` }} title={`Working on it: ${workingCount}`} />}
+                {stuckPercent > 0 && <span className="tl-prog-stuck" style={{ width: `${stuckPercent}%` }} title={`Stuck: ${stuckCount}`} />}
+                {notStartedPercent > 0 && <span className="tl-prog-not-started" style={{ width: `${notStartedPercent}%` }} title={`Not Started: ${notStartedCount}`} />}
+                {total === 0 && <span className="tl-prog-empty" style={{ width: "100%" }} />}
+              </div>
             </div>
-          </section>
-        );
-      })}
+
+            <div className="tl-monday-collapsed-due-cell">
+              <span className="tl-col-sublabel">Due date</span>
+              <div className="tl-monday-due-badge">
+                <span>{dueDateSummary !== "-" ? dueDateSummary : "-"}</span>
+                <small>latest</small>
+                <Info size={13} className="tl-info-icon" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="tl-monday-table-wrapper" style={{ borderLeftColor: group.color }}>
+          <div className="tl-monday-table" role="table" aria-label={`${group.name} tasks`}>
+            <div className="tl-monday-row is-header" role="row">
+              <div className="tl-col-select" role="columnheader">
+                <input type="checkbox" aria-label="Select all tasks in group" />
+              </div>
+              <div className="tl-col-task" role="columnheader">
+                <span>Task</span>
+              </div>
+              <div className="tl-col-owner" role="columnheader">
+                <span>Owner</span>
+              </div>
+              <div className="tl-col-status" role="columnheader">
+                <span>Status</span>
+                <Info size={14} className="tl-header-info" />
+              </div>
+              <div className="tl-col-due" role="columnheader">
+                <span>Due date</span>
+                <Info size={14} className="tl-header-info" />
+              </div>
+              <div className="tl-col-add" role="columnheader">
+                <button type="button" aria-label="Add column" onClick={() => setToast("Add column is ready for product integration")}>
+                  <Plus />
+                </button>
+              </div>
+            </div>
+
+            {tasks.map((task) => (
+              <MondayTaskRow
+                key={task.id}
+                task={task}
+                onOpenStatusMenu={(rect) => onOpenStatusMenu(task.id, rect)}
+                isDragging={draggingTaskId === task.id}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", String(task.id));
+                  setDraggingTaskId(task.id);
+                }}
+                onDragEnd={() => setDraggingTaskId(null)}
+                setToast={setToast}
+              />
+            ))}
+
+            <form className="tl-monday-add-row" onSubmit={handleInlineSubmit}>
+              <div className="tl-col-select">
+                <Square className="tl-add-checkbox" weight="thin" />
+              </div>
+              <div className="tl-col-task tl-add-input-wrap">
+                <input
+                  type="text"
+                  value={inlineTaskInput}
+                  onChange={(e) => setInlineTaskInput(e.target.value)}
+                  placeholder="+ Add task"
+                  aria-label={`Add task to ${group.name}`}
+                />
+              </div>
+              <div className="tl-col-owner" />
+              <div className="tl-col-status" />
+              <div className="tl-col-due" />
+              <div className="tl-col-add" />
+            </form>
+          </div>
+
+          <div className="tl-monday-footer-row">
+            <div className="tl-col-select" />
+            <div className="tl-col-task" />
+            <div className="tl-col-owner" />
+            <div className="tl-col-status tl-footer-status">
+              <div className="tl-monday-progress-bar">
+                {donePercent > 0 && <span className="tl-prog-done" style={{ width: `${donePercent}%` }} title={`Done: ${doneCount} (${Math.round(donePercent)}%)`} />}
+                {workingPercent > 0 && <span className="tl-prog-working" style={{ width: `${workingPercent}%` }} title={`Working on it: ${workingCount} (${Math.round(workingPercent)}%)`} />}
+                {stuckPercent > 0 && <span className="tl-prog-stuck" style={{ width: `${stuckPercent}%` }} title={`Stuck: ${stuckCount} (${Math.round(stuckPercent)}%)`} />}
+                {notStartedPercent > 0 && <span className="tl-prog-not-started" style={{ width: `${notStartedPercent}%` }} title={`Not Started: ${notStartedCount} (${Math.round(notStartedPercent)}%)`} />}
+                {total === 0 && <span className="tl-prog-empty" style={{ width: "100%" }} />}
+              </div>
+            </div>
+            <div className="tl-col-due tl-footer-due">
+              {dueDateSummary !== "-" ? (
+                <span className="tl-due-pill-active">{dueDateSummary}</span>
+              ) : (
+                <span className="tl-due-pill-empty">-</span>
+              )}
+            </div>
+            <div className="tl-col-add" />
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MondayTaskRow({
+  task,
+  onOpenStatusMenu,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  setToast,
+}: {
+  task: Task;
+  onOpenStatusMenu: (rect: DOMRect) => void;
+  isDragging: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: (e: React.DragEvent) => void;
+  setToast: (message: string) => void;
+}) {
+  const member = members.find((item) => item.initials === task.owner);
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleStatusClick = () => {
+    if (statusButtonRef.current) {
+      const rect = statusButtonRef.current.getBoundingClientRect();
+      onOpenStatusMenu(rect);
+    }
+  };
+
+  const getStatusClass = (status: TaskStatus) => {
+    switch (status) {
+      case "Done":
+        return "is-done";
+      case "Working on it":
+        return "is-working";
+      case "Stuck":
+      case "Blocked":
+        return "is-stuck";
+      case "Not Started":
+      default:
+        return "is-not-started";
+    }
+  };
+
+  return (
+    <div
+      className={`tl-monday-row ${isDragging ? "is-dragging" : ""}`}
+      role="row"
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      <div className="tl-col-select" role="cell">
+        <span className="tl-drag-handle" title="Drag to reorder or move to Completed">
+          <DotsSixVertical weight="bold" />
+        </span>
+        <input type="checkbox" aria-label={`Select ${task.name}`} />
+      </div>
+
+      <div className="tl-col-task" role="cell">
+        <span className="tl-task-title-text" title={task.name}>{task.name}</span>
+        <button
+          type="button"
+          className="tl-task-update-btn"
+          onClick={() => setToast(`Updates for ${task.name} opened`)}
+          aria-label="Open task updates"
+          title="Start conversation / update"
+        >
+          <ChatCircle weight="regular" />
+          <Plus size={10} className="tl-chat-plus" />
+        </button>
+      </div>
+
+      <div className="tl-col-owner" role="cell">
+        {member ? (
+          <div className="tl-owner-avatar-filled" title={member.name}>
+            <User weight="fill" />
+          </div>
+        ) : (
+          <div className="tl-owner-avatar-empty" title="Unassigned">
+            <UserCircle weight="light" />
+          </div>
+        )}
+      </div>
+
+      <div className="tl-col-status" role="cell">
+        <button
+          ref={statusButtonRef}
+          type="button"
+          className={`tl-monday-status-pill ${getStatusClass(task.status)}`}
+          onClick={handleStatusClick}
+          aria-haspopup="menu"
+          aria-label={`Status: ${task.status}. Click to change`}
+        >
+          <span>{task.status}</span>
+          <span className="tl-status-dogear" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="tl-col-due" role="cell">
+        {task.due ? (
+          <div className="tl-due-content">
+            {task.status === "Done" ? (
+              <Check className="tl-due-icon is-done" weight="bold" />
+            ) : (
+              <WarningCircle className="tl-due-icon is-alert" weight="fill" />
+            )}
+            <span className="tl-due-date-text">{task.due}</span>
+          </div>
+        ) : (
+          <span className="tl-due-empty" />
+        )}
+      </div>
+
+      <div className="tl-col-add" role="cell" />
     </div>
   );
 }
 
-function TaskRow({ task, cycleStatus, setToast }: { task: Task; cycleStatus: (id: number) => void; setToast: (message: string) => void }) {
-  const member = members.find((item) => item.initials === task.owner) ?? members[0];
+function StatusDropdownPopover({
+  menuState,
+  onClose,
+  onSelectStatus,
+  onEditLabels,
+  onAutoAssign,
+}: {
+  menuState: { taskId: number; rect: DOMRect };
+  onClose: () => void;
+  onSelectStatus: (status: TaskStatus) => void;
+  onEditLabels: () => void;
+  onAutoAssign: () => void;
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const handlePointerDown = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [onClose]);
+
+  const top = menuState.rect.bottom + 6;
+  const left = menuState.rect.left + (menuState.rect.width / 2) - 100;
+
   return (
-    <div className="tl-task-row" role="row">
-      <div className="tl-task-name"><button type="button" className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} aria-pressed={task.status === "Done"} title={`Change status for ${task.name}`}>{task.status === "Done" && <Check weight="bold" aria-hidden="true" />}</button><strong title={task.name}>{task.name}</strong></div>
-      <div className="tl-task-owner"><Avatar member={member} size="small" /><span>{task.ownerName}</span></div>
-      <button className="tl-status-cell" onClick={() => cycleStatus(task.id)}><StatusLabel status={task.status} /></button>
-      <div><PriorityLabel priority={task.priority} /></div>
-      <div className="tl-task-due"><CalendarBlank />{task.due}</div>
-      <button className="tl-more-button" onClick={() => setToast(`Options for ${task.name} are ready for product integration`)} aria-label={`More options for ${task.name}`} title={`More options for ${task.name}`}><DotsThree /></button>
+    <div
+      ref={popoverRef}
+      className="tl-status-dropdown-menu"
+      style={{ top: `${top}px`, left: `${Math.max(16, left)}px` }}
+      role="menu"
+      aria-label="Choose status"
+    >
+      <div className="tl-status-dropdown-options">
+        <button
+          type="button"
+          className="tl-status-opt is-done"
+          role="menuitem"
+          onClick={() => onSelectStatus("Done")}
+        >
+          Done
+        </button>
+        <button
+          type="button"
+          className="tl-status-opt is-working"
+          role="menuitem"
+          onClick={() => onSelectStatus("Working on it")}
+        >
+          Working on it
+        </button>
+        <button
+          type="button"
+          className="tl-status-opt is-stuck"
+          role="menuitem"
+          onClick={() => onSelectStatus("Stuck")}
+        >
+          Stuck
+        </button>
+        <button
+          type="button"
+          className="tl-status-opt is-not-started"
+          role="menuitem"
+          onClick={() => onSelectStatus("Not Started")}
+        >
+          Not Started
+        </button>
+      </div>
+
+      <div className="tl-status-dropdown-divider" />
+
+      <div className="tl-status-dropdown-actions">
+        <button type="button" className="tl-status-action-btn" onClick={onEditLabels} role="menuitem">
+          <PencilSimple size={16} />
+          <span>Edit Labels</span>
+        </button>
+        <button type="button" className="tl-status-action-btn is-ai" onClick={onAutoAssign} role="menuitem">
+          <Sparkle size={16} weight="fill" className="tl-sparkle-gradient" />
+          <span>Auto-assign labels</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -1816,10 +2411,54 @@ function KanbanView({ tasks, cycleStatus, setToast }: { tasks: Task[]; cycleStat
 
 function MyWorkScreen({ tasks, view, activeOnly, cycleStatus, setToast }: { tasks: Task[]; view: MyWorkView; activeOnly: boolean; cycleStatus: (id: number) => void; setToast: (message: string) => void }) {
   const mine = tasks.filter((task) => task.owner === "MC" && (!activeOnly || task.status !== "Done"));
+  const [activeStatusMenu, setActiveStatusMenu] = useState<{ taskId: number; rect: DOMRect } | null>(null);
+  const myWorkGroup: GroupDef = { id: "MyWork", name: "Assigned to me", color: "#0073ea" };
+
   return (
     <div className="tl-standard-page">
       <PageHeader title="My work" description="Tasks assigned to Mara across Main workspace." />
-      {view === "table" ? <><div className="tl-summary-line"><span><strong>{mine.length}</strong> assigned</span><span><strong>{mine.filter((task) => task.status === "Done").length}</strong> completed</span><span><strong>{mine.filter((task) => task.status === "Blocked").length}</strong> blocked</span></div>{mine.length ? <TaskTable tasks={mine} cycleStatus={cycleStatus} setToast={setToast} /> : <EmptySearch />}</> : <MyWorkCalendar tasks={mine} />}
+      {view === "table" ? (
+        <>
+          <div className="tl-summary-line">
+            <span><strong>{mine.length}</strong> assigned</span>
+            <span><strong>{mine.filter((task) => task.status === "Done").length}</strong> completed</span>
+            <span><strong>{mine.filter((task) => task.status === "Blocked" || task.status === "Stuck").length}</strong> blocked</span>
+          </div>
+          {mine.length ? (
+            <MondayTableGroup
+              group={myWorkGroup}
+              tasks={mine}
+              isCollapsed={false}
+              onToggleCollapse={() => {}}
+              onOpenStatusMenu={(taskId, rect) => setActiveStatusMenu({ taskId, rect })}
+              onAddTask={() => {}}
+              draggingTaskId={null}
+              setDraggingTaskId={() => {}}
+              dragOverGroup={null}
+              setDragOverGroup={() => {}}
+              onDropTask={() => {}}
+              setToast={setToast}
+            />
+          ) : (
+            <EmptySearch />
+          )}
+          {activeStatusMenu && (
+            <StatusDropdownPopover
+              menuState={activeStatusMenu}
+              onClose={() => setActiveStatusMenu(null)}
+              onSelectStatus={(_status) => {
+                cycleStatus(activeStatusMenu.taskId);
+                setActiveStatusMenu(null);
+                setToast("Status updated");
+              }}
+              onEditLabels={() => setActiveStatusMenu(null)}
+              onAutoAssign={() => setActiveStatusMenu(null)}
+            />
+          )}
+        </>
+      ) : (
+        <MyWorkCalendar tasks={mine} />
+      )}
     </div>
   );
 }
