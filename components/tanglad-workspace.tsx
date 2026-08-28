@@ -1774,7 +1774,7 @@ function TaskRow({ task, cycleStatus, setToast }: { task: Task; cycleStatus: (id
   const member = members.find((item) => item.initials === task.owner) ?? members[0];
   return (
     <div className="tl-task-row" role="row">
-      <div className="tl-task-name"><button className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} title={`Change status for ${task.name}`}>{task.status === "Done" && <Check />}</button><strong title={task.name}>{task.name}</strong></div>
+      <div className="tl-task-name"><button type="button" className={task.status === "Done" ? "is-done" : ""} onClick={() => cycleStatus(task.id)} aria-label={`Change status for ${task.name}`} aria-pressed={task.status === "Done"} title={`Change status for ${task.name}`}>{task.status === "Done" && <Check weight="bold" aria-hidden="true" />}</button><strong title={task.name}>{task.name}</strong></div>
       <div className="tl-task-owner"><Avatar member={member} size="small" /><span>{task.ownerName}</span></div>
       <button className="tl-status-cell" onClick={() => cycleStatus(task.id)}><StatusLabel status={task.status} /></button>
       <div><PriorityLabel priority={task.priority} /></div>
