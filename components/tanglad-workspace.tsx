@@ -1268,13 +1268,33 @@ function AnimatedTabs({ id, items, active, onChange, ariaLabel, className = "tl-
 
   useEffect(() => setAnimationsReady(true), []);
 
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number, itemId: string) => {
+    if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+      event.preventDefault();
+      onChange(itemId);
+      return;
+    }
+
+    let nextIndex = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (index + 1) % items.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (index - 1 + items.length) % items.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = items.length - 1;
+    else return;
+
+    event.preventDefault();
+    const nextTab = items[nextIndex].id;
+    onChange(nextTab);
+    window.requestAnimationFrame(() => document.getElementById(`${id}-${nextTab}`)?.focus());
+  };
+
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="never">
       <div className={className} role="tablist" aria-label={ariaLabel}>
-        {items.map((item) => {
+        {items.map((item, index) => {
           const isActive = active === item.id;
           return (
-            <m.button key={item.id} type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} role="tab" aria-selected={isActive} whileTap={{ scale: 0.98 }}>
+            <m.button key={item.id} id={`${id}-${item.id}`} type="button" className={isActive ? "is-active" : ""} onClick={() => onChange(item.id)} onKeyDown={(event) => handleTabKeyDown(event, index, item.id)} role="tab" aria-selected={isActive} whileTap={{ scale: 0.98 }}>
               {item.icon}<span>{item.label}</span>
               {isActive && (
                 <m.span
