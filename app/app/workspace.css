@@ -1284,8 +1284,12 @@
 }
 
 .tl-group-row.is-header .tl-col-task {
-  justify-content: flex-start !important;
+  justify-content: center !important;
+  align-items: center !important;
   padding-inline: 12px !important;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tl-text-soft);
 }
 
 .tl-group-row.is-header .tl-col-owner {
