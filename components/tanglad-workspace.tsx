@@ -1851,6 +1851,19 @@ function BoardScreen({
     }, 2200);
   };
 
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      setDraggingTaskId(null);
+      setDragOverGroup(null);
+    };
+    window.addEventListener("dragend", handleGlobalDragEnd);
+    window.addEventListener("drop", handleGlobalDragEnd);
+    return () => {
+      window.removeEventListener("dragend", handleGlobalDragEnd);
+      window.removeEventListener("drop", handleGlobalDragEnd);
+    };
+  }, []);
+
   return (
     <div className="tl-standard-page tl-board-page">
       <header className="tl-board-header">
@@ -2091,6 +2104,7 @@ function TaskGroupTable({
     e.preventDefault();
     setDragOverGroup(null);
     setDropIndicatorId(null);
+    setDraggingTaskId(null);
     const taskIdStr = e.dataTransfer.getData("text/plain");
     if (taskIdStr) {
       const taskId = Number(taskIdStr);
@@ -2209,9 +2223,27 @@ function TaskGroupTable({
                   e.dataTransfer.setData("text/plain", String(task.id));
                   setDraggingTaskId(task.id);
                 }}
-                onDragEnd={() => { setDraggingTaskId(null); setDropIndicatorId(null); }}
-                onDragEnter={() => { if (draggingTaskId !== task.id) setDropIndicatorId(task.id); }}
-                onDropOnRow={(droppedId) => onDropTask(droppedId)}
+                onDragEnd={() => {
+                  setDraggingTaskId(null);
+                  setDropIndicatorId(null);
+                  setDragOverGroup(null);
+                }}
+                onDragEnter={() => {
+                  if (draggingTaskId !== task.id) {
+                    setDropIndicatorId(task.id);
+                  }
+                }}
+                onDragLeave={() => {
+                  if (dropIndicatorId === task.id) {
+                    setDropIndicatorId(null);
+                  }
+                }}
+                onDropOnRow={(droppedId) => {
+                  setDropIndicatorId(null);
+                  setDragOverGroup(null);
+                  setDraggingTaskId(null);
+                  onDropTask(droppedId);
+                }}
                 setToast={setToast}
               />
             ))}
@@ -2278,6 +2310,7 @@ function TaskGroupRow({
   onDragStart,
   onDragEnd,
   onDragEnter,
+  onDragLeave,
   onDropOnRow,
   setToast,
 }: {
@@ -2289,6 +2322,7 @@ function TaskGroupRow({
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: (e: React.DragEvent) => void;
   onDragEnter: () => void;
+  onDragLeave?: () => void;
   onDropOnRow?: (taskId: number) => void;
   setToast: (message: string) => void;
 }) {
@@ -2325,6 +2359,7 @@ function TaskGroupRow({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";

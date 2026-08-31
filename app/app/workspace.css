@@ -692,15 +692,15 @@
 
 .tl-tabs { min-height: 40px; gap: 4px; border-bottom: 1px solid var(--tl-line); }
 .tl-tabs button { position: relative; align-self: stretch; gap: 7px; padding: 0 14px; color: var(--tl-text-soft); background: transparent; font-size: var(--tl-type-body-size); font-weight: 500; }
-.tl-tabs button::after { position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px 2px 0 0; content: ""; background: transparent; }
+.tl-tabs button::after { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; content: ""; background: transparent; }
 .tl-tabs button::after,
 .tl-notification-tabs button::after { display: none; }
 .tl-tabs button:hover { color: var(--tl-text); background: #fafbfc; }
 .tl-tabs button.is-active { color: var(--tl-blue); font-weight: 600; }
 .tl-tabs button.is-active::after { background: var(--tl-blue); }
 .tl-tabs svg { width: 17px; height: 17px; }
-.tl-tab-indicator { position: absolute; z-index: 1; left: 10px; right: 10px; bottom: -1px; height: 2px; display: block; transform-origin: center; pointer-events: none; }
-.tl-tab-indicator-core { width: 100%; height: 100%; display: block; transform-origin: center; border-radius: 2px 2px 0 0; background: var(--tl-blue); }
+.tl-tab-indicator { position: absolute; z-index: 2; left: 0; right: 0; bottom: -1px; height: 2px; display: block; transform-origin: left center; pointer-events: none; }
+.tl-tab-indicator-core { width: 100%; height: 100%; display: block; background: var(--tl-blue); }
 
 .tl-tab-content { padding: 28px 4px 80px; }
 .tl-list-section { min-width: 0; }
@@ -1195,8 +1195,13 @@
 }
 
 .tl-group-row.is-dragging {
-  background: #dbeafe;
-  opacity: 0.7;
+  background: #ffffff !important;
+  opacity: 0.98 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  border-top: 1px solid #d0d5dd !important;
+  border-bottom: 1px solid #d0d5dd !important;
+  z-index: 20;
+  position: relative;
 }
 
 .tl-group-row.is-drop-target {
@@ -1207,12 +1212,25 @@
   content: "";
   position: absolute;
   inset-inline: 0;
-  top: -1px;
-  height: 2px;
+  top: -2px;
+  height: 3px;
   background: #0073ea;
-  border-radius: 1px;
+  border-radius: 1.5px;
   pointer-events: none;
-  z-index: 2;
+  z-index: 10;
+}
+
+.tl-group-row.is-drop-target::after {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -4.5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0073ea;
+  pointer-events: none;
+  z-index: 11;
 }
 
 /* Row highlight when moved between groups or status updated */
@@ -1239,10 +1257,6 @@
 
 .tl-task-group.is-drag-target .tl-group-table-wrapper {
   border-color: #0073ea;
-  outline: 2px dashed #0073ea;
-  outline-offset: -2px;
-  background: rgba(0, 115, 234, 0.03);
-  box-shadow: 0 4px 16px rgba(0, 115, 234, 0.12);
 }
 
 .tl-group-row > * {
