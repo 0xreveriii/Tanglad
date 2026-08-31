@@ -13,6 +13,7 @@ import {
   CaretDown,
   CaretLeft,
   CaretRight,
+  CaretUp,
   ChartBar,
   ChatCircle,
   Check,
@@ -37,6 +38,7 @@ import {
   Kanban,
   Leaf,
   Lightbulb,
+  Lightning,
   LinkSimple,
   List,
   ListBullets,
@@ -48,6 +50,7 @@ import {
   Paperclip,
   Plus,
   Question,
+  Robot,
   RocketLaunch,
   Rows,
   SidebarSimple,
@@ -1856,49 +1859,105 @@ function BoardScreen({
           <button type="button" onClick={() => setToast("Board name options are ready for this UI preview")} aria-label="Board name options" title="Board name options"><CaretDown /></button>
         </div>
         <div className="tl-board-header-actions">
-          <button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button>
-          <button type="button" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("AI suggestions are ready for this UI preview")}>
+            <Sparkle weight="bold" />
+            <span>AI suggestions</span>
+            <span className="tl-new-badge">New</span>
+          </button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("Integrations are ready for this UI preview")}>
+            <Lightning weight="bold" />
+            <span>Integrate</span>
+          </button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("Automations are ready for this UI preview")}>
+            <RocketLaunch weight="bold" />
+            <span>Automate</span>
+          </button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("Agents are ready for this UI preview")}>
+            <Robot weight="bold" />
+            <span>Agents</span>
+          </button>
+          <button type="button" className="tl-board-header-icon-btn" onClick={() => setToast("Board activity updates opened")} aria-label="Board activity" title="Board activity">
+            <ChatCircle weight="regular" />
+          </button>
+          <button type="button" className="tl-board-header-avatar" onClick={() => setToast("Mara Cruz profile")} title="Mara Cruz">
+            <span>MC</span>
+          </button>
+          <button type="button" className="tl-board-invite-btn" onClick={() => navigate("collaborators")}>
+            <UserPlus />
+            <span>Invite / 1</span>
+            <LinkSimple />
+          </button>
+          <button type="button" className="tl-board-header-icon-btn" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button>
         </div>
       </header>
 
-      <div className="tl-board-tabs">
-        <AnimatedTabs
-          id="board-tabs"
-          ariaLabel="Board views"
-          active={view}
-          onChange={(value) => setView(value as BoardView)}
-          items={[
-            { id: "table", label: "Main table", icon: <Rows /> },
-            { id: "calendar", label: "Calendar", icon: <CalendarBlank /> },
-            { id: "kanban", label: "Kanban", icon: <Kanban /> },
-          ]}
-        />
+      <div className="tl-board-tabs-wrapper">
+        <div className="tl-board-tabs">
+          <AnimatedTabs
+            id="board-tabs"
+            ariaLabel="Board views"
+            active={view}
+            onChange={(value) => setView(value as BoardView)}
+            items={[
+              { id: "table", label: "Main table", icon: <Rows /> },
+              { id: "calendar", label: "Calendar", icon: <CalendarBlank /> },
+              { id: "kanban", label: "Kanban", icon: <Kanban /> },
+            ]}
+          />
+          <button
+            type="button"
+            className="tl-add-view-tab"
+            onClick={() => setToast("Add view tab is ready for this UI preview")}
+            aria-label="Add view"
+            title="Add view"
+          >
+            <Plus />
+          </button>
+        </div>
       </div>
 
       <div className="tl-board-toolbar" aria-label="Board tools">
-        <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => (addTaskToGroup ? addTaskToGroup("To-Do", "New task") : setComposerOpen(true))}>
-          <Plus />New task<CaretDown />
-        </button>
-        <label className="tl-board-search tl-composite-field">
-          <MagnifyingGlass />
-          <span className="sr-only">Search board items</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
-        </label>
-        <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}>
-          <User />Person
-        </button>
-        <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}>
-          <FunnelSimple />Filter<CaretDown />
-        </button>
-        <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}>
-          <ListNumbers />Sort
-        </button>
-        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}>
-          <EyeSlash />Hide
-        </button>
-        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}>
-          <Rows />Group by
-        </button>
+        <div className="tl-board-toolbar-left">
+          <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => (addTaskToGroup ? addTaskToGroup("To-Do", "New task") : setComposerOpen(true))}>
+            <Plus />New task<CaretDown />
+          </button>
+          <label className="tl-board-search tl-composite-field">
+            <MagnifyingGlass />
+            <span className="sr-only">Search board items</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
+          </label>
+          <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}>
+            <User />Person
+          </button>
+          <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}>
+            <FunnelSimple />Filter<CaretDown />
+          </button>
+          <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}>
+            <ListNumbers />Sort
+          </button>
+          <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}>
+            <EyeSlash />Hide
+          </button>
+          <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}>
+            <Rows />Group by
+          </button>
+        </div>
+        <div className="tl-board-toolbar-right">
+          <button
+            type="button"
+            className="tl-board-collapse-all-btn"
+            onClick={() => {
+              const allCollapsed = Object.values(collapsedGroups).every(Boolean) && Object.keys(collapsedGroups).length === groups.length;
+              const nextState: Record<string, boolean> = {};
+              groups.forEach((g) => { nextState[g.id] = !allCollapsed; });
+              setCollapsedGroups(nextState);
+            }}
+            aria-label="Toggle collapse all groups"
+            title="Toggle collapse all groups"
+          >
+            <CaretUp />
+          </button>
+        </div>
       </div>
 
       {composerOpen && (
