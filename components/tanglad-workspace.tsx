@@ -575,7 +575,15 @@ export function TangladWorkspace() {
   const moveTask = (id: number, targetGroup: string) => {
     setTasks((current) => current.map((task) => {
       if (task.id !== id) return task;
-      return { ...task, group: targetGroup };
+      const isMovingToCompleted = targetGroup.toLowerCase().includes("completed") || targetGroup.toLowerCase().includes("done");
+      const isMovingToTodo = targetGroup.toLowerCase().includes("to-do") || targetGroup.toLowerCase().includes("todo");
+      let nextStatus = task.status;
+      if (isMovingToCompleted && task.status !== "Done") {
+        nextStatus = "Done";
+      } else if (isMovingToTodo && task.status === "Done") {
+        nextStatus = "Working on it";
+      }
+      return { ...task, group: targetGroup, status: nextStatus };
     }));
     setToast(`Task moved to ${targetGroup}`);
   };
@@ -1798,6 +1806,7 @@ function BoardScreen({
   const [activeStatusMenu, setActiveStatusMenu] = useState<{ taskId: number; rect: DOMRect } | null>(null);
   const [draggingTaskId, setDraggingTaskId] = useState<number | null>(null);
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
+  const [recentlyMovedTaskId, setRecentlyMovedTaskId] = useState<number | null>(null);
 
   const toggleGroupCollapse = (groupId: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
@@ -1819,8 +1828,24 @@ function BoardScreen({
     } else {
       cycleStatus(taskId);
     }
+    setRecentlyMovedTaskId(taskId);
+    window.setTimeout(() => {
+      setRecentlyMovedTaskId((prev) => (prev === taskId ? null : prev));
+    }, 2200);
     setActiveStatusMenu(null);
     setToast(`Status updated to "${newStatus}"`);
+  };
+
+  const handleDropTask = (taskId: number, targetGroupName: string) => {
+    if (moveTask) {
+      moveTask(taskId, targetGroupName);
+    } else {
+      setToast(`Moved to ${targetGroupName}`);
+    }
+    setRecentlyMovedTaskId(taskId);
+    window.setTimeout(() => {
+      setRecentlyMovedTaskId((prev) => (prev === taskId ? null : prev));
+    }, 2200);
   };
 
   return (
@@ -1907,7 +1932,8 @@ function BoardScreen({
                   setDraggingTaskId={setDraggingTaskId}
                   dragOverGroup={dragOverGroup}
                   setDragOverGroup={setDragOverGroup}
-                  onDropTask={(taskId) => moveTask ? moveTask(taskId, group.name) : setToast(`Moved to ${group.name}`)}
+                  onDropTask={(taskId) => handleDropTask(taskId, group.name)}
+                  recentlyMovedTaskId={recentlyMovedTaskId}
                   setToast={setToast}
                 />
               );
@@ -1952,6 +1978,7 @@ function TaskGroupTable({
   dragOverGroup,
   setDragOverGroup,
   onDropTask,
+  recentlyMovedTaskId,
   setToast,
 }: {
   group: GroupDef;
@@ -1965,6 +1992,7 @@ function TaskGroupTable({
   dragOverGroup: string | null;
   setDragOverGroup: (id: string | null) => void;
   onDropTask: (taskId: number) => void;
+  recentlyMovedTaskId?: number | null;
   setToast: (message: string) => void;
 }) {
   const [inlineTaskInput, setInlineTaskInput] = useState("");
@@ -2117,12 +2145,14 @@ function TaskGroupTable({
                 onOpenStatusMenu={(rect) => onOpenStatusMenu(task.id, rect)}
                 isDragging={draggingTaskId === task.id}
                 isDropTarget={dropIndicatorId === task.id}
+                isRecentlyMoved={recentlyMovedTaskId === task.id}
                 onDragStart={(e) => {
                   e.dataTransfer.setData("text/plain", String(task.id));
                   setDraggingTaskId(task.id);
                 }}
                 onDragEnd={() => { setDraggingTaskId(null); setDropIndicatorId(null); }}
                 onDragEnter={() => { if (draggingTaskId !== task.id) setDropIndicatorId(task.id); }}
+                onDropOnRow={(droppedId) => onDropTask(droppedId)}
                 setToast={setToast}
               />
             ))}
@@ -2162,9 +2192,14 @@ function TaskGroupTable({
             </div>
             <div className="tl-col-due tl-footer-due">
               {dueDateSummary !== "-" ? (
-                <span className="tl-due-pill-active">{dueDateSummary}</span>
+                <div className="tl-footer-due-badge">
+                  <span className="tl-due-pill-active">{dueDateSummary}</span>
+                  <small className="tl-footer-due-caption">latest</small>
+                </div>
               ) : (
-                <span className="tl-due-pill-empty">-</span>
+                <div className="tl-footer-due-badge">
+                  <span className="tl-due-pill-empty">-</span>
+                </div>
               )}
             </div>
             <div className="tl-col-add" />
@@ -2180,18 +2215,22 @@ function TaskGroupRow({
   onOpenStatusMenu,
   isDragging,
   isDropTarget,
+  isRecentlyMoved,
   onDragStart,
   onDragEnd,
   onDragEnter,
+  onDropOnRow,
   setToast,
 }: {
   task: Task;
   onOpenStatusMenu: (rect: DOMRect) => void;
   isDragging: boolean;
   isDropTarget: boolean;
+  isRecentlyMoved?: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: (e: React.DragEvent) => void;
   onDragEnter: () => void;
+  onDropOnRow?: (taskId: number) => void;
   setToast: (message: string) => void;
 }) {
   const member = members.find((item) => item.initials === task.owner);
@@ -2221,15 +2260,27 @@ function TaskGroupRow({
 
   return (
     <div
-      className={`tl-group-row ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`}
+      className={`tl-group-row ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""} ${isRecentlyMoved ? "is-recently-moved" : ""}`}
       role="row"
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragEnter={onDragEnter}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idStr = e.dataTransfer.getData("text/plain");
+        if (idStr && onDropOnRow) {
+          onDropOnRow(Number(idStr));
+        }
+      }}
     >
       <div className="tl-col-select" role="cell">
-        <span className="tl-drag-handle" title="Drag to reorder or move to Completed">
+        <span className="tl-drag-handle" title="Drag to reorder or move between groups">
           <DotsSixVertical weight="bold" />
         </span>
         <input type="checkbox" aria-label={`Select ${task.name}`} />
