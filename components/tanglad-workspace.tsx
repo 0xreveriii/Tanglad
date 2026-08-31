@@ -2069,6 +2069,7 @@ function TaskGroupTable({
 }) {
   const [inlineTaskInput, setInlineTaskInput] = useState("");
   const [dropIndicatorId, setDropIndicatorId] = useState<number | null>(null);
+  const [hoveredProg, setHoveredProg] = useState<string | null>(null);
   const isDragOver = dragOverGroup === group.id;
 
   const total = tasks.length;
@@ -2184,8 +2185,8 @@ function TaskGroupTable({
           </div>
         </div>
       ) : (
-        <div className="tl-group-table-wrapper" style={{ borderLeftColor: group.color }}>
-          <div className="tl-group-table" role="table" aria-label={`${group.name} tasks`}>
+        <div className="tl-group-table-wrapper">
+          <div className="tl-group-table" style={{ borderLeftColor: group.color }} role="table" aria-label={`${group.name} tasks`}>
             <div className="tl-group-row is-header" role="row">
               <div className="tl-col-select" role="columnheader">
                 <input type="checkbox" aria-label="Select all tasks in group" />
@@ -2252,7 +2253,7 @@ function TaskGroupTable({
               <div className="tl-col-select">
                 <Square className="tl-add-checkbox" weight="thin" />
               </div>
-              <div className="tl-col-task tl-add-input-wrap">
+              <div className="tl-col-add-task-input">
                 <input
                   type="text"
                   value={inlineTaskInput}
@@ -2261,27 +2262,59 @@ function TaskGroupTable({
                   aria-label={`Add task to ${group.name}`}
                 />
               </div>
-              <div className="tl-col-owner" />
-              <div className="tl-col-status" />
-              <div className="tl-col-due" />
-              <div className="tl-col-add" />
             </form>
           </div>
 
           <div className="tl-group-footer-row">
-            <div className="tl-col-select" />
-            <div className="tl-col-task" />
-            <div className="tl-col-owner" />
-            <div className="tl-col-status tl-footer-status">
-              <div className="tl-group-progress-bar">
-                {donePercent > 0 && <span className="tl-prog-done" style={{ width: `${donePercent}%` }} title={`Done: ${doneCount} (${Math.round(donePercent)}%)`} />}
-                {workingPercent > 0 && <span className="tl-prog-working" style={{ width: `${workingPercent}%` }} title={`Working on it: ${workingCount} (${Math.round(workingPercent)}%)`} />}
-                {stuckPercent > 0 && <span className="tl-prog-stuck" style={{ width: `${stuckPercent}%` }} title={`Stuck: ${stuckCount} (${Math.round(stuckPercent)}%)`} />}
-                {notStartedPercent > 0 && <span className="tl-prog-not-started" style={{ width: `${notStartedPercent}%` }} title={`Not Started: ${notStartedCount} (${Math.round(notStartedPercent)}%)`} />}
-                {total === 0 && <span className="tl-prog-empty" style={{ width: "100%" }} />}
+            <div className="tl-col-select tl-footer-spacer" />
+            <div className="tl-col-task tl-footer-spacer" />
+            <div className="tl-col-owner tl-footer-card-cell" />
+            <div className="tl-col-status tl-footer-card-cell tl-footer-status">
+              <div className="tl-prog-container">
+                {hoveredProg && (
+                  <div className="tl-prog-tooltip">
+                    <span>{hoveredProg}</span>
+                    <div className="tl-prog-tooltip-arrow" />
+                  </div>
+                )}
+                <div className="tl-group-progress-bar">
+                  {donePercent > 0 && (
+                    <span
+                      className="tl-prog-done"
+                      style={{ width: `${donePercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Done ${doneCount}/${total} ${Math.round(donePercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {workingPercent > 0 && (
+                    <span
+                      className="tl-prog-working"
+                      style={{ width: `${workingPercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Working on it ${workingCount}/${total} ${Math.round(workingPercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {stuckPercent > 0 && (
+                    <span
+                      className="tl-prog-stuck"
+                      style={{ width: `${stuckPercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Stuck ${stuckCount}/${total} ${Math.round(stuckPercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {notStartedPercent > 0 && (
+                    <span
+                      className="tl-prog-not-started"
+                      style={{ width: `${notStartedPercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Not Started ${notStartedCount}/${total} ${Math.round(notStartedPercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {total === 0 && <span className="tl-prog-empty" style={{ width: "100%" }} />}
+                </div>
               </div>
             </div>
-            <div className="tl-col-due tl-footer-due">
+            <div className="tl-col-due tl-footer-card-cell tl-footer-due">
               {dueDateSummary !== "-" ? (
                 <div className="tl-footer-due-badge">
                   <span className="tl-due-pill-active">{dueDateSummary}</span>
@@ -2293,7 +2326,7 @@ function TaskGroupTable({
                 </div>
               )}
             </div>
-            <div className="tl-col-add" />
+            <div className="tl-col-add tl-footer-card-cell" />
           </div>
         </div>
       )}
@@ -2381,15 +2414,20 @@ function TaskGroupRow({
       </div>
 
       <div className="tl-col-task" role="cell">
-        <span className="tl-task-title-text" title={task.name}>{task.name}</span>
+        <div className="tl-task-title-wrap">
+          <span className="tl-task-title-text" title={task.name}>{task.name}</span>
+        </div>
         <button
           type="button"
           className="tl-task-update-btn"
           onClick={() => setToast(`Updates for ${task.name} opened`)}
           aria-label="Open task updates"
-          title="Start conversation / update"
+          title="Write new update"
         >
-          <ChatCircle weight="regular" />
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2.5C5.86 2.5 2.5 5.63 2.5 9.5C2.5 11.23 3.16 12.82 4.28 14.05L3.4 17.15C3.29 17.53 3.67 17.88 4.04 17.74L7.33 16.5C8.18 16.82 9.07 17 10 17C14.14 17 17.5 13.87 17.5 9.5C17.5 5.63 14.14 2.5 10 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M10 7V12M7.5 9.5H12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
       </div>
 
