@@ -1196,16 +1196,18 @@
   background: #f7f9fb;
 }
 
+/* Dragging row: light blue opaque row highlight — row stays fully visible */
 .tl-group-row.is-dragging {
-  background: #ffffff !important;
-  opacity: 0.98 !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-  border-top: 1px solid #d0d5dd !important;
-  border-bottom: 1px solid #d0d5dd !important;
-  z-index: 20;
+  background: #e9f1fd !important;
+  opacity: 1 !important;
+  border-top: 1px solid #c0d9f9 !important;
+  border-bottom: 1px solid #c0d9f9 !important;
+  box-shadow: none !important;
+  z-index: 1;
   position: relative;
 }
 
+/* Drop insertion indicator: only within the Task column (left: 40px skips checkbox) */
 .tl-group-row.is-drop-target {
   position: relative;
 }
@@ -1213,11 +1215,11 @@
 .tl-group-row.is-drop-target::before {
   content: "";
   position: absolute;
-  inset-inline: 0;
+  left: 40px;
+  right: 0;
   top: -2px;
-  height: 3px;
+  height: 2px;
   background: #0073ea;
-  border-radius: 1.5px;
   pointer-events: none;
   z-index: 10;
 }
@@ -1225,10 +1227,10 @@
 .tl-group-row.is-drop-target::after {
   content: "";
   position: absolute;
-  left: -5px;
-  top: -4.5px;
-  width: 8px;
-  height: 8px;
+  left: 36px;
+  top: -4px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #0073ea;
   pointer-events: none;
