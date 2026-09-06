@@ -13,6 +13,7 @@ import {
   CaretDown,
   CaretLeft,
   CaretRight,
+  CaretUp,
   ChartBar,
   ChatCircle,
   Check,
@@ -37,6 +38,7 @@ import {
   Kanban,
   Leaf,
   Lightbulb,
+  Lightning,
   LinkSimple,
   List,
   ListBullets,
@@ -48,6 +50,7 @@ import {
   Paperclip,
   Plus,
   Question,
+  Robot,
   RocketLaunch,
   Rows,
   SidebarSimple,
@@ -575,7 +578,15 @@ export function TangladWorkspace() {
   const moveTask = (id: number, targetGroup: string) => {
     setTasks((current) => current.map((task) => {
       if (task.id !== id) return task;
-      return { ...task, group: targetGroup };
+      const isMovingToCompleted = targetGroup.toLowerCase().includes("completed") || targetGroup.toLowerCase().includes("done");
+      const isMovingToTodo = targetGroup.toLowerCase().includes("to-do") || targetGroup.toLowerCase().includes("todo");
+      let nextStatus = task.status;
+      if (isMovingToCompleted && task.status !== "Done") {
+        nextStatus = "Done";
+      } else if (isMovingToTodo && task.status === "Done") {
+        nextStatus = "Working on it";
+      }
+      return { ...task, group: targetGroup, status: nextStatus };
     }));
     setToast(`Task moved to ${targetGroup}`);
   };
@@ -1798,6 +1809,7 @@ function BoardScreen({
   const [activeStatusMenu, setActiveStatusMenu] = useState<{ taskId: number; rect: DOMRect } | null>(null);
   const [draggingTaskId, setDraggingTaskId] = useState<number | null>(null);
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
+  const [recentlyMovedTaskId, setRecentlyMovedTaskId] = useState<number | null>(null);
 
   const toggleGroupCollapse = (groupId: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
@@ -1819,9 +1831,38 @@ function BoardScreen({
     } else {
       cycleStatus(taskId);
     }
+    setRecentlyMovedTaskId(taskId);
+    window.setTimeout(() => {
+      setRecentlyMovedTaskId((prev) => (prev === taskId ? null : prev));
+    }, 2200);
     setActiveStatusMenu(null);
     setToast(`Status updated to "${newStatus}"`);
   };
+
+  const handleDropTask = (taskId: number, targetGroupName: string) => {
+    if (moveTask) {
+      moveTask(taskId, targetGroupName);
+    } else {
+      setToast(`Moved to ${targetGroupName}`);
+    }
+    setRecentlyMovedTaskId(taskId);
+    window.setTimeout(() => {
+      setRecentlyMovedTaskId((prev) => (prev === taskId ? null : prev));
+    }, 2200);
+  };
+
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      setDraggingTaskId(null);
+      setDragOverGroup(null);
+    };
+    window.addEventListener("dragend", handleGlobalDragEnd);
+    window.addEventListener("drop", handleGlobalDragEnd);
+    return () => {
+      window.removeEventListener("dragend", handleGlobalDragEnd);
+      window.removeEventListener("drop", handleGlobalDragEnd);
+    };
+  }, []);
 
   return (
     <div className="tl-standard-page tl-board-page">
@@ -1831,49 +1872,105 @@ function BoardScreen({
           <button type="button" onClick={() => setToast("Board name options are ready for this UI preview")} aria-label="Board name options" title="Board name options"><CaretDown /></button>
         </div>
         <div className="tl-board-header-actions">
-          <button className="tl-outline-button" onClick={() => navigate("collaborators")}><UserPlus />Invite</button>
-          <button type="button" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("AI suggestions are ready for this UI preview")}>
+            <Sparkle weight="bold" />
+            <span>AI suggestions</span>
+            <span className="tl-new-badge">New</span>
+          </button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("Integrations are ready for this UI preview")}>
+            <Lightning weight="bold" />
+            <span>Integrate</span>
+          </button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("Automations are ready for this UI preview")}>
+            <RocketLaunch weight="bold" />
+            <span>Automate</span>
+          </button>
+          <button type="button" className="tl-board-header-btn" onClick={() => setToast("Agents are ready for this UI preview")}>
+            <Robot weight="bold" />
+            <span>Agents</span>
+          </button>
+          <button type="button" className="tl-board-header-icon-btn" onClick={() => setToast("Board activity updates opened")} aria-label="Board activity" title="Board activity">
+            <ChatCircle weight="regular" />
+          </button>
+          <button type="button" className="tl-board-header-avatar" onClick={() => setToast("Mara Cruz profile")} title="Mara Cruz">
+            <span>MC</span>
+          </button>
+          <button type="button" className="tl-board-invite-btn" onClick={() => navigate("collaborators")}>
+            <UserPlus />
+            <span>Invite / 1</span>
+            <LinkSimple />
+          </button>
+          <button type="button" className="tl-board-header-icon-btn" onClick={() => setToast("Board options are ready for this UI preview")} aria-label="Board options" title="Board options"><DotsThree /></button>
         </div>
       </header>
 
-      <div className="tl-board-tabs">
-        <AnimatedTabs
-          id="board-tabs"
-          ariaLabel="Board views"
-          active={view}
-          onChange={(value) => setView(value as BoardView)}
-          items={[
-            { id: "table", label: "Main table", icon: <Rows /> },
-            { id: "calendar", label: "Calendar", icon: <CalendarBlank /> },
-            { id: "kanban", label: "Kanban", icon: <Kanban /> },
-          ]}
-        />
+      <div className="tl-board-tabs-wrapper">
+        <div className="tl-board-tabs">
+          <AnimatedTabs
+            id="board-tabs"
+            ariaLabel="Board views"
+            active={view}
+            onChange={(value) => setView(value as BoardView)}
+            items={[
+              { id: "table", label: "Main table", icon: <Rows /> },
+              { id: "calendar", label: "Calendar", icon: <CalendarBlank /> },
+              { id: "kanban", label: "Kanban", icon: <Kanban /> },
+            ]}
+          />
+          <button
+            type="button"
+            className="tl-add-view-tab"
+            onClick={() => setToast("Add view tab is ready for this UI preview")}
+            aria-label="Add view"
+            title="Add view"
+          >
+            <Plus />
+          </button>
+        </div>
       </div>
 
       <div className="tl-board-toolbar" aria-label="Board tools">
-        <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => (addTaskToGroup ? addTaskToGroup("To-Do", "New task") : setComposerOpen(true))}>
-          <Plus />New task<CaretDown />
-        </button>
-        <label className="tl-board-search tl-composite-field">
-          <MagnifyingGlass />
-          <span className="sr-only">Search board items</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
-        </label>
-        <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}>
-          <User />Person
-        </button>
-        <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}>
-          <FunnelSimple />Filter<CaretDown />
-        </button>
-        <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}>
-          <ListNumbers />Sort
-        </button>
-        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}>
-          <EyeSlash />Hide
-        </button>
-        <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}>
-          <Rows />Group by
-        </button>
+        <div className="tl-board-toolbar-left">
+          <button className="tl-blue-button tl-new-item-button" type="button" onClick={() => (addTaskToGroup ? addTaskToGroup("To-Do", "New task") : setComposerOpen(true))}>
+            <Plus />New task<CaretDown />
+          </button>
+          <label className="tl-board-search tl-composite-field">
+            <MagnifyingGlass />
+            <span className="sr-only">Search board items</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
+          </label>
+          <button className={mineOnly ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setMineOnly(!mineOnly)} aria-pressed={mineOnly}>
+            <User />Person
+          </button>
+          <button className="tl-board-tool" type="button" onClick={() => setToast("Filter options are ready for this UI preview")}>
+            <FunnelSimple />Filter<CaretDown />
+          </button>
+          <button className={sortAscending ? "tl-board-tool is-selected" : "tl-board-tool"} type="button" onClick={() => setSortAscending((value) => !value)} aria-pressed={sortAscending}>
+            <ListNumbers />Sort
+          </button>
+          <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Column visibility options are ready for this UI preview")}>
+            <EyeSlash />Hide
+          </button>
+          <button className="tl-board-tool tl-board-optional-tool" type="button" onClick={() => setToast("Grouping options are ready for this UI preview")}>
+            <Rows />Group by
+          </button>
+        </div>
+        <div className="tl-board-toolbar-right">
+          <button
+            type="button"
+            className="tl-board-collapse-all-btn"
+            onClick={() => {
+              const allCollapsed = Object.values(collapsedGroups).every(Boolean) && Object.keys(collapsedGroups).length === groups.length;
+              const nextState: Record<string, boolean> = {};
+              groups.forEach((g) => { nextState[g.id] = !allCollapsed; });
+              setCollapsedGroups(nextState);
+            }}
+            aria-label="Toggle collapse all groups"
+            title="Toggle collapse all groups"
+          >
+            <CaretUp />
+          </button>
+        </div>
       </div>
 
       {composerOpen && (
@@ -1907,7 +2004,8 @@ function BoardScreen({
                   setDraggingTaskId={setDraggingTaskId}
                   dragOverGroup={dragOverGroup}
                   setDragOverGroup={setDragOverGroup}
-                  onDropTask={(taskId) => moveTask ? moveTask(taskId, group.name) : setToast(`Moved to ${group.name}`)}
+                  onDropTask={(taskId) => handleDropTask(taskId, group.name)}
+                  recentlyMovedTaskId={recentlyMovedTaskId}
                   setToast={setToast}
                 />
               );
@@ -1952,6 +2050,7 @@ function TaskGroupTable({
   dragOverGroup,
   setDragOverGroup,
   onDropTask,
+  recentlyMovedTaskId,
   setToast,
 }: {
   group: GroupDef;
@@ -1965,10 +2064,12 @@ function TaskGroupTable({
   dragOverGroup: string | null;
   setDragOverGroup: (id: string | null) => void;
   onDropTask: (taskId: number) => void;
+  recentlyMovedTaskId?: number | null;
   setToast: (message: string) => void;
 }) {
   const [inlineTaskInput, setInlineTaskInput] = useState("");
   const [dropIndicatorId, setDropIndicatorId] = useState<number | null>(null);
+  const [hoveredProg, setHoveredProg] = useState<string | null>(null);
   const isDragOver = dragOverGroup === group.id;
 
   const total = tasks.length;
@@ -2004,6 +2105,7 @@ function TaskGroupTable({
     e.preventDefault();
     setDragOverGroup(null);
     setDropIndicatorId(null);
+    setDraggingTaskId(null);
     const taskIdStr = e.dataTransfer.getData("text/plain");
     if (taskIdStr) {
       const taskId = Number(taskIdStr);
@@ -2083,8 +2185,8 @@ function TaskGroupTable({
           </div>
         </div>
       ) : (
-        <div className="tl-group-table-wrapper" style={{ borderLeftColor: group.color }}>
-          <div className="tl-group-table" role="table" aria-label={`${group.name} tasks`}>
+        <div className="tl-group-table-wrapper">
+          <div className="tl-group-table" style={{ borderLeftColor: group.color }} role="table" aria-label={`${group.name} tasks`}>
             <div className="tl-group-row is-header" role="row">
               <div className="tl-col-select" role="columnheader">
                 <input type="checkbox" aria-label="Select all tasks in group" />
@@ -2117,12 +2219,32 @@ function TaskGroupTable({
                 onOpenStatusMenu={(rect) => onOpenStatusMenu(task.id, rect)}
                 isDragging={draggingTaskId === task.id}
                 isDropTarget={dropIndicatorId === task.id}
+                isRecentlyMoved={recentlyMovedTaskId === task.id}
                 onDragStart={(e) => {
                   e.dataTransfer.setData("text/plain", String(task.id));
                   setDraggingTaskId(task.id);
                 }}
-                onDragEnd={() => { setDraggingTaskId(null); setDropIndicatorId(null); }}
-                onDragEnter={() => { if (draggingTaskId !== task.id) setDropIndicatorId(task.id); }}
+                onDragEnd={() => {
+                  setDraggingTaskId(null);
+                  setDropIndicatorId(null);
+                  setDragOverGroup(null);
+                }}
+                onDragEnter={() => {
+                  if (draggingTaskId !== task.id) {
+                    setDropIndicatorId(task.id);
+                  }
+                }}
+                onDragLeave={() => {
+                  if (dropIndicatorId === task.id) {
+                    setDropIndicatorId(null);
+                  }
+                }}
+                onDropOnRow={(droppedId) => {
+                  setDropIndicatorId(null);
+                  setDragOverGroup(null);
+                  setDraggingTaskId(null);
+                  onDropTask(droppedId);
+                }}
                 setToast={setToast}
               />
             ))}
@@ -2131,7 +2253,7 @@ function TaskGroupTable({
               <div className="tl-col-select">
                 <Square className="tl-add-checkbox" weight="thin" />
               </div>
-              <div className="tl-col-task tl-add-input-wrap">
+              <div className="tl-col-add-task-input">
                 <input
                   type="text"
                   value={inlineTaskInput}
@@ -2140,34 +2262,71 @@ function TaskGroupTable({
                   aria-label={`Add task to ${group.name}`}
                 />
               </div>
-              <div className="tl-col-owner" />
-              <div className="tl-col-status" />
-              <div className="tl-col-due" />
-              <div className="tl-col-add" />
             </form>
           </div>
 
           <div className="tl-group-footer-row">
-            <div className="tl-col-select" />
-            <div className="tl-col-task" />
-            <div className="tl-col-owner" />
-            <div className="tl-col-status tl-footer-status">
-              <div className="tl-group-progress-bar">
-                {donePercent > 0 && <span className="tl-prog-done" style={{ width: `${donePercent}%` }} title={`Done: ${doneCount} (${Math.round(donePercent)}%)`} />}
-                {workingPercent > 0 && <span className="tl-prog-working" style={{ width: `${workingPercent}%` }} title={`Working on it: ${workingCount} (${Math.round(workingPercent)}%)`} />}
-                {stuckPercent > 0 && <span className="tl-prog-stuck" style={{ width: `${stuckPercent}%` }} title={`Stuck: ${stuckCount} (${Math.round(stuckPercent)}%)`} />}
-                {notStartedPercent > 0 && <span className="tl-prog-not-started" style={{ width: `${notStartedPercent}%` }} title={`Not Started: ${notStartedCount} (${Math.round(notStartedPercent)}%)`} />}
-                {total === 0 && <span className="tl-prog-empty" style={{ width: "100%" }} />}
+            <div className="tl-col-select tl-footer-spacer" />
+            <div className="tl-col-task tl-footer-spacer" />
+            <div className="tl-col-owner tl-footer-card-cell" />
+            <div className="tl-col-status tl-footer-card-cell tl-footer-status">
+              <div className="tl-prog-container">
+                {hoveredProg && (
+                  <div className="tl-prog-tooltip">
+                    <span>{hoveredProg}</span>
+                    <div className="tl-prog-tooltip-arrow" />
+                  </div>
+                )}
+                <div className="tl-group-progress-bar">
+                  {donePercent > 0 && (
+                    <span
+                      className="tl-prog-done"
+                      style={{ width: `${donePercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Done ${doneCount}/${total} ${Math.round(donePercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {workingPercent > 0 && (
+                    <span
+                      className="tl-prog-working"
+                      style={{ width: `${workingPercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Working on it ${workingCount}/${total} ${Math.round(workingPercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {stuckPercent > 0 && (
+                    <span
+                      className="tl-prog-stuck"
+                      style={{ width: `${stuckPercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Stuck ${stuckCount}/${total} ${Math.round(stuckPercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {notStartedPercent > 0 && (
+                    <span
+                      className="tl-prog-not-started"
+                      style={{ width: `${notStartedPercent}%` }}
+                      onMouseEnter={() => setHoveredProg(`Not Started ${notStartedCount}/${total} ${Math.round(notStartedPercent)}%`)}
+                      onMouseLeave={() => setHoveredProg(null)}
+                    />
+                  )}
+                  {total === 0 && <span className="tl-prog-empty" style={{ width: "100%" }} />}
+                </div>
               </div>
             </div>
-            <div className="tl-col-due tl-footer-due">
+            <div className="tl-col-due tl-footer-card-cell tl-footer-due">
               {dueDateSummary !== "-" ? (
-                <span className="tl-due-pill-active">{dueDateSummary}</span>
+                <div className="tl-footer-due-badge">
+                  <span className="tl-due-pill-active">{dueDateSummary}</span>
+                  <small className="tl-footer-due-caption">latest</small>
+                </div>
               ) : (
-                <span className="tl-due-pill-empty">-</span>
+                <div className="tl-footer-due-badge">
+                  <span className="tl-due-pill-empty">-</span>
+                </div>
               )}
             </div>
-            <div className="tl-col-add" />
+            <div className="tl-col-add tl-footer-card-cell" />
           </div>
         </div>
       )}
@@ -2180,18 +2339,24 @@ function TaskGroupRow({
   onOpenStatusMenu,
   isDragging,
   isDropTarget,
+  isRecentlyMoved,
   onDragStart,
   onDragEnd,
   onDragEnter,
+  onDragLeave,
+  onDropOnRow,
   setToast,
 }: {
   task: Task;
   onOpenStatusMenu: (rect: DOMRect) => void;
   isDragging: boolean;
   isDropTarget: boolean;
+  isRecentlyMoved?: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: (e: React.DragEvent) => void;
   onDragEnter: () => void;
+  onDragLeave?: () => void;
+  onDropOnRow?: (taskId: number) => void;
   setToast: (message: string) => void;
 }) {
   const member = members.find((item) => item.initials === task.owner);
@@ -2221,30 +2386,48 @@ function TaskGroupRow({
 
   return (
     <div
-      className={`tl-group-row ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`}
+      className={`tl-group-row ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""} ${isRecentlyMoved ? "is-recently-moved" : ""}`}
       role="row"
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idStr = e.dataTransfer.getData("text/plain");
+        if (idStr && onDropOnRow) {
+          onDropOnRow(Number(idStr));
+        }
+      }}
     >
       <div className="tl-col-select" role="cell">
-        <span className="tl-drag-handle" title="Drag to reorder or move to Completed">
+        <span className="tl-drag-handle" title="Drag to reorder or move between groups">
           <DotsSixVertical weight="bold" />
         </span>
         <input type="checkbox" aria-label={`Select ${task.name}`} />
       </div>
 
       <div className="tl-col-task" role="cell">
-        <span className="tl-task-title-text" title={task.name}>{task.name}</span>
+        <div className="tl-task-title-wrap">
+          <span className="tl-task-title-text" title={task.name}>{task.name}</span>
+        </div>
         <button
           type="button"
           className="tl-task-update-btn"
           onClick={() => setToast(`Updates for ${task.name} opened`)}
           aria-label="Open task updates"
-          title="Start conversation / update"
+          title="Write new update"
         >
-          <ChatCircle weight="regular" />
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2.5C5.86 2.5 2.5 5.63 2.5 9.5C2.5 11.23 3.16 12.82 4.28 14.05L3.4 17.15C3.29 17.53 3.67 17.88 4.04 17.74L7.33 16.5C8.18 16.82 9.07 17 10 17C14.14 17 17.5 13.87 17.5 9.5C17.5 5.63 14.14 2.5 10 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M10 7V12M7.5 9.5H12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
       </div>
 
