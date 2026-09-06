@@ -12,6 +12,12 @@ const purpose = [
   { href: "#principles", label: "Team decision" },
 ];
 
+const legal = [
+  { href: "/policy/terms", label: "Terms of Use" },
+  { href: "/policy/privacy", label: "Privacy Policy" },
+  { href: "/policy/cookies", label: "Cookie Policy" },
+];
+
 export function TangladFooter() {
   return (
     <footer className="tanglad-footer">
@@ -36,6 +42,17 @@ export function TangladFooter() {
           <h3>Purpose</h3>
           <nav aria-label="Tanglad purpose">
             {purpose.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}
+          </nav>
+        </div>
+
+        <div className="footer-column">
+          <h3>Legal</h3>
+          <nav aria-label="Legal information">
+            {legal.map((item) => (
+              <a href={item.href} target="_blank" rel="noopener noreferrer" key={item.label}>
+                {item.label}
+              </a>
+            ))}
           </nav>
         </div>
 
