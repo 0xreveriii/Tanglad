@@ -73,6 +73,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m } from "motion/react";
+import { initialTasks, type Task, type TaskPriority, type TaskStatus } from "./tanglad-sample-data";
 import "@/app/app/workspace.css";
 
 type Screen = "manage-workspace" | "my-work" | "inbox" | "board" | "docs" | "docs-editor" | "insights" | "collaborators" | "permissions" | "favorites";
@@ -82,24 +83,10 @@ type SearchSection = "all" | "boards" | "updates" | "files" | "people" | "tags" 
 type BoardView = "table" | "calendar" | "kanban";
 type MyWorkView = "table" | "calendar";
 type UpdateFilter = "all" | "mentions" | "assigned";
-type TaskStatus = "Not Started" | "Working on it" | "Done" | "Stuck" | "Review" | "Blocked";
-type TaskPriority = "Low" | "Medium" | "High";
-
 type GroupDef = {
   id: string;
   name: string;
   color: string;
-};
-
-type Task = {
-  id: number;
-  name: string;
-  owner: string;
-  ownerName: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  due: string;
-  group: string;
 };
 
 type Member = {
@@ -156,15 +143,6 @@ const inviteDialogMotion = {
 const defaultGroups: GroupDef[] = [
   { id: "To-Do", name: "To-Do", color: "#0073ea" },
   { id: "Completed", name: "Completed", color: "#00c875" },
-];
-
-const initialTasks: Task[] = [
-  { id: 1, name: "New task", owner: "", ownerName: "Unassigned", status: "Not Started", priority: "Medium", due: "", group: "To-Do" },
-  { id: 2, name: "New task", owner: "", ownerName: "Unassigned", status: "Not Started", priority: "Medium", due: "", group: "To-Do" },
-  { id: 3, name: "New task", owner: "", ownerName: "Unassigned", status: "Not Started", priority: "Medium", due: "", group: "To-Do" },
-  { id: 4, name: "Task 1", owner: "MC", ownerName: "Mara Cruz", status: "Working on it", priority: "High", due: "Aug 18", group: "To-Do" },
-  { id: 5, name: "Task 2", owner: "", ownerName: "Unassigned", status: "Done", priority: "Low", due: "Aug 19", group: "To-Do" },
-  { id: 6, name: "Task 3", owner: "", ownerName: "Unassigned", status: "Stuck", priority: "High", due: "Aug 20", group: "To-Do" },
 ];
 
 const members: Member[] = [

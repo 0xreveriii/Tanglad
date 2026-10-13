@@ -1,71 +1,56 @@
 "use client";
 
-import { ArrowRight } from "@phosphor-icons/react";
-import { motion, useInView, useScroll, useTransform } from "motion/react";
+import { ArrowDown, ArrowRight } from "@phosphor-icons/react";
+import { motion, useScroll, useTransform } from "motion/react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRef } from "react";
-import { ChibiTanglad } from "./chibi-tanglad";
 import { useStableReducedMotion } from "./motion-primitives";
-
-const heroCopyVisible = { opacity: 1, y: 0, filter: "blur(0px)" };
-const heroHeadingHidden = { opacity: 0, y: 30, filter: "blur(8px)" };
-const heroSummaryHidden = { opacity: 0, y: 22, filter: "blur(7px)" };
-const heroCtaHidden = { opacity: 0, y: 18, filter: "blur(6px)" };
-const heroVisualHidden = { opacity: 0, y: 42, scale: 0.92, filter: "blur(14px)" };
-const heroVisualVisible = { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" };
 
 export function HeroExperience() {
   const ref = useRef<HTMLElement>(null);
   const reduce = useStableReducedMotion();
-  const heroInView = useInView(ref, { amount: 0.12 });
-  const entranceActive = reduce || heroInView;
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const copyY = useTransform(scrollYProgress, [0, 0.72], [0, -88]);
-  const copyOpacity = useTransform(scrollYProgress, [0, 0.62, 0.92], [1, 0.88, 0]);
-  const lineScale = useTransform(scrollYProgress, [0, 0.8], [0.2, 1]);
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, -36]);
+  const artY = useTransform(scrollYProgress, [0, 1], [0, -64]);
+  const artScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
+  const opacity = useTransform(scrollYProgress, [0, 0.65, 1], [1, 1, 0.4]);
 
   return (
-    <section className="hero-shell" id="top" ref={ref}>
-      <div className="hero-sticky">
-        <motion.div className="hero-copy" style={{ y: copyY, opacity: copyOpacity }}>
-          <motion.h1
-            initial={reduce ? heroCopyVisible : heroHeadingHidden}
-            animate={entranceActive ? heroCopyVisible : heroHeadingHidden}
-            transition={{ delay: 0.24, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          >
-            Fair work<br /><span>has weight.</span>
-          </motion.h1>
-          <motion.p
-            className="hero-summary"
-            initial={reduce ? heroCopyVisible : heroSummaryHidden}
-            animate={entranceActive ? heroCopyVisible : heroSummaryHidden}
-            transition={{ delay: 0.4, duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
-          >
-            Tanglad is a collaborative project tracker that brings clarity to commitments, context to progress, and fairness to every contribution.
-          </motion.p>
-          <motion.a
-            className="primary-cta"
-            href="/app"
-            initial={reduce ? heroCopyVisible : heroCtaHidden}
-            animate={entranceActive ? heroCopyVisible : heroCtaHidden}
-            transition={{ delay: 0.54, duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
-            whileHover={reduce ? undefined : { scale: 1.018 }}
-            whileTap={reduce ? undefined : { scale: 0.98 }}
-          >
-            <span>Get Started</span>
-            <span className="cta-icon"><ArrowRight weight="light" /></span>
-          </motion.a>
+    <section className="studio-hero" id="top" ref={ref} aria-labelledby="studio-hero-heading">
+      <div className="studio-hero-stage">
+        <div className="studio-hero-atmosphere" aria-hidden="true">
+          <span /><span /><span /><span />
+        </div>
+        <motion.div className="studio-hero-art" aria-hidden="true"
+          style={reduce ? undefined : { y: artY, scale: artScale, opacity }}>
+          <motion.div className="studio-hero-art-drift"
+            animate={reduce ? { y: 0 } : { y: [0, -7, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
+            <Image className="studio-hero-art-wide" src="/images/tanglad-task-still-life-refined.png" alt="" fill priority unoptimized
+              sizes="(max-width: 767px) 100vw, 1600px" />
+            <Image className="studio-hero-art-compact" src="/images/tanglad-task-still-life-mobile-refined.png" alt="" fill unoptimized
+              sizes="(max-width: 767px) 100vw, 600px" />
+          </motion.div>
         </motion.div>
 
-        <motion.div
-          className="hero-visual-shell"
-          initial={reduce ? heroVisualVisible : heroVisualHidden}
-          animate={entranceActive ? heroVisualVisible : heroVisualHidden}
-          transition={{ delay: 0.16, duration: 1.12, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <ChibiTanglad />
+        <motion.div className="studio-hero-copy" style={reduce ? undefined : { y: copyY, opacity }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduce ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}>
+          <span className="studio-hero-kicker">Less guesswork. More perspective.</span>
+          <h1 id="studio-hero-heading">Fair work<br /><span>has weight.</span></h1>
+          <p>Plan together. Track progress. See the effort behind every task, so your team can share the work with more context.</p>
+          <Link className="studio-hero-cta" href="/app">
+            <span>Explore Tanglad</span>
+            <ArrowRight size={18} weight="regular" aria-hidden="true" />
+          </Link>
+          <a className="studio-hero-method" href="#method">See how task weight works <ArrowDown size={16} aria-hidden="true" /></a>
         </motion.div>
 
-        <motion.div className="hero-progress" style={{ scaleX: lineScale }} aria-hidden="true" />
+        <div className="studio-hero-footnote">
+          <span>Task weight considers</span>
+          <p>Complexity <i aria-hidden="true" /> Time demand <i aria-hidden="true" /> Skill demand <i aria-hidden="true" /> Project impact</p>
+        </div>
       </div>
     </section>
   );

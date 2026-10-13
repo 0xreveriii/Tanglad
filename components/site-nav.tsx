@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, List, Moon, Pause, Plant, Play, Sun, X } from "@phosphor-icons/react";
+import { List, Moon, Plant, Sun, X } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useStableReducedMotion } from "./motion-primitives";
@@ -34,22 +34,19 @@ export function SiteNav() {
 
   useEffect(() => {
     let nextDark = true;
-    let nextMotion: "system" | "full" | "reduced" = "system";
 
     try {
       const storedTheme = localStorage.getItem("tanglad-theme");
-      const storedMotion = localStorage.getItem("tanglad-motion");
       nextDark = storedTheme ? storedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-      nextMotion = storedMotion === "full" || storedMotion === "reduced" ? storedMotion : "system";
+      localStorage.removeItem("tanglad-motion");
     } catch {
       nextDark = true;
     }
 
     document.documentElement.dataset.theme = nextDark ? "dark" : "light";
-    document.documentElement.dataset.motion = nextMotion;
+    document.documentElement.dataset.motion = "full";
     document.documentElement.style.colorScheme = nextDark ? "dark" : "light";
     setDark(nextDark);
-    window.dispatchEvent(new Event("tanglad-motion-change"));
   }, []);
 
   const toggleTheme = () => {
@@ -58,13 +55,6 @@ export function SiteNav() {
     document.documentElement.dataset.theme = next ? "dark" : "light";
     document.documentElement.style.colorScheme = next ? "dark" : "light";
     localStorage.setItem("tanglad-theme", next ? "dark" : "light");
-  };
-
-  const toggleMotion = () => {
-    const next = reduceMotion ? "full" : "reduced";
-    document.documentElement.dataset.motion = next;
-    localStorage.setItem("tanglad-motion", next);
-    window.dispatchEvent(new Event("tanglad-motion-change"));
   };
 
   return (
@@ -109,21 +99,7 @@ export function SiteNav() {
         <div className="nav-actions">
           <Link className="nav-login" href="/app">
             <span>Log in</span>
-            <ArrowRight weight="bold" />
           </Link>
-          <button className="icon-button motion-button" onClick={toggleMotion} aria-label={reduceMotion ? "Enable page motion" : "Reduce page motion"} title={reduceMotion ? "Enable motion" : "Reduce motion"}>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={reduceMotion ? "play" : "pause"}
-                initial={{ opacity: 0, scale: 0.78 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.78 }}
-                transition={{ duration: 0.18 }}
-              >
-                {reduceMotion ? <Play weight="light" /> : <Pause weight="light" />}
-              </motion.span>
-            </AnimatePresence>
-          </button>
           <button className="icon-button" onClick={toggleTheme} aria-label={dark ? "Use light mode" : "Use dark mode"}>
             <AnimatePresence mode="wait" initial={false}>
               <motion.span

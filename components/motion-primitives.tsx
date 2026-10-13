@@ -6,24 +6,14 @@ import { useEffect, useRef, useState } from "react";
 export function useStableReducedMotion() {
   const preference = useReducedMotion();
   const [hydrated, setHydrated] = useState(false);
-  const [mode, setMode] = useState<"system" | "full" | "reduced">("system");
+  const [fullMotion, setFullMotion] = useState(true);
 
   useEffect(() => {
-    const readMode = () => {
-      const value = document.documentElement.dataset.motion;
-      setMode(value === "full" || value === "reduced" ? value : "system");
-      setHydrated(true);
-    };
-
-    readMode();
-    window.addEventListener("tanglad-motion-change", readMode);
-    return () => window.removeEventListener("tanglad-motion-change", readMode);
+    setFullMotion(document.documentElement.dataset.motion === "full");
+    setHydrated(true);
   }, []);
 
-  if (!hydrated) return false;
-  if (mode === "full") return false;
-  if (mode === "reduced") return true;
-  return Boolean(preference);
+  return hydrated && !fullMotion && Boolean(preference);
 }
 
 export function ScrollSection({
