@@ -6,14 +6,22 @@ import { useEffect, useRef, useState } from "react";
 export function useStableReducedMotion() {
   const preference = useReducedMotion();
   const [hydrated, setHydrated] = useState(false);
-  const [fullMotion, setFullMotion] = useState(true);
+  const [mode, setMode] = useState<"system" | "full" | "reduced">("full");
 
   useEffect(() => {
-    setFullMotion(document.documentElement.dataset.motion === "full");
-    setHydrated(true);
+    const readMode = () => {
+      const value = document.documentElement.dataset.motion;
+      setMode(value === "full" || value === "reduced" ? value : "system");
+      setHydrated(true);
+    };
+
+    readMode();
+    window.addEventListener("tanglad-motion-change", readMode);
+    return () => window.removeEventListener("tanglad-motion-change", readMode);
   }, []);
 
-  return hydrated && !fullMotion && Boolean(preference);
+  if (!hydrated || mode === "full") return false;
+  return mode === "reduced" || Boolean(preference);
 }
 
 export function ScrollSection({
@@ -51,9 +59,10 @@ export function Reveal({
     <motion.div
       className={className}
       initial={reduce ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 32, filter: "blur(9px)" }}
+      animate={reduce ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: false, amount: 0.22 }}
-      transition={{ duration: 0.78, delay: reduce ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: reduce ? 0 : 0.78, delay: reduce ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
@@ -62,11 +71,12 @@ export function Reveal({
 
 export function SectionFade({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useStableReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const opacity = useTransform(scrollYProgress, [0, 0.16, 0.78, 1], [0.86, 1, 1, 0.3]);
 
   return (
-    <motion.div ref={ref} className={className} style={{ opacity }}>
+    <motion.div ref={ref} className={className} style={reduce ? { opacity: 1 } : { opacity }}>
       {children}
     </motion.div>
   );

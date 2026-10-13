@@ -1634,7 +1634,7 @@ html[data-motion="reduced"] :is(
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chibi-mascot { animation: none; }
+  html:not([data-motion="full"]) .chibi-mascot { animation: none; }
 }
 
 .system-preview-brand,
@@ -2132,7 +2132,7 @@ html[data-motion="reduced"] :is(
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .system-preview-live i {
+  html:not([data-motion="full"]) .system-preview-live i {
     animation: none;
   }
 }
@@ -2165,6 +2165,16 @@ html[data-motion="reduced"] :is(
   pointer-events: none;
 }
 .studio-hero-art-drift { position: relative; width: 100%; height: 100%; }
+html[data-motion="reduced"] :is(.studio-hero-art, .studio-hero-art-drift, .studio-hero-copy-motion, .studio-hero-copy) {
+  opacity: 1 !important;
+  transform: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) :is(.studio-hero-art, .studio-hero-art-drift, .studio-hero-copy-motion, .studio-hero-copy) {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 .studio-hero-atmosphere {
   position: absolute;
   inset: -60px 0 -24px;

@@ -73,7 +73,8 @@ Rules:
 - The method uses a sticky four-stage scroll narrative tied to task weighting and team choice.
 - Animate transforms and opacity only.
 - Never attach raw scroll listeners or store continuous scroll values in React state.
-- Honor `prefers-reduced-motion` and preserve a complete static experience.
+- The landing page plays full motion automatically on every visit, as explicitly requested for this experience. Set `data-motion="full"` in the root layout; do not add a motion toggle or restore a saved motion preference.
+- Preserve the shared `system` and `reduced` fallbacks for contexts that explicitly select them, with a complete static experience.
 
 ## Content principles
 
