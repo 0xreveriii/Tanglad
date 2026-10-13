@@ -38,13 +38,11 @@ export function SiteNav() {
     try {
       const storedTheme = localStorage.getItem("tanglad-theme");
       nextDark = storedTheme ? storedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-      localStorage.removeItem("tanglad-motion");
     } catch {
       nextDark = true;
     }
 
     document.documentElement.dataset.theme = nextDark ? "dark" : "light";
-    document.documentElement.dataset.motion = "full";
     document.documentElement.style.colorScheme = nextDark ? "dark" : "light";
     setDark(nextDark);
   }, []);
