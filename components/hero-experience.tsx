@@ -14,7 +14,6 @@ export function HeroExperience() {
   const copyY = useTransform(scrollYProgress, [0, 1], [0, -36]);
   const artY = useTransform(scrollYProgress, [0, 1], [0, -64]);
   const artScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
-  const opacity = useTransform(scrollYProgress, [0, 0.65, 1], [1, 1, 0.4]);
 
   return (
     <section className="studio-hero" id="top" ref={ref} aria-labelledby="studio-hero-heading">
@@ -23,7 +22,7 @@ export function HeroExperience() {
           <span /><span /><span /><span />
         </div>
         <motion.div className="studio-hero-art" aria-hidden="true"
-          style={reduce ? undefined : { y: artY, scale: artScale, opacity }}>
+          style={reduce ? undefined : { y: artY, scale: artScale }}>
           <motion.div className="studio-hero-art-drift"
             animate={reduce ? { y: 0 } : { y: [0, -7, 0] }}
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
@@ -34,17 +33,19 @@ export function HeroExperience() {
           </motion.div>
         </motion.div>
 
-        <motion.div className="studio-hero-copy" style={reduce ? undefined : { y: copyY, opacity }}
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reduce ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}>
-          <span className="studio-hero-kicker">Less guesswork. More perspective.</span>
-          <h1 id="studio-hero-heading">Fair work<br /><span>has weight.</span></h1>
-          <p>Plan together. Track progress. See the effort behind every task, so your team can share the work with more context.</p>
-          <Link className="studio-hero-cta" href="/app">
-            <span>Explore Tanglad</span>
-            <ArrowRight size={18} weight="regular" aria-hidden="true" />
-          </Link>
-          <a className="studio-hero-method" href="#method">See how task weight works <ArrowDown size={16} aria-hidden="true" /></a>
+        <motion.div className="studio-hero-copy-motion" style={reduce ? undefined : { y: copyY }}>
+          <motion.div className="studio-hero-copy"
+            initial={reduce ? false : { opacity: 1, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduce ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}>
+            <span className="studio-hero-kicker">Less guesswork. More perspective.</span>
+            <h1 id="studio-hero-heading">Fair work<br /><span>has weight.</span></h1>
+            <p>Plan together. Track progress. See the effort behind every task, so your team can share the work with more context.</p>
+            <Link className="studio-hero-cta" href="/app">
+              <span>Explore Tanglad</span>
+              <ArrowRight size={18} weight="regular" aria-hidden="true" />
+            </Link>
+            <a className="studio-hero-method" href="#method">See how task weight works <ArrowDown size={16} aria-hidden="true" /></a>
+          </motion.div>
         </motion.div>
 
         <div className="studio-hero-footnote">

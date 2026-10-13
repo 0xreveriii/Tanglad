@@ -2161,7 +2161,7 @@ html[data-motion="reduced"] :is(
 .studio-hero-art {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
 }
 .studio-hero-art-drift { position: relative; width: 100%; height: 100%; }
@@ -2206,6 +2206,8 @@ html[data-motion="reduced"] :is(
 .studio-hero-cta svg { flex-shrink: 0; }
 .studio-hero-art img { object-fit: contain; }
 .studio-hero-art .studio-hero-art-compact { display: none; object-fit: contain; }
+.studio-hero-copy-motion,
+.studio-hero-footnote { position: relative; z-index: 1; }
 .studio-hero-copy {
   position: relative;
   max-width: 580px;
